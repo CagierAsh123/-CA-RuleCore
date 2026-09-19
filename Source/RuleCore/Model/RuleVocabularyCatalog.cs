@@ -1191,30 +1191,54 @@ namespace RuleCore
 
         // ── 静态清单：两个 C# 枚举 ───────────────────────────────────
 
-        // 显示名走**原版自己的翻译键**（`GetLabel()` → `MedicalCareCategory_X`），
-        // 所以这里不需要另造一份词——而且游戏换语言时它跟着换。
+        // 显示名走**原版自己的翻译键**（`MedicalCareUtility.GetLabel()` 的实现就是
+        // `("MedicalCareCategory_" + cat).Translate()`），所以这里不另造一份词——
+        // 而且游戏换语言时它跟着换。
+        //
+        // ⚠ **这里必须是 labelKey，不能是 label。**（2026-09-19 实机炸过一次）
+        //
+        // 原来写的是 `MedicalCareCategory.NoCare.GetLabel()`，把**翻译结果**烤成字符串。
+        // 两个后果，第一个当场就撞上了：
+        //
+        //   1. 字段初始化器跑在**静态构造函数**里，而 cctor 由"第一次碰这个类的
+        //      **任何**静态成员"触发——实测路径是
+        //      `Rule.ExposeData(PostLoadInit)` → `Rule.Resolve()` → `Current` → cctor，
+        //      那是**读全局配置**的时候，比语言加载还早。
+        //      于是 `Translate()` 报一屏「No active language!」，
+        //      而这一屏错误又把原版的日志窗口刷到「Collection was modified」异常，
+        //      异常卡在日志窗口自己的 GUIClip 里 → 连带报「pushing more GUIClips」。
+        //      **一个错因，三条看起来无关的报错。**
+        //   2. 就算加载顺序侥幸对了，烤进去的是**那一刻的语言**；
+        //      游戏里换成中文，这一列还是英文。
+        //
+        // `labelKey` 是画到屏幕上的那一刻才查的（`OptionLabel` → `LabelOf`），两个问题一起消失。
+        // 这条也是那个"惰性构建"承诺的真正含义：**懒的是 cctor 之后的代码，
+        // 不是字段初始化器**——把翻译放进 `static readonly` 就等于把懒这件事作废了。
+        private static RuleEnumOption MedCareOption(MedicalCareCategory care)
+        {
+            return new RuleEnumOption(care.ToString(), "MedicalCareCategory_" + care);
+        }
+
         private static readonly RuleEnumOption[] MedicalCareOptions =
         {
-            new RuleEnumOption(MedicalCareCategory.NoCare.ToString(), null,
-                MedicalCareCategory.NoCare.GetLabel()),
-            new RuleEnumOption(MedicalCareCategory.NoMeds.ToString(), null,
-                MedicalCareCategory.NoMeds.GetLabel()),
-            new RuleEnumOption(MedicalCareCategory.HerbalOrWorse.ToString(), null,
-                MedicalCareCategory.HerbalOrWorse.GetLabel()),
-            new RuleEnumOption(MedicalCareCategory.NormalOrWorse.ToString(), null,
-                MedicalCareCategory.NormalOrWorse.GetLabel()),
-            new RuleEnumOption(MedicalCareCategory.Best.ToString(), null,
-                MedicalCareCategory.Best.GetLabel())
+            MedCareOption(MedicalCareCategory.NoCare),
+            MedCareOption(MedicalCareCategory.NoMeds),
+            MedCareOption(MedicalCareCategory.HerbalOrWorse),
+            MedCareOption(MedicalCareCategory.NormalOrWorse),
+            MedCareOption(MedicalCareCategory.Best)
         };
+
+        // 同上。`HostilityResponseModeUtility.GetLabel()` 也是 `("HostilityResponseMode_" + r).Translate()`。
+        private static RuleEnumOption HostilityOption(HostilityResponseMode response)
+        {
+            return new RuleEnumOption(response.ToString(), "HostilityResponseMode_" + response);
+        }
 
         private static readonly RuleEnumOption[] HostilityOptions =
         {
-            new RuleEnumOption(HostilityResponseMode.Ignore.ToString(), null,
-                HostilityResponseMode.Ignore.GetLabel()),
-            new RuleEnumOption(HostilityResponseMode.Attack.ToString(), null,
-                HostilityResponseMode.Attack.GetLabel()),
-            new RuleEnumOption(HostilityResponseMode.Flee.ToString(), null,
-                HostilityResponseMode.Flee.GetLabel())
+            HostilityOption(HostilityResponseMode.Ignore),
+            HostilityOption(HostilityResponseMode.Attack),
+            HostilityOption(HostilityResponseMode.Flee)
         };
 
         /// <summary>「不受限」。活动区列表里那一项没有对应的 Area 对象。</summary>
