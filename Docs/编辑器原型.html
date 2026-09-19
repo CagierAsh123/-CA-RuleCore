@@ -212,13 +212,33 @@ const ANIMAL = CAP.Pawn|CAP.Animal|CAP.Biological|CAP.NeedFood|CAP.NeedRest
              | CAP.NeedJoy|CAP.NeedComfort|CAP.NeedBeauty|CAP.Inventory
              | CAP.Bed|CAP.Age;
 
+/* 根。**「一群」是一个根 + 一个键**（源码里就是 RuleRootKind.PawnGroup），
+   不是每种群体一个枚举值——所以这里也现场从绑定表生成，加一种绑定自动多一行。 */
 const ROOTS = [
   {id:'Subject',    text:'本主体',       kind:'Entity',    entity:'Pawn', note:'绑定了主体才有意义；指名绑定时这里显示的是那个人的名字'},
   {id:'Map',        text:'本图',         kind:'Entity',    entity:'Map'},
-  {id:'Colonists',  text:'全部自由殖民者', kind:'EntitySet', entity:'Pawn', note:'一组，必须先归约'},
   {id:'AllMaps',    text:'全部地图',      kind:'EntitySet', entity:'Map',  note:'一组，必须先归约'},
   {id:'Element',    text:'当前元素',      kind:'Entity',    entity:'ELEMENT', onlyInFilter:true},
 ];
+
+function groupRootId(key){ return 'Group:' + key; }
+function groupRootKey(id){ return id && id.indexOf('Group:') === 0 ? id.slice(6) : null; }
+
+/** 现场生成"一群"那些根：绑定表里每一个 scope==='group' 的都算。 */
+function rootList(){
+  const out = ROOTS.filter(r => r.id !== 'AllMaps' && !r.onlyInFilter);
+  for (const b of BINDINGS){
+    if (b.scope !== 'group') continue;
+    out.push({
+      id: groupRootId(b.k), text: '全部' + b.n, kind: 'EntitySet', entity: b.entity || 'Pawn',
+      groupKey: b.k,
+      note: '一组，必须先归约 —— 想让每个' + b.n + '各判一次，把主体绑定改成「' + b.n + '」'
+    });
+  }
+  const allMaps = ROOTS.find(r => r.id === 'AllMaps');
+  if (allMaps) out.push(allMaps);
+  return out;
+}
 
 /* caps = requires：宿主缺这一位，这条就不出现在列表里（并在下面说明缺什么） */
 const PROPS = {
@@ -235,6 +255,9 @@ const PROPS = {
     {k:'map.colonyAnimalCount',n:'动物数',  kind:'Number', dec:0, caps:CAP.Map},
     {k:'map.pawnCount',    n:'总人数',      kind:'Number', dec:0, caps:CAP.Map},
     {k:'map.wealth',       n:'地图财富',    kind:'Number', dec:0, caps:CAP.Map},
+    {k:'map.hour',         n:'当地时间',    kind:'Number', unit:'点', dec:0, min:0, max:23, caps:CAP.Map},
+    {k:'map.isDay',        n:'是白天',      kind:'Bool', caps:CAP.Map,
+     note:'按当地时间算（6:00–18:00），与天气和日蚀无关；"有多亮"用天空亮度'},
   ],
   /* **注意这里没有「是囚犯 / 是机械族」这类属性，那是刻意的。**
      身份完全由主体绑定决定：绑成"囚犯"，那一轮里每个人的身份就都是囚犯。
@@ -255,6 +278,8 @@ const PROPS = {
     {k:'pawn.shelterCell',  n:'避难格',     kind:'Entity', entity:'Cell', caps:CAP.Pawn},
     {k:'pawn.isDowned',     n:'倒地',       kind:'Bool', caps:CAP.Pawn},
     {k:'pawn.isDrafted',    n:'被征召',     kind:'Bool', caps:CAP.CanDraft},
+    {k:'pawn.outdoor',      n:'在露天',     kind:'Bool', caps:CAP.Pawn,
+     note:'只答"有没有屋顶"，不答"现在亮不亮"——后者是天空亮度'},
   ],
   Room: [
     {k:'room.temperature', n:'温度',   kind:'Number', unit:'℃', dec:1, caps:CAP.Room},
@@ -293,6 +318,10 @@ const VERBS = [
   {k:'前往',   cat:'operate', subj:'Pawn', svk:null, arg:'Entity', argEntity:'Cell'},
   {k:'脱下',   cat:'operate', subj:'Pawn', svk:null, arg:'Entity', argEntity:'Thing',
    tier:'开发者级', caps:CAP.Apparel},
+  /* 充电：直接推电量。数值宾语的显示单位**由谓语自己声明**
+     （操作的主语是执行者，路径上读不到单位，不给的话输入框是裸数字：输入 1 = 100%）。 */
+  {k:'充电',   cat:'operate', subj:'Pawn', svk:null, arg:'Number',
+   tier:'开发者级', caps:CAP.NeedEnergy, argPct:true},
 
   /* 地图级：**直接改世界状态**。
      地图原来只有一个「写日志」——玩家点开地图的谓语列表，看到的是一行。
@@ -412,7 +441,7 @@ function findProp(entity, key){
 
 /** 走到第 n 步时手上是什么。返回 {kind, entity, lastProp} */
 function pathType(path, upto, insideFilter){
-  const rootDef = ROOTS.find(r => r.id === path.root);
+  const rootDef = rootList().find(r => r.id === path.root);
   let kind = 'Entity', entity = 'Any', lastProp = null;
 
   if (!rootDef) return {kind:'None', entity:'Any', lastProp:null};
@@ -595,7 +624,7 @@ function pathText(path){
     让整句话从"本主体.饱食度"变成"小明.饱食度"。 */
 function rootText(rootId){
   if (rootId === 'Subject') return subjectText();
-  return (ROOTS.find(r => r.id === rootId)||{}).text || rootId;
+  return (rootList().find(r => r.id === rootId)||{}).text || rootId;
 }
 
 function propName(key){
@@ -754,8 +783,7 @@ function inspectorSubject(el, c){
 
   h3(el, '根实体');
   const roots = div(el, 'opt-list');
-  for (const r of ROOTS){
-    if (r.onlyInFilter) continue;
+  for (const r of rootList()){
     const btn = opt(roots, rootText(r.id), ENTITY[r.entity], '', p.root === r.id);
     btn.onclick = () => { p.root = r.id; p.steps = []; render(); };
     if (r.note){
@@ -823,6 +851,22 @@ function inspectorSubject(el, c){
       }
     } else {
       why.push('实体类型 <b>' + ENTITY[t.entity] + '</b> 身上没有登记任何属性');
+    }
+
+    // **这里是最容易走错的一步，所以当场把"一群"和"主体绑定"的区别说清。**
+    // 玩家的直觉是「全部机械族.电量 小于 50%」= 每个机械族的电量都小于 50%，
+    // 但那句话在一组东西上根本读不出属性（上面就没有属性列表），
+    // 而想要"每个各判一次"是**主体绑定**的事——那个入口不叫这个名字，他找不到。
+    const gk = groupRootKey(p.root);
+    if (gk){
+      const b = BINDINGS.find(x => x.k === gk);
+      if (b){
+        why.push('「<b>全部' + b.n + '</b>」是一整组东西：它只能 <b>.数量</b> 或 <b>.第一个</b>，'
+               + '读不了属性——"这一组东西的电量"本来就不是一个值。'
+               + '想让<b>每个' + b.n + '各判一次自己的电量 / 自己所在的位置</b>，'
+               + '请把顶上的<b>主体绑定</b>改成「' + b.n + '」：'
+               + '那样整条规则会为每个成员各跑一遍，每个人只看自己的数。');
+      }
     }
 
     /* **被挡掉的那些也要说出来。**
@@ -1004,7 +1048,10 @@ function inspectorObject(el, c){
 
 function objectEditor(el, c, v, unitProp){
   if (v.arg === 'Number'){
-    const pct = unitProp && unitProp.pct;
+    // 单位一般来自主语路径最后那个属性。**操作的主语是执行者，路径上什么都没有**，
+    // 所以谓语可以自己声明一个（源码里是 RuleVerbInfo.argDisplay）。
+    // 不给这一步的话，「充电」的输入框就是个裸数字——输入 1 会被当成 100%。
+    const pct = (unitProp && unitProp.pct) || (!unitProp && v.argPct);
     const raw = c.obj.value === undefined ? 0 : c.obj.value;
     const shown = pct ? raw*100 : raw;
     const box = document.createElement('div');
@@ -1030,7 +1077,7 @@ function objectEditor(el, c, v, unitProp){
       const b = opt(list, label, null, '');
       b.onclick = () => { c.obj.value = val; render(); };
     }
-    if (!unitProp) renderWhy(el, ['语义单位是从<b>主语路径最后读到的属性</b>来的；现在主语没读属性，所以这里是裸数值'], false);
+    if (!unitProp && !v.argPct) renderWhy(el, ['语义单位是从<b>主语路径最后读到的属性</b>来的；现在主语没读属性，所以这里是裸数值'], false);
     return;
   }
 
@@ -1067,8 +1114,9 @@ function objectEditor(el, c, v, unitProp){
       h3(el, '能产出「' + ENTITY[v.argEntity] + '」的走法');
       const ways = div(el, 'opt-list');
       let shown = 0;
-      for (const r of ROOTS){
-        if (r.onlyInFilter) continue;
+      for (const r of rootList()){
+        // **集合根进不了"走法"列表**：一组东西读不了属性，得先归约。
+        if (r.kind === 'EntitySet') continue;
         const hostEntity = r.id === 'Subject' ? (state.binding ? 'Pawn' : 'Any') : r.entity;
         if (hostEntity === 'Any' || hostEntity === 'ELEMENT') continue;
         for (const pr of (PROPS[hostEntity] || [])){
@@ -1083,8 +1131,7 @@ function objectEditor(el, c, v, unitProp){
 
       h3(el, '或者自己拼：选一个根');
       const manual = div(el, 'opt-list');
-      for (const r of ROOTS){
-        if (r.onlyInFilter) continue;
+      for (const r of rootList()){
         const b = opt(manual, r.text, ENTITY[r.entity], '');
         b.onclick = () => { c.obj.path = P(r.id, []); render(); };
       }
@@ -1095,15 +1142,14 @@ function objectEditor(el, c, v, unitProp){
 
     h3(el, '目标实体的路径（要产出「' + ENTITY[v.argEntity] + '」）');
     const roots = div(el, 'opt-list');
-    for (const r of ROOTS){
-      if (r.onlyInFilter) continue;
+    for (const r of rootList()){
       const b = opt(roots, r.text, ENTITY[r.entity], '', p.root === r.id);
       b.onclick = () => { p.root = r.id; p.steps = []; render(); };
     }
 
     const chain = div(el, 'chain');
     const rs = document.createElement('span');
-    rs.className = 'seg root'; rs.textContent = (ROOTS.find(r=>r.id===p.root)||{}).text;
+    rs.className = 'seg root'; rs.textContent = rootText(p.root);
     rs.onclick = () => { p.steps = []; render(); };
     chain.appendChild(rs);
     p.steps.forEach((st,si) => {
@@ -1301,6 +1347,27 @@ const PRESETS = {
     clauses:[
       {kind:'detect', path:P('Map',[]), verb:'处于', obj:{value:'Eclipse（日蚀）'}},
       {kind:'operate', path:P('Map',[]), verb:'发信件', obj:{value:'NegativeEvent（负面事件）'}},
+    ]
+  }),
+
+  /* ── 用户要的那个例子：太阳能充电 ──
+     **关键是第一行的主体绑定，不是「全部机械族」这个根。**
+     写成 `全部机械族.电量 小于 50%` 表达不了"每个各判一次"——见根检查器里的诊断。 */
+  '太阳能充电': () => ({
+    binding:'colonyMechs',
+    clauses:[
+      {kind:'detect', path:P('Subject',[prop('pawn.energy')]), verb:'小于', obj:{value:0.5}},
+      {kind:'detect', path:P('Subject',[prop('pawn.outdoor')]), verb:'为真', obj:null},
+      {kind:'detect', path:P('Map',[prop('map.isDay')]), verb:'为真', obj:null},
+      {kind:'operate', path:P('Subject',[]), verb:'充电', obj:{value:0.01}},
+    ]
+  }),
+  '写错的写法': () => ({
+    binding:null,
+    clauses:[
+      // 故意用「全部机械族」当根：属性列表是空的，诊断会告诉你为什么、
+      // 以及该点哪里改。
+      {kind:'detect', path:P(groupRootId('colonyMechs'),[]), verb:null, obj:null},
     ]
   }),
 };
