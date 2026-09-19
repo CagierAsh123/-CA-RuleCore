@@ -8,7 +8,13 @@
     <OutputPath>..\..\1.6\Assemblies\</OutputPath>
     <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <Deterministic>false</Deterministic>
+    <!--
+      确定性构建。**不是为了安全，是为了仓库干净**：
+      `Deterministic=false` 时每次编译产出的二进制都不一样（嵌了时间戳/随机 GUID），
+      于是"源码一个字没改"也会在 git 里留下一个 DLL 变更，历史里全是噪声。
+      打开之后同样的源码 → 同样的字节，DLL 只在该变的时候变。
+    -->
+    <Deterministic>true</Deterministic>
   </PropertyGroup>
 
   <PropertyGroup>
