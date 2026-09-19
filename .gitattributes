@@ -1,0 +1,16 @@
+# 统一换行：仓库里一律存 LF，检出时按平台决定。
+# 不加这个，Windows 上每次提交都可能因为 CRLF/LF 转换产生整文件 diff。
+* text=auto
+
+# 二进制：**必须显式声明**，否则 git 会试图按文本处理它们
+# （行尾转换会把二进制改坏，合并冲突时也没法处理）。
+*.dll  binary
+*.pdb  binary
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ogg  binary
+*.wav  binary
+*.xcf  binary
+*.psd  binary

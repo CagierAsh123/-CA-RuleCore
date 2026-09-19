@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <!--
+    指令核心主按钮。挂在屏幕下方主按钮栏，与「建筑」(order 1) 同级、紧贴其后。
+    label / description 由 Languages/*/DefInjected/MainButtonDef/RuleCore_Rules.xml 提供。
+  -->
+  <MainButtonDef>
+    <defName>RuleCore_Rules</defName>
+    <label>rules</label>
+    <description>Write and manage automation rules, and inspect the engine's debug timeline.</description>
+    <tabWindowClass>RuleCore.MainTabWindow_RuleCore</tabWindowClass>
+    <order>5</order>
+    <defaultHotKey>F10</defaultHotKey>
+    <validWithoutMap>true</validWithoutMap>
+    <closesWorldView>true</closesWorldView>
+  </MainButtonDef>
+</Defs>

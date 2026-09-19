@@ -1,0 +1,22 @@
+# 构建产物
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.idea/
+
+# 调试符号：能重新编译出来，放进来只是让仓库变大
+*.pdb
+
+# 第三方二进制：本模组不依赖 Harmony，不需要带上它
+# （带上还会让 RimWorld 多加载一份 0Harmony，与 Harmony mod 重复）
+1.6/Assemblies/0Harmony.dll
+
+# 运行时落盘的调试日志，不进版本库
+log/
+
+# 本地工具配置
+.claude/settings.local.json
+.codex/hooks.json
+.scratch/

@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>RuleCore 编辑器 · 可操作原型（照源码）</title>
+<style>
+  :root{
+    --bg:#101218; --panel:#171a23; --panel2:#1e222d; --border:#2a2f3d;
+    --text:#e3e6ef; --muted:#8a92a6;
+    --detect:#4fc3f7; --operate:#ffb74d; --entity:#b388ff;
+    --reduce:#66bb6a; --object:#d4b483; --danger:#ef5350; --ok:#a8d8b9;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--text);
+    font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;font-size:14px}
+  .app{display:grid;grid-template-rows:auto auto 1fr;height:100vh}
+
+  header{display:flex;align-items:center;gap:14px;padding:10px 18px;
+    border-bottom:1px solid var(--border);background:var(--panel)}
+  header h1{margin:0;font-size:15px;font-weight:600}
+  header .sub{color:var(--muted);font-size:12px}
+  header .spacer{flex:1}
+
+  .presets{display:flex;gap:6px;flex-wrap:wrap}
+  .preset{padding:4px 10px;border-radius:6px;font-size:12px;cursor:pointer;
+    background:var(--panel2);border:1px solid var(--border);color:var(--text)}
+  .preset:hover{border-color:var(--detect);color:var(--detect)}
+
+  .identity{display:flex;align-items:center;gap:10px;padding:8px 18px;
+    border-bottom:1px solid var(--border);background:var(--bg)}
+  .identity label{color:var(--muted);font-size:12px}
+  .identity input[type=text]{width:160px;padding:5px 9px;border-radius:6px;
+    background:var(--panel2);border:1px solid var(--border);color:var(--text);outline:none}
+  .identity input[type=number]{width:68px;padding:5px 9px;border-radius:6px;
+    background:var(--panel2);border:1px solid var(--border);color:var(--text);outline:none}
+  .bindchip{padding:5px 12px;border-radius:6px;cursor:pointer;font-family:ui-monospace,monospace;
+    font-size:13px;color:var(--entity);border:1px solid transparent}
+  .bindchip:hover{background:rgba(255,255,255,.06)}
+  .bindchip.sel{border-color:var(--entity);background:rgba(179,136,255,.18)}
+  .bindchip.warn{color:var(--danger)}
+
+  .main{display:grid;grid-template-columns:1fr 400px;overflow:hidden}
+  .left{display:flex;flex-direction:column;overflow:hidden}
+  .sentence-wrap{flex:1;overflow:auto;padding:18px}
+  .gen-panel{border-top:1px solid var(--border);background:#0c0e13;padding:10px 18px;
+    max-height:26%;overflow:auto}
+  .gen-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+  #generated{margin:0;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;
+    line-height:1.7;color:var(--ok);white-space:pre-wrap}
+
+  .line{display:flex;gap:8px;margin-bottom:8px;align-items:flex-start}
+  .kw{color:var(--muted);font-size:14px;min-width:20px;text-align:center;
+    font-family:ui-monospace,monospace;padding-top:6px}
+  .kw.comma{color:var(--operate);font-weight:700}
+  .clause{display:flex;align-items:center;gap:3px;padding:3px 6px 3px 9px;border-radius:8px;
+    border:1px solid var(--border);background:var(--panel2);flex-wrap:wrap}
+  .clause.detect{border-left:3px solid var(--detect)}
+  .clause.operate{border-left:3px solid var(--operate)}
+  .clause:hover{border-color:#3a4256}
+  .slot{background:transparent;border:1px solid transparent;border-radius:5px;padding:4px 8px;
+    font-size:13px;cursor:pointer;font-family:ui-monospace,Menlo,Consolas,monospace;white-space:nowrap}
+  .slot:hover{background:rgba(255,255,255,.07)}
+  .slot.sel{border-color:var(--entity);background:rgba(179,136,255,.18)}
+  .slot.empty{color:var(--muted);font-style:italic;font-family:inherit}
+  .s-subject{color:var(--entity)}
+  .s-predicate{font-weight:600}
+  .s-predicate.d{color:var(--detect)} .s-predicate.o{color:var(--operate)}
+  .s-object{color:var(--object)}
+  .del{background:transparent;border:none;color:#4a5165;cursor:pointer;font-size:15px;
+    line-height:1;padding:4px 6px;border-radius:4px}
+  .del:hover{color:var(--danger);background:rgba(239,83,80,.12)}
+  .add-row{display:flex;gap:8px;margin-top:14px}
+  .add-btn{padding:6px 14px;border-radius:7px;cursor:pointer;font-size:13px;
+    background:var(--panel2);border:1px solid var(--border);color:var(--text)}
+  .add-btn:hover{border-color:var(--detect);color:var(--detect)}
+  .add-btn.op:hover{border-color:var(--operate);color:var(--operate)}
+  .hint{color:var(--muted);font-size:13px;padding:16px 0}
+
+  .inspector{border-left:1px solid var(--border);background:var(--panel);overflow:auto;padding:14px 16px}
+  .crumb{font-size:11px;color:var(--muted);letter-spacing:.6px;margin-bottom:12px;
+    padding-bottom:9px;border-bottom:1px solid var(--border)}
+  .inspector h3{font-size:11px;color:var(--muted);font-weight:600;margin:16px 0 7px;
+    text-transform:uppercase;letter-spacing:.5px}
+  .opt-list{display:flex;flex-direction:column;gap:3px}
+  .opt{display:flex;align-items:center;gap:6px;text-align:left;padding:6px 10px;border-radius:6px;
+    cursor:pointer;background:var(--panel2);border:1px solid var(--border);color:var(--text);
+    font-size:13px;font-family:ui-monospace,Menlo,Consolas,monospace}
+  .opt:hover{border-color:#46506a;background:#232836}
+  .opt.active{border-color:var(--entity);background:rgba(179,136,255,.15)}
+  .opt.det:hover{border-color:var(--detect)} .opt.ope:hover{border-color:var(--operate)}
+  .opt.red{color:var(--reduce)}
+  .opt.danger{color:var(--danger);border-color:rgba(239,83,80,.4)}
+  .opt .grow{flex:1}
+  .tag{font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,.08);
+    color:var(--muted);font-family:-apple-system,sans-serif;white-space:nowrap}
+  .tag.tier{background:rgba(255,183,77,.15);color:var(--operate)}
+  .tag.edge{background:rgba(79,195,247,.15);color:var(--detect)}
+  .chain{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:8px}
+  .seg{font-family:ui-monospace,monospace;font-size:13px;padding:4px 9px;border-radius:5px;
+    cursor:pointer;border:1px solid transparent}
+  .seg:hover{background:rgba(255,255,255,.08)}
+  .seg.root{color:var(--entity);background:rgba(179,136,255,.13)}
+  .seg.prop{color:#9ecbff;background:rgba(158,203,255,.1)}
+  .seg.filter{color:#ffd479;background:rgba(255,212,121,.1)}
+  .seg.reduce{color:var(--reduce);background:rgba(102,187,106,.13)}
+  .badge{display:inline-block;font-size:11px;padding:3px 10px;border-radius:10px;
+    background:rgba(79,195,247,.12);color:var(--detect);margin:4px 0 8px}
+  .obj-input{width:100%;padding:7px 10px;border-radius:6px;font-size:13px;background:var(--panel2);
+    border:1px solid var(--border);color:var(--text);font-family:ui-monospace,monospace;outline:none}
+  .obj-input:focus{border-color:var(--entity)}
+  .unit{color:var(--muted);margin-left:6px;font-size:12px}
+  .why{margin-top:14px;padding:9px 11px;border-radius:6px;background:rgba(255,255,255,.03);
+    border:1px solid var(--border)}
+  .why h4{margin:0 0 6px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .why ul{margin:0;padding-left:16px}
+  .why li{font-size:12px;color:var(--muted);margin-bottom:3px;line-height:1.5}
+  .why li b{color:var(--text);font-weight:600}
+  /* 「这些用不上」——用暖色描边，和"类型不对"的红色诊断区分开：
+     它不是错误，是"这个词在这具身体上不存在"。 */
+  .blocked{margin-top:14px;padding:9px 11px;border-radius:6px;background:rgba(255,212,121,.05);
+    border:1px solid rgba(255,212,121,.25)}
+  .blocked h4{margin:0 0 6px;font-size:11px;color:#ffd479;letter-spacing:.5px}
+  .blocked ul{margin:0;padding-left:16px}
+  .blocked li{font-size:12px;color:var(--muted);margin-bottom:3px;line-height:1.5}
+  .blocked li b{color:var(--text);font-weight:600}
+  .ok{color:var(--reduce) !important}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>RuleCore 编辑器</h1>
+    <span class="sub">三元组 · 检测 → 操作 · 照源码的类型过滤</span>
+    <span class="spacer"></span>
+    <div class="presets" id="presets"></div>
+  </header>
+
+  <div class="identity">
+    <label>名称</label>
+    <input type="text" id="rname" value="新建规则">
+    <label>冷却</label>
+    <input type="number" id="rcool" value="5000" min="0"><span class="unit">t</span>
+    <label>主体</label>
+    <span class="bindchip" id="bindchip"></span>
+    <span class="spacer"></span>
+    <label><input type="checkbox" id="renabled" checked> 启用</label>
+  </div>
+
+  <div class="main">
+    <div class="left">
+      <div class="sentence-wrap">
+        <div id="sentence"></div>
+        <div class="add-row">
+          <button class="add-btn" onclick="addClause('detect')">+ 检测</button>
+          <button class="add-btn op" onclick="addClause('operate')">+ 操作</button>
+        </div>
+      </div>
+      <div class="gen-panel">
+        <div class="gen-label">生成文本</div>
+        <pre id="generated"></pre>
+      </div>
+    </div>
+    <div class="inspector" id="inspector"></div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════ 词表（照 RuleVocabularyCatalog.cs 抄） ═══════════════ */
+
+const ENTITY = {
+  Any:'任意', Map:'地图', Pawn:'小人', Thing:'物品', Room:'房间', Cell:'格子',
+};
+
+/* ═══ 能力位（照 Core/RuleSemantics.cs 的 RuleCapability 抄） ═══
+   属性与谓词声明"我需要宿主具备什么"（requires），编辑器拿**当前主体的实际能力位**
+   去比。这就是"机械族身上不列饱食度、列出电量"的全部机制——
+   它不是一句 if，而是每一行自己的声明被一次表查询读出来。 */
+const CAP = {
+  Pawn:1, Map:2, Thing:4, Room:8, Cell:16,
+  Humanlike:32, Mechanoid:64, Animal:128, Biological:256,
+  NeedMood:512, NeedFood:1024, NeedRest:2048, NeedEnergy:4096,
+  NeedJoy:8192, NeedComfort:16384, NeedBeauty:32768,
+  Apparel:65536, Equipment:131072, Inventory:262144, Bed:524288,
+  Colonist:1048576, Prisoner:2097152, Slave:4194304, Guest:8388608,
+  Hostile:16777216, CanDraft:33554432, Skills:67108864, Ideo:134217728,
+  Age:268435456, All:-1,
+};
+const CAPNAME = {
+  Pawn:'是小人', Map:'是地图', Thing:'是物品', Room:'是房间', Cell:'是格子',
+  Humanlike:'人形', Mechanoid:'机械族', Animal:'动物', Biological:'血肉之躯',
+  NeedMood:'心情需求', NeedFood:'饱食需求', NeedRest:'休息需求',
+  NeedEnergy:'电量需求', NeedJoy:'娱乐需求', NeedComfort:'舒适需求',
+  NeedBeauty:'美观需求', Apparel:'能穿衣服', Equipment:'能拿东西',
+  Inventory:'有随身物品', Bed:'能拥有床位', Colonist:'殖民地成员',
+  Prisoner:'囚犯', Slave:'奴隶', Guest:'访客', Hostile:'敌对',
+  CanDraft:'能被征召', Skills:'有技能', Ideo:'有理念', Age:'有年龄',
+};
+function capName(c){
+  if (!c) return '—';
+  const out = [];
+  for (const k in CAPNAME) if (c & CAP[k]) out.push(CAPNAME[k]);
+  return out.length ? out.join('+') : String(c);
+}
+
+const HUMAN  = CAP.Pawn|CAP.Humanlike|CAP.Biological|CAP.NeedMood|CAP.NeedFood
+             | CAP.NeedRest|CAP.NeedJoy|CAP.NeedComfort|CAP.NeedBeauty|CAP.Apparel
+             | CAP.Equipment|CAP.Inventory|CAP.Bed|CAP.CanDraft|CAP.Skills
+             | CAP.Ideo|CAP.Age;
+const MECH   = CAP.Pawn|CAP.Mechanoid|CAP.NeedEnergy|CAP.Equipment|CAP.Inventory
+             | CAP.Bed|CAP.CanDraft|CAP.Age;
+const ANIMAL = CAP.Pawn|CAP.Animal|CAP.Biological|CAP.NeedFood|CAP.NeedRest
+             | CAP.NeedJoy|CAP.NeedComfort|CAP.NeedBeauty|CAP.Inventory
+             | CAP.Bed|CAP.Age;
+
+const ROOTS = [
+  {id:'Subject',    text:'本主体',       kind:'Entity',    entity:'Pawn', note:'绑定了主体才有意义；指名绑定时这里显示的是那个人的名字'},
+  {id:'Map',        text:'本图',         kind:'Entity',    entity:'Map'},
+  {id:'Colonists',  text:'全部自由殖民者', kind:'EntitySet', entity:'Pawn', note:'一组，必须先归约'},
+  {id:'AllMaps',    text:'全部地图',      kind:'EntitySet', entity:'Map',  note:'一组，必须先归约'},
+  {id:'Element',    text:'当前元素',      kind:'Entity',    entity:'ELEMENT', onlyInFilter:true},
+];
+
+/* caps = requires：宿主缺这一位，这条就不出现在列表里（并在下面说明缺什么） */
+const PROPS = {
+  Map: [
+    {k:'map.outdoorTemp',  n:'室外温度',    kind:'Number', unit:'℃', dec:1, min:-200, max:200, caps:CAP.Map},
+    {k:'map.weather',      n:'天气',        kind:'Enum', dom:'WeatherDef', caps:CAP.Map},
+    {k:'map.rainRate',     n:'降雨强度',    kind:'Number', pct:true, caps:CAP.Map},
+    {k:'map.snowRate',     n:'降雪强度',    kind:'Number', pct:true, caps:CAP.Map},
+    {k:'map.skyGlow',      n:'天空亮度',    kind:'Number', min:0, max:1, dec:2, caps:CAP.Map},
+    {k:'map.colonistCount',n:'自由殖民者数', kind:'Number', dec:0, caps:CAP.Map},
+    {k:'map.prisonerCount',n:'囚犯数',      kind:'Number', dec:0, caps:CAP.Map},
+    {k:'map.slaveCount',   n:'奴隶数',      kind:'Number', dec:0, caps:CAP.Map},
+    {k:'map.colonyMechCount',n:'机械族数',  kind:'Number', dec:0, caps:CAP.Map},
+    {k:'map.colonyAnimalCount',n:'动物数',  kind:'Number', dec:0, caps:CAP.Map},
+    {k:'map.pawnCount',    n:'总人数',      kind:'Number', dec:0, caps:CAP.Map},
+    {k:'map.wealth',       n:'地图财富',    kind:'Number', dec:0, caps:CAP.Map},
+  ],
+  /* **注意这里没有「是囚犯 / 是机械族」这类属性，那是刻意的。**
+     身份完全由主体绑定决定：绑成"囚犯"，那一轮里每个人的身份就都是囚犯。
+     写出来是恒真句，只占列表位置。要"囚犯做某事"就把主体绑成囚犯。 */
+  Pawn: [
+    {k:'pawn.health',       n:'血量',       kind:'Number', pct:true, caps:CAP.Pawn},
+    {k:'pawn.mood',         n:'心情',       kind:'Number', pct:true, caps:CAP.NeedMood},
+    {k:'pawn.food',         n:'饱食度',     kind:'Number', pct:true, caps:CAP.NeedFood},
+    {k:'pawn.rest',         n:'精力',       kind:'Number', pct:true, caps:CAP.NeedRest},
+    {k:'pawn.energy',       n:'电量',       kind:'Number', pct:true, caps:CAP.NeedEnergy,
+     note:'机械族的"饱食度"——它身上只有这一条，没有饱食度'},
+    {k:'pawn.age',          n:'年龄',       kind:'Number', unit:'岁', dec:0, caps:CAP.Age},
+    {k:'pawn.position',     n:'位置',       kind:'Coord', caps:CAP.Pawn},
+    {k:'pawn.locationTemp', n:'所在位置温度', kind:'Number', unit:'℃', dec:1, caps:CAP.Pawn},
+    {k:'pawn.room',         n:'所在房间',   kind:'Entity', entity:'Room', caps:CAP.Pawn, note:'户外读不到'},
+    {k:'pawn.apparel',      n:'着装',       kind:'EntitySet', entity:'Thing', caps:CAP.Apparel, note:'一组'},
+    {k:'pawn.equipment',    n:'手持武器',   kind:'Entity', entity:'Thing', caps:CAP.Equipment, note:'空手读不到'},
+    {k:'pawn.shelterCell',  n:'避难格',     kind:'Entity', entity:'Cell', caps:CAP.Pawn},
+    {k:'pawn.isDowned',     n:'倒地',       kind:'Bool', caps:CAP.Pawn},
+    {k:'pawn.isDrafted',    n:'被征召',     kind:'Bool', caps:CAP.CanDraft},
+  ],
+  Room: [
+    {k:'room.temperature', n:'温度',   kind:'Number', unit:'℃', dec:1, caps:CAP.Room},
+    {k:'room.cellCount',   n:'大小',   kind:'Number', dec:0, caps:CAP.Room},
+  ],
+  Thing: [
+    {k:'thing.durability', n:'耐久',     kind:'Number', pct:true, caps:CAP.Thing},
+    {k:'thing.hitPoints',  n:'当前耐久值', kind:'Number', dec:0, caps:CAP.Thing},
+    {k:'thing.defName',    n:'物品类型',   kind:'Enum', dom:'ThingDef', caps:CAP.Thing},
+  ],
+};
+
+const REDUCES = [
+  {n:'数量', from:'EntitySet', to:'Number'},
+  {n:'第一个', from:'EntitySet', to:'Entity'},
+  {n:'最近', from:'EntitySet', to:'Entity'},
+];
+
+/* 谓语。svk = 主语必须是什么值类型（null = 不限）；caps = 宿主必须具备什么；
+   集合一律被拒（见 verbsFor） */
+const VERBS = [
+  {k:'大于',   cat:'detect', subj:'Any', svk:'Number', arg:'Number'},
+  {k:'小于',   cat:'detect', subj:'Any', svk:'Number', arg:'Number'},
+  {k:'不小于', cat:'detect', subj:'Any', svk:'Number', arg:'Number'},
+  {k:'不大于', cat:'detect', subj:'Any', svk:'Number', arg:'Number'},
+  {k:'等于',   cat:'detect', subj:'Any', svk:'Number', arg:'Number'},
+  {k:'不等于', cat:'detect', subj:'Any', svk:'Number', arg:'Number'},
+  {k:'是',     cat:'detect', subj:'Any', svk:'Enum',   arg:'Enum'},
+  {k:'为真',   cat:'detect', subj:'Any', svk:'Bool',   arg:'None'},
+  {k:'恒真',   cat:'detect', subj:'Any', svk:null,     arg:'None'},
+  {k:'空闲',   cat:'detect', subj:'Pawn', svk:null, arg:'None', quiet:true},
+  {k:'能动',   cat:'detect', subj:'Pawn', svk:null, arg:'None', quiet:true},
+  {k:'收到信件',cat:'detect', subj:'Map', svk:null, arg:'Enum', dom:'LetterDef', edge:true},
+
+  {k:'写日志', cat:'operate', subj:'Any',  svk:null, arg:'Text'},
+  {k:'前往',   cat:'operate', subj:'Pawn', svk:null, arg:'Entity', argEntity:'Cell'},
+  {k:'脱下',   cat:'operate', subj:'Pawn', svk:null, arg:'Entity', argEntity:'Thing',
+   tier:'开发者级', caps:CAP.Apparel},
+
+  /* 地图级：**直接改世界状态**。
+     地图原来只有一个「写日志」——玩家点开地图的谓语列表，看到的是一行。
+     这一组补的就是那个洞：地图是唯一一个不通过小人就能改变世界的地方。 */
+  {k:'变成',     cat:'operate', subj:'Map', svk:null, arg:'Enum', dom:'WeatherDef', tier:'开发者级'},
+  {k:'触发事件', cat:'operate', subj:'Map', svk:null, arg:'Enum', dom:'IncidentDef', tier:'开发者级'},
+  {k:'发信件',   cat:'operate', subj:'Map', svk:null, arg:'Enum', dom:'LetterDef'},
+  {k:'处于',     cat:'detect',  subj:'Map', svk:null, arg:'Enum', dom:'GameConditionDef'},
+];
+
+const DEFS = {
+  WeatherDef:  ['Clear（晴朗）','Rain（下雨）','SnowHard（大雪）','Fog（雾）','Thunderstorm（雷暴）'],
+  LetterDef:   ['ThreatBig（大威胁）','ThreatSmall（小威胁）','NegativeEvent（负面事件）','PositiveEvent（正面事件）'],
+  ThingDef:    ['Apparel_Hat（帽子）','Apparel_Parka（大衣）','Apparel_FlakJacket（防弹衣）','MealSimple（简单食物）'],
+  PawnCategory:['colonist（殖民者）','slave（奴隶）','prisoner（囚犯）','guest（访客）',
+                'hostile（敌人）','mechanoid（机械族）','animal（动物）','entity（异象实体）',
+                'subhuman（亚人）','wildman（野人）','other（其他）'],
+  IncidentDef: ['RaidEnemy（袭击）','SolarFlare（太阳耀斑）','ToxicFallout（毒雾）',
+                'Eclipse（日蚀）','WandererJoin（流浪者加入）','ColdSnap（寒潮）',
+                'HeatWave（热浪）','Flashstorm（雷暴）','Aurora（极光）'],
+  GameConditionDef:['SolarFlare（太阳耀斑）','ToxicFallout（毒雾）','Eclipse（日蚀）',
+                'ColdSnap（寒潮）','HeatWave（热浪）','PsychicDrone（心灵低语）'],
+};
+
+/* 主体绑定。**scope 是这个版本的要害**：
+   group  = 对每个成员各跑一遍（冷却按人分开算），n = 这一轮收出几个
+   single = 整条规则只跑一遍，必须再点名是哪一位
+   caps   = 该主体的实际能力位，编辑器拿它决定属性/谓语列什么
+            （真实实现里是从绑出来的成员身上取并集；这里写死成代表值。）
+
+   **绑定就是身份**：绑成囚犯，那一轮里每个人的身份就都是囚犯。
+   所以规则语言里没有「是囚犯」这种问句——锁定了就不需要判断。 */
+const BINDINGS = [
+  {k:null, n:'不绑定主体', scope:'none', caps:CAP.All, note:'整图评估一次；读「本主体」的检测永远不成立'},
+
+  {k:'namedPawn', n:'点名一个人', scope:'single', entity:'Pawn',
+   note:'规则只对他跑一遍，句子里直接写他的名字'},
+
+  {k:'freeColonists', n:'自由殖民者', scope:'group', members:5, entity:'Pawn',
+   caps:HUMAN|CAP.Colonist|CAP.CanDraft, note:'每人各跑一遍，冷却按人分开算'},
+  {k:'prisoners', n:'囚犯', scope:'group', members:3, entity:'Pawn',
+   caps:HUMAN|CAP.Prisoner, note:'每个殖民地囚犯各跑一遍'},
+  {k:'slaves', n:'奴隶', scope:'group', members:0, entity:'Pawn',
+   caps:HUMAN|CAP.Slave, note:'每个殖民地奴隶各跑一遍'},
+  {k:'colonyMechs', n:'殖民机械族', scope:'group', members:2, entity:'Pawn',
+   caps:MECH, note:'每个殖民机械族各跑一遍。属性列表里没有饱食度，有电量'},
+  {k:'colonyAnimals', n:'殖民地动物', scope:'group', members:7, entity:'Pawn',
+   caps:ANIMAL, note:'每只殖民地动物各跑一遍。没有理念，不能被征召'},
+  {k:'guests', n:'访客', scope:'group', members:1, entity:'Pawn',
+   caps:HUMAN|CAP.Guest, note:'有人接待、既非囚犯也非奴隶'},
+];
+
+/* 点名能挑的人（真实实现里是当前地图上的人形与机械族） */
+const NAMED_PAWNS = [
+  {id:'Human12', n:'小明',   caps:HUMAN|CAP.Colonist, cat:'殖民者'},
+  {id:'Mech3',   n:'履带者7', caps:MECH,              cat:'机械族'},
+  {id:'Human88', n:'阿珍',   caps:HUMAN|CAP.Prisoner, cat:'囚犯'},
+  {id:'Animal7', n:'雪牛',   caps:ANIMAL,             cat:'动物'},
+];
+
+/* ═══════════════ 状态 ═══════════════ */
+// 子句：{kind:'detect'|'operate', path:{root, steps:[]}, verb, obj:{...}}
+let state = { clauses:[], binding:null, named:'Human12', sel:null };
+// sel: {ci, slot:'subject'|'predicate'|'object'|'binding'}
+
+/* ═══════════════ 主体：是谁、他有什么 ═══════════════ */
+
+function bindingDef(){ return BINDINGS.find(b => b.k === state.binding) || BINDINGS[0]; }
+
+/** 指名绑定选中的人（找不到时退回"什么都有可能"）。 */
+function namedPawn(){
+  if (bindingDef().scope !== 'single') return null;
+  return NAMED_PAWNS.find(p => p.id === state.named) || null;
+}
+
+/**
+ * 当前主体具备什么能力。
+ *
+ * **拿不到样本时返回 All** —— 宁可多给几个选项，也不要把有用的东西藏起来：
+ * 藏起来玩家会以为"词表里没有这个功能"，那是一个查不出答案的问题。
+ */
+function boundCaps(){
+  const b = bindingDef();
+  if (b.scope === 'none') return CAP.All;
+  if (b.scope === 'single'){
+    const p = namedPawn();
+    return p ? p.caps : CAP.All;
+  }
+  return b.caps;
+}
+
+/** 宿主是否具备要求的能力。need 为空 = 不挑；have 为 All = 不知道宿主是谁。 */
+function capMatches(have, need){ return !need || (have & need) === need; }
+
+/** 「本主体」显示成什么：指名就是那个人的名字，群体就是那个群体的名字。 */
+function subjectText(){
+  const b = bindingDef();
+  if (b.scope === 'none') return '本主体';
+  if (b.scope === 'single'){
+    const p = namedPawn();
+    return p ? p.n : '（还没选是哪一位）';
+  }
+  return '本主体';
+}
+
+function P(rootId, steps){ return { root: rootId, steps: steps||[] }; }
+const prop = k => ({t:'prop', k});
+const filt = () => ({t:'filter', leaf:{ path:P(null), verb:null, obj:null }});
+const red  = n => ({t:'reduce', n});
+
+/* ═══════════════ 取值与类型推导 ═══════════════ */
+
+function findProp(entity, key){
+  if (entity === 'ELEMENT') return null;
+  return (PROPS[entity]||[]).find(p => p.k === key) || null;
+}
+
+/** 走到第 n 步时手上是什么。返回 {kind, entity, lastProp} */
+function pathType(path, upto, insideFilter){
+  const rootDef = ROOTS.find(r => r.id === path.root);
+  let kind = 'Entity', entity = 'Any', lastProp = null;
+
+  if (!rootDef) return {kind:'None', entity:'Any', lastProp:null};
+
+  if (rootDef.id === 'Subject') entity = state.binding ? 'Pawn' : 'Any';
+  else if (rootDef.id === 'Element') entity = insideFilter ? insideFilter : 'Any';
+  else { kind = rootDef.kind; entity = rootDef.entity; }
+
+  const n = (upto === undefined) ? path.steps.length : Math.min(upto, path.steps.length);
+
+  for (let i=0;i<n;i++){
+    const st = path.steps[i];
+    if (st.t === 'prop'){
+      const p = findProp(entity, st.k);
+      if (!p) return {kind:'None', entity:'Any', lastProp:null};
+      kind = p.kind;
+      entity = (p.kind === 'Entity' || p.kind === 'EntitySet') ? p.entity : 'Any';
+      lastProp = p;
+    } else if (st.t === 'reduce'){
+      const r = REDUCES.find(x => x.n === st.n);
+      if (!r) return {kind:'None', entity:'Any', lastProp:null};
+      kind = r.to;
+      if (kind === 'Number') entity = 'Any';
+    }
+    // filter 不改类型
+  }
+  return {kind, entity, lastProp};
+}
+
+function entityMatches(expected, actual){
+  if (expected === 'Any') return true;
+  if (actual === 'Any') return false;
+  return expected === actual;
+}
+
+/**
+ * 某个类型身上可用的谓语。
+ * 关键：**集合不能被"只作用于单个实体"的谓语接住** —— 与源码同一条规则。
+ *
+ * have：宿主能力位。**只有根是「本主体」时才传真实值**——
+ * 路径可以从「本图」或「殖民者」出发，那时主体是谁跟这条路无关。
+ */
+function verbsFor(kind, entity, cat, have){
+  const out = [];
+  const caps = (have === undefined) ? CAP.All : have;
+  for (const v of VERBS){
+    if (v.cat !== cat) continue;
+    const why = rejectReason(v, kind, entity, caps);
+    if (why) out.push({v, why}); else out.push({v, ok:true});
+  }
+  return out;
+}
+
+function rejectReason(v, kind, entity, have){
+  if (!entityMatches(v.subj, entity))
+    return '要主语是<b>' + ENTITY[v.subj] + '</b>，现在是 ' + ENTITY[entity];
+  if (kind === 'EntitySet' && v.svk !== 'EntitySet')
+    return '手上是<b>一组东西</b>，谓语作用不到它上面 —— 先归约';
+  if (v.svk && v.svk !== kind)
+    return '要主语产出<b>' + valName(v.svk) + '</b>，现在是 ' + valName(kind);
+  if (!capMatches(have, v.caps))
+    return '当前主体<b>缺：' + capName(v.caps) + '</b>';
+  return null;
+}
+
+function valName(k){
+  return {Number:'数值', Bool:'布尔', Enum:'名字', Coord:'坐标',
+          Entity:'单个实体', EntitySet:'一组东西', Text:'文本', None:'（没有值）'}[k] || k;
+}
+
+/* ═══════════════ 渲染：句子 ═══════════════ */
+
+function render(){
+  recheckAllVerbs();
+  renderIdentity(); renderSentence(); renderInspector(); renderGenerated();
+}
+
+/**
+ * 每次重绘前把所有子句的谓语复查一遍。
+ *
+ * 放在这里而不是挂在每个改动点上：主语可以在**六七处**被改（换根、截断、
+ * 加属性、加筛选、加归约…），逐个挂钩一定会漏一个，而漏掉的表现是
+ * "子句看起来完整、其实永远不会成立"。一次全量复查只有几行、几微秒。
+ */
+function recheckAllVerbs(){
+  for (const c of state.clauses) recheckVerb(c);
+}
+
+function renderIdentity(){
+  const b = bindingDef();
+  const chip = document.getElementById('bindchip');
+  chip.textContent = b.scope === 'none' ? '不绑定主体 ⚠' : subjectText();
+  chip.className = 'bindchip' + (state.sel && state.sel.slot === 'binding' ? ' sel' : '')
+                 + (state.binding ? '' : ' warn');
+  chip.onclick = () => { state.sel = {slot:'binding'}; render(); };
+
+  document.getElementById('rname').oninput = e => { state.name = e.target.value; renderGenerated(); };
+  document.getElementById('rcool').oninput = e => { state.cool = e.target.value; };
+}
+
+function renderSentence(){
+  const el = document.getElementById('sentence');
+  el.innerHTML = '';
+  if (!state.clauses.length){
+    el.innerHTML = '<div class="hint">还没有子句，点下面的按钮开始。</div>';
+    return;
+  }
+  let seenOp = false;
+  state.clauses.forEach((c,i) => {
+    const line = document.createElement('div');
+    line.className = 'line';
+
+    const kw = document.createElement('span');
+    kw.className = 'kw';
+    if (i === 0){ kw.textContent = '当'; if (c.kind==='operate') seenOp = true; }
+    else if (c.kind === 'operate' && !seenOp){ kw.textContent = '，'; kw.classList.add('comma'); seenOp = true; }
+    else kw.textContent = '且';
+    line.appendChild(kw);
+
+    line.appendChild(clauseEl(c,i));
+    el.appendChild(line);
+  });
+}
+
+function clauseEl(c,i){
+  const box = document.createElement('div');
+  box.className = 'clause ' + c.kind;
+
+  box.appendChild(slotEl('subject', c, i));
+
+  const v = VERBS.find(x => x.k === c.verb);
+  const vEl = slotEl('predicate', c, i);
+  if (v) vEl.classList.add(c.kind === 'detect' ? 'd' : 'o');
+  box.appendChild(vEl);
+
+  if (!v || v.arg !== 'None') box.appendChild(slotEl('object', c, i));
+
+  const del = document.createElement('button');
+  del.className = 'del'; del.textContent = '×'; del.title = '删除子句';
+  del.onclick = e => { e.stopPropagation(); state.clauses.splice(i,1); state.sel = null; render(); };
+  box.appendChild(del);
+
+  return box;
+}
+
+function slotEl(slot, c, i){
+  const btn = document.createElement('button');
+  btn.className = 'slot s-' + slot;
+  const sel = state.sel && state.sel.ci === i && state.sel.slot === slot;
+  if (sel) btn.classList.add('sel');
+
+  if (slot === 'subject'){
+    btn.textContent = c.path.root ? pathText(c.path) : '选择实体…';
+    if (!c.path.root) btn.classList.add('empty');
+  } else if (slot === 'predicate'){
+    if (c.verb){ btn.textContent = c.verb; }
+    else { btn.textContent = '选择谓语…'; btn.classList.add('empty'); }
+  } else {
+    const t = objText(c);
+    if (t) btn.textContent = t;
+    else { btn.textContent = '宾语…'; btn.classList.add('empty'); }
+  }
+
+  btn.onclick = () => { state.sel = {ci:i, slot:slot}; render(); };
+  return btn;
+}
+
+function pathText(path){
+  if (!path || !path.root) return '？';
+  let s = rootText(path.root);
+  for (const st of path.steps){
+    if (st.t === 'prop'){ const p = findProp('?', st.k); s += '.' + propName(st.k); }
+    else if (st.t === 'filter'){ s += '[' + leafText(st.leaf) + ']'; }
+    else s += '.' + st.n;
+  }
+  return s;
+}
+
+/** 根显示成什么。**「本主体」在指名绑定下就是那个人的名字** —— 这一个改动
+    让整句话从"本主体.饱食度"变成"小明.饱食度"。 */
+function rootText(rootId){
+  if (rootId === 'Subject') return subjectText();
+  return (ROOTS.find(r => r.id === rootId)||{}).text || rootId;
+}
+
+function propName(key){
+  for (const e in PROPS){ const p = PROPS[e].find(x => x.k === key); if (p) return p.n; }
+  return key;
+}
+
+function objText(c){
+  const v = VERBS.find(x => x.k === c.verb);
+  if (!v || v.arg === 'None' || !c.obj) return '';
+  if (v.arg === 'Entity') return c.obj.path ? pathText(c.obj.path) : '（未选）';
+  if (v.arg === 'Number') return fmtNum(c.obj.value, unitOf(c));
+  if (v.arg === 'Enum') return c.obj.value || '';
+  return c.obj.value || '';
+}
+
+function unitOf(c){
+  const t = pathType(c.path, undefined, null);
+  return t.lastProp || null;
+}
+
+function fmtNum(v, prop){
+  if (prop && prop.pct) return ((v||0)*100).toFixed(1).replace(/\.0$/,'') + '%';
+  return String(v === undefined ? 0 : v);
+}
+
+function leafText(leaf){
+  if (!leaf) return '…';
+  const s = leaf.path && leaf.path.root ? pathText(leaf.path) : '当前元素';
+  return s + ' ' + (leaf.verb || '……') + (leaf.obj && leaf.obj.value ? ' ' + leaf.obj.value : '');
+}
+
+/* ═══════════════ 渲染：检查器 ═══════════════ */
+
+function renderInspector(){
+  const el = document.getElementById('inspector');
+  el.innerHTML = '';
+  const sel = state.sel;
+  if (!sel){ el.innerHTML = '<div class="hint">点句子里的任意槽位开始编辑。<br><br>可用选项都在这里列出来，不会弹菜单挡住句子。而且<b>被拒的选项也会说明原因</b>——你要判断"怎么组合合理"，看的就是这个。</div>'; return; }
+
+  const crumb = document.createElement('div');
+  crumb.className = 'crumb';
+  if (sel.slot === 'binding') crumb.textContent = '规则主体 · 选择绑定方式';
+  else {
+    const c = state.clauses[sel.ci];
+    crumb.textContent = (c.kind === 'detect' ? '检测子句' : '操作子句') + ' #' + (sel.ci+1)
+      + ' · ' + ({subject:'主语', predicate:'谓语', object:'宾语', filter:'筛选条件'}[sel.slot] || sel.slot);
+  }
+  el.appendChild(crumb);
+
+  if (sel.slot === 'binding') return inspectorBinding(el);
+  const c = state.clauses[sel.ci];
+  if (!c){ state.sel = null; render(); return; }
+
+  if (sel.slot === 'subject') inspectorSubject(el, c);
+  else if (sel.slot === 'predicate') inspectorPredicate(el, c);
+  else if (sel.slot === 'filter') inspectorFilter(el, c, sel.si);
+  else inspectorObject(el, c);
+}
+
+function h3(parent, text){ const e = document.createElement('h3'); e.textContent = text; parent.appendChild(e); return e; }
+function div(parent, cls){ const d = document.createElement('div'); if (cls) d.className = cls; parent.appendChild(d); return d; }
+function hint(parent, text){ const d = document.createElement('div'); d.className = 'hint'; d.innerHTML = text; parent.appendChild(d); return d; }
+
+function opt(parent, label, tag, cls, active){
+  const b = document.createElement('button');
+  b.className = 'opt' + (cls ? ' ' + cls : '') + (active ? ' active' : '');
+  const s1 = document.createElement('span'); s1.className = 'grow'; s1.innerHTML = label;
+  b.appendChild(s1);
+  if (tag){ const t = document.createElement('span'); t.className = 'tag'; t.textContent = tag; b.appendChild(t); }
+  parent.appendChild(b);
+  return b;
+}
+
+/* ── 主体绑定 ──
+   分两段，因为这是两件不同的事。而**身份不在这里选第二遍**：
+   绑成"囚犯"，那一轮里每个人的身份就都是囚犯 —— 锁定了就不需要判断。
+   玩家想知道"现在这个主体到底是什么"，这里直接写给他看。 */
+function inspectorBinding(el){
+
+  const none = BINDINGS.find(b => b.scope === 'none');
+  const single = BINDINGS.filter(b => b.scope === 'single');
+  const groups = BINDINGS.filter(b => b.scope === 'group');
+
+  h3(el, '主体绑定（「本主体」指谁）');
+
+  const top = div(el, 'opt-list');
+  const nb = opt(top, none.n, '整图一次', '', state.binding === none.k);
+  nb.onclick = () => { state.binding = none.k; render(); };
+
+  /* ── 第一段：点名一个人 ── */
+  h3(el, '点名一个人');
+  const sl = div(el, 'opt-list');
+  for (const b of single){
+    const btn = opt(sl, b.n, '就这一个', '', state.binding === b.k);
+    btn.onclick = () => { state.binding = b.k; state.sel = {slot:'binding'}; render(); };
+  }
+
+  if (bindingDef().scope === 'single'){
+    const p = namedPawn();
+    const cur = opt(div(el,'opt-list'), p ? p.n : '（还没选是哪一位）',
+                    p ? '换一个' : null, p ? '' : 'danger');
+    cur.onclick = () => {
+      const i = NAMED_PAWNS.findIndex(x => x.id === state.named);
+      state.named = NAMED_PAWNS[(i + 1) % NAMED_PAWNS.length].id;   // 原型里循环代替选择器
+      render();
+    };
+    hint(el, p
+      ? '<b>' + p.n + '</b> 现在是：' + p.cat + '。锁定了是谁，"他是什么"就不需要你在规则里判断——'
+        + '属性列表已经按他身上的东西列好了。'
+      : '还没选人。');
+  } else {
+    hint(el, '规则只对点名的这个人跑一遍，句子里直接写他的名字。锁定了是谁，"他是什么"就不需要你在规则里判断。');
+  }
+
+  /* ── 第二段：让一类人各做一遍 ── */
+  h3(el, '或者，让一类人各做一遍');
+  const gl = div(el, 'opt-list');
+  for (const b of groups){
+    const tag = b.members > 0 ? (b.members + ' 个') : '0 个——规则不会跑';
+    const btn = opt(gl, b.n, tag, '', state.binding === b.k);
+    btn.onclick = () => { state.binding = b.k; render(); };
+    if (b.note){
+      const n = document.createElement('div');
+      n.style.cssText = 'font-size:11px;color:var(--muted);margin:-1px 0 6px 4px';
+      n.textContent = b.note;
+      gl.appendChild(n);
+    }
+  }
+
+  /* 当前主体身上到底有什么 —— 下面所有"用不上"的判断都出自这里 */
+  const caps = boundCaps();
+  const badge = document.createElement('div');
+  badge.className = 'badge';
+  badge.textContent = caps === CAP.All
+    ? '当前主体：未知（拿不到样本 → 不过滤，宁可多给）'
+    : '当前主体具备：' + capName(caps);
+  el.appendChild(badge);
+
+  if (bindingDef().scope !== 'single'){
+    hint(el, '<b>绑定就是身份</b>：绑成"囚犯"，这一轮里每个人的身份就都是囚犯，'
+           + '不需要再写一句"他是囚犯"。属性列表也会跟着变——机械族身上没有饱食度，只有电量。');
+  }
+}
+
+/* ── 主语：实体路径 ── */
+function inspectorSubject(el, c){
+  const insideFilter = false;
+  const p = c.path;
+
+  // 根列表永远给出来（含已有根的情况）
+  if (!state.binding && !p.root){
+    const w = opt(div(el,'opt-list'), '⚠ 这条规则还没绑定主体 —— 点这里去选一个', null, 'danger');
+    w.onclick = () => { state.sel = {slot:'binding'}; render(); };
+  }
+
+  h3(el, '根实体');
+  const roots = div(el, 'opt-list');
+  for (const r of ROOTS){
+    if (r.onlyInFilter) continue;
+    const btn = opt(roots, rootText(r.id), ENTITY[r.entity], '', p.root === r.id);
+    btn.onclick = () => { p.root = r.id; p.steps = []; render(); };
+    if (r.note){
+      const n = document.createElement('div');
+      n.style.cssText = 'font-size:11px;color:var(--muted);margin:-1px 0 6px 4px';
+      n.textContent = r.note; roots.appendChild(n);
+    }
+  }
+
+  if (!p.root) return;
+
+  h3(el, '实体路径（点一段就截断到那里）');
+  const chain = div(el, 'chain');
+  const rootSeg = document.createElement('span');
+  rootSeg.className = 'seg root';
+  rootSeg.textContent = rootText(p.root);
+  rootSeg.title = '重置到根';
+  rootSeg.onclick = () => { p.steps = []; render(); };
+  chain.appendChild(rootSeg);
+
+  p.steps.forEach((st,si) => {
+    const s = document.createElement('span');
+    s.className = 'seg ' + (st.t === 'prop' ? 'prop' : st.t === 'filter' ? 'filter' : 'reduce');
+    s.textContent = st.t === 'prop' ? '.' + propName(st.k)
+                  : st.t === 'filter' ? '[' + leafText(st.leaf) + ']'
+                  : '.' + st.n;
+    s.title = st.t === 'filter' ? '点它编辑筛选里的条件' : '删掉这一步及其后';
+    s.onclick = () => {
+      if (st.t === 'filter'){ state.sel = {ci:state.sel.ci, slot:'filter', si:si}; render(); }
+      else { p.steps = p.steps.slice(0,si); render(); }
+    };
+    chain.appendChild(s);
+  });
+
+  const t = pathType(p, undefined, null);
+  const badge = document.createElement('div');
+  badge.className = 'badge';
+  badge.textContent = '当前类型：' + valName(t.kind) + (t.entity !== 'Any' ? '（' + ENTITY[t.entity] + '）' : '');
+  el.appendChild(badge);
+
+  /* 诊断：为什么能加的就这么几个 */
+  const why = [];
+
+  if (t.kind === 'Entity'){
+    // 能力过滤**只对根是「本主体」的路径生效**：路径可以从「本图」出发，
+    // 那时主体是谁跟这条路无关，拿主体的能力去砍它只会砍掉本来能用的东西。
+    const caps = (p.root === 'Subject') ? boundCaps() : CAP.All;
+
+    const all = PROPS[t.entity] || [];
+    const usable = all.filter(pr => capMatches(caps, pr.caps));
+    const blocked = all.filter(pr => !capMatches(caps, pr.caps));
+
+    if (usable.length){
+      h3(el, '添加属性');
+      const list = div(el, 'opt-list');
+      for (const pr of usable){
+        const btn = opt(list, '.' + pr.n, propTag(pr), '');
+        btn.onclick = () => { p.steps.push(prop(pr.k)); render(); };
+        if (pr.note){
+          const n = document.createElement('div');
+          n.style.cssText = 'font-size:11px;color:var(--muted);margin:-1px 0 6px 4px';
+          n.textContent = pr.note;
+          list.appendChild(n);
+        }
+      }
+    } else {
+      why.push('实体类型 <b>' + ENTITY[t.entity] + '</b> 身上没有登记任何属性');
+    }
+
+    /* **被挡掉的那些也要说出来。**
+       玩家看着一个短了一截的下拉，看不出是"这个词表就没有它"还是"我选错了主体"。
+       把缺的那一位能力摆出来，他才知道下一步改什么——
+       这比多给几个选了必然报错的选项有用得多。 */
+    if (blocked.length && caps !== CAP.All){
+      const bl = div(el, 'blocked');
+      bl.appendChild(Object.assign(document.createElement('h4'),
+        {textContent:'这些用不上（当前主体身上没有它们要的东西）'}));
+      const ul = document.createElement('ul');
+      for (const pr of blocked){
+        const li = document.createElement('li');
+        li.innerHTML = '<b>' + pr.n + '</b> —— 缺：' + capName(pr.caps);
+        ul.appendChild(li);
+      }
+      bl.appendChild(ul);
+      el.appendChild(bl);
+    }
+  } else if (t.kind === 'EntitySet'){
+    h3(el, '筛选');
+    const fl = div(el, 'opt-list');
+    const fb = opt(fl, '+ 加一层筛选…', null, 'red');
+    fb.onclick = () => { p.steps.push(filt()); render(); };
+
+    h3(el, '归约（集合路径必选）');
+    const rl = div(el, 'opt-list');
+    for (const r of REDUCES){
+      if (r.from !== 'EntitySet') continue;
+      const btn = opt(rl, '.' + r.n, '→ ' + valName(r.to), 'red');
+      btn.onclick = () => { p.steps.push(red(r.n)); render(); };
+    }
+    why.push('手上是<b>一组东西</b>：<b>不能读属性、也不能选谓语</b>，必须先归约');
+  } else {
+    why.push('已经到了终点（' + valName(t.kind) + '）——谓语的宾语就是它，没有下一步可走');
+  }
+
+  if (t.kind === 'None') why.push('路径里有认不出的键');
+  renderWhy(el, why, true);
+}
+
+function propTag(pr){
+  if (pr.kind === 'Number') return pr.pct ? '百分比' : (pr.unit === '℃' ? '温度' : '数值');
+  if (pr.kind === 'Entity' || pr.kind === 'EntitySet')
+    return ENTITY[pr.entity] + (pr.kind === 'EntitySet' ? '（一组）' : '');
+  return valName(pr.kind);
+}
+
+/* ── 筛选里的条件 ── */
+function inspectorFilter(el, c, si){
+  const st = c.path.steps[si];
+  const leaf = st.leaf;
+  const setType = pathType(c.path, si+1, null);
+  const elemEntity = setType.entity;
+
+  h3(el, '筛选条件（主语固定是「当前元素」）');
+
+  // 条件的主语：元素读哪个属性（点一下就把条件路径设成它）
+  const props = PROPS[elemEntity] || [];
+  if (props.length){
+    h3(el, '条件主语：当前元素读什么');
+    const list = div(el, 'opt-list');
+    for (const pr of props){
+      const cur = leaf.path.root === 'Element' && leaf.path.steps[0] && leaf.path.steps[0].k === pr.k;
+      const btn = opt(list, '当前元素.' + pr.n, propTag(pr), '', cur);
+      btn.onclick = () => { leaf.path = P('Element', [prop(pr.k)]); leaf.verb = null; leaf.obj = null; render(); };
+    }
+  } else {
+    hint(el, '元素类型「' + ENTITY[elemEntity] + '」身上没有属性');
+    return;
+  }
+
+  if (!leaf.path.root) return;
+
+  const t = pathType(leaf.path, undefined, elemEntity);
+  const badge = document.createElement('div');
+  badge.className = 'badge';
+  badge.textContent = '条件主语类型：' + valName(t.kind) + (t.entity !== 'Any' ? '（' + ENTITY[t.entity] + '）' : '');
+  el.appendChild(badge);
+
+  // 谓语
+  h3(el, '条件谓语');
+  const list = div(el, 'opt-list');
+  for (const r of verbsFor(t.kind, t.entity, 'detect')){
+    const btn = opt(list, r.v.k, r.ok ? tagOf(r.v) : null, r.ok ? 'det' : 'danger', leaf.verb === r.v.k);
+    if (r.ok) btn.onclick = () => { setVerb(leaf, r.v); render(); };
+    else { btn.disabled = true; btn.style.opacity = .55; btn.title = r.why.replace(/<[^>]+>/g,''); }
+  }
+
+  // 宾语
+  const v = VERBS.find(x => x.k === leaf.verb);
+  if (v && v.arg !== 'None'){
+    h3(el, '条件宾语');
+    objectEditor(el, leaf, v, t.lastProp);
+  }
+
+  const back = document.createElement('button');
+  back.className = 'opt'; back.style.marginTop = '12px';
+  back.textContent = '← 回到主路径';
+  back.onclick = () => { state.sel = {ci:state.sel.ci, slot:'subject'}; render(); };
+  el.appendChild(back);
+}
+
+/* ── 谓语 ── */
+function inspectorPredicate(el, c){
+  const t = pathType(c.path, undefined, null);
+
+  if (!c.path.root){
+    hint(el, '先选主语实体。');
+    return;
+  }
+
+  h3(el, '可用谓语（主语类型：' + valName(t.kind) + (t.entity!=='Any' ? '（'+ENTITY[t.entity]+'）' : '') + '）');
+
+  const cat = c.kind === 'detect' ? 'detect' : 'operate';
+  const have = (c.path.root === 'Subject') ? boundCaps() : CAP.All;
+  const results = verbsFor(t.kind, t.entity, cat, have);
+  const list = div(el, 'opt-list');
+  const rejected = [];
+
+  for (const r of results){
+    if (r.ok){
+      const btn = opt(list, r.v.k, tagOf(r.v), cat === 'detect' ? 'det' : 'ope', c.verb === r.v.k);
+      btn.onclick = () => { setVerb(c, r.v); render(); };
+    } else {
+      rejected.push('<b>' + r.v.k + '</b>：' + r.why);
+    }
+  }
+
+  if (!results.some(r => r.ok)) hint(el, '没有能用的谓语。');
+  renderWhy(el, rejected, false);
+}
+
+function tagOf(v){
+  const t = [];
+  if (v.edge) t.push('边沿');
+  if (v.tier) t.push(v.tier);
+  if (v.quiet) t.push('安静让开');
+  if (v.arg === 'Entity' && v.argEntity) t.push('宾语要' + ENTITY[v.argEntity]);
+  return t.length ? t.join(' · ') : null;
+}
+
+function setVerb(c, v){
+  c.verb = v.k;
+  if (v.arg === 'None') c.obj = null;
+  else if (v.arg === 'Number') c.obj = {value:0};
+  // 实体宾语**不预填路径**：谓词要什么类型就列什么走法（见 objectEditor）。
+  else if (v.arg === 'Entity') c.obj = {path:null};
+  else c.obj = {value:''};
+  render();
+}
+
+/**
+ * 主语路径改完之后，复查当前谓语还成不成立；不成立就清掉。
+ *
+ * 不清的后果：玩家先写好 `本主体.血量 大于 10`，再把路径截断回 `本主体`——
+ * 子句表面上完整，实际永远不会成立，而提示只在底下的诊断里，
+ * 离他刚做的那一步很远。清掉之后谓语槽变回灰色的"选择谓语…"，一眼就知道要重选。
+ */
+function recheckVerb(c){
+  if (!c.verb || !c.path.root) return;
+  const t = pathType(c.path, undefined, null);
+  const cat = c.kind === 'detect' ? 'detect' : 'operate';
+  const caps = (c.path.root === 'Subject') ? boundCaps() : CAP.All;
+  const ok = verbsFor(t.kind, t.entity, cat, caps).some(r => r.ok && r.v.k === c.verb);
+  if (!ok){ c.verb = null; c.obj = null; }
+}
+
+/* ── 宾语 ── */
+function inspectorObject(el, c){
+  const v = VERBS.find(x => x.k === c.verb);
+  if (!v) return hint(el, '先选谓语。');
+  if (v.arg === 'None') return hint(el, '这个谓语没有宾语。');
+
+  h3(el, '宾语');
+  const t = pathType(c.path, undefined, null);
+  objectEditor(el, c, v, t.lastProp);
+}
+
+function objectEditor(el, c, v, unitProp){
+  if (v.arg === 'Number'){
+    const pct = unitProp && unitProp.pct;
+    const raw = c.obj.value === undefined ? 0 : c.obj.value;
+    const shown = pct ? raw*100 : raw;
+    const box = document.createElement('div');
+    box.style.cssText = 'display:flex;align-items:center;gap:6px';
+    const inp = document.createElement('input');
+    inp.type = 'number'; inp.className = 'obj-input'; inp.value = shown;
+    if (pct){ inp.step = '1'; inp.min=0; inp.max=100; } else inp.step = 'any';
+    inp.oninput = () => { const x = parseFloat(inp.value)||0; c.obj.value = pct ? x/100 : x; renderGenerated(); renderSentence(); };
+    box.appendChild(inp);
+    const u = document.createElement('span');
+    u.className = 'unit';
+    u.textContent = pct ? '%' : (unitProp && unitProp.unit ? unitProp.unit : '');
+    box.appendChild(u);
+    el.appendChild(box);
+
+    h3(el, '常用值');
+    const list = div(el, 'opt-list');
+    const presets = pct ? [['50%',0.5],['30%',0.3],['100%',1]]
+                        : (unitProp && unitProp.unit === '℃'
+                           ? [['0℃',0],['-5℃',-5],['10℃',10]]
+                           : [['0',0],['10',10],['100',100]]);
+    for (const [label,val] of presets){
+      const b = opt(list, label, null, '');
+      b.onclick = () => { c.obj.value = val; render(); };
+    }
+    if (!unitProp) renderWhy(el, ['语义单位是从<b>主语路径最后读到的属性</b>来的；现在主语没读属性，所以这里是裸数值'], false);
+    return;
+  }
+
+  if (v.arg === 'Enum'){
+    const dom = v.dom || (unitProp && unitProp.dom);
+    if (!dom){
+      hint(el, '这个谓语没声明取值来源，只能手填。');
+      return;
+    }
+    h3(el, '可选值（' + dom + '）');
+    const list = div(el, 'opt-list');
+    for (const d of DEFS[dom] || []){
+      const key = d.split('（')[0];
+      const b = opt(list, d, null, '', c.obj.value === key);
+      b.onclick = () => { c.obj.value = key; render(); };
+    }
+    return;
+  }
+
+  if (v.arg === 'Text'){
+    const inp = document.createElement('input');
+    inp.className = 'obj-input'; inp.value = c.obj.value || '';
+    inp.placeholder = '写进时间线的文本';
+    inp.oninput = () => { c.obj.value = inp.value; renderSentence(); renderGenerated(); };
+    el.appendChild(inp);
+    return;
+  }
+
+  if (v.arg === 'Entity'){
+    // **路径不预填。** 预填成 `本主体` 是原来那个坑：「前往」要格子、
+    // 拿到的是一个小人，规则一建出来就带着一条类型错误，
+    // 而玩家在界面上没有地方能改它（属性列表按"格子"查，一条都没有）。
+    if (!c.obj.path){
+      h3(el, '能产出「' + ENTITY[v.argEntity] + '」的走法');
+      const ways = div(el, 'opt-list');
+      let shown = 0;
+      for (const r of ROOTS){
+        if (r.onlyInFilter) continue;
+        const hostEntity = r.id === 'Subject' ? (state.binding ? 'Pawn' : 'Any') : r.entity;
+        if (hostEntity === 'Any' || hostEntity === 'ELEMENT') continue;
+        for (const pr of (PROPS[hostEntity] || [])){
+          if (pr.kind !== 'Entity') continue;
+          if (!entityMatches(v.argEntity, pr.entity)) continue;
+          const b = opt(ways, r.text + '.' + pr.n, propTag(pr), '');
+          b.onclick = () => { c.obj.path = P(r.id, [prop(pr.k)]); render(); };
+          shown++;
+        }
+      }
+      if (!shown) hint(el, '词表里现在没有能产出「' + ENTITY[v.argEntity] + '」的属性。');
+
+      h3(el, '或者自己拼：选一个根');
+      const manual = div(el, 'opt-list');
+      for (const r of ROOTS){
+        if (r.onlyInFilter) continue;
+        const b = opt(manual, r.text, ENTITY[r.entity], '');
+        b.onclick = () => { c.obj.path = P(r.id, []); render(); };
+      }
+      return;
+    }
+
+    const p = c.obj.path;
+
+    h3(el, '目标实体的路径（要产出「' + ENTITY[v.argEntity] + '」）');
+    const roots = div(el, 'opt-list');
+    for (const r of ROOTS){
+      if (r.onlyInFilter) continue;
+      const b = opt(roots, r.text, ENTITY[r.entity], '', p.root === r.id);
+      b.onclick = () => { p.root = r.id; p.steps = []; render(); };
+    }
+
+    const chain = div(el, 'chain');
+    const rs = document.createElement('span');
+    rs.className = 'seg root'; rs.textContent = (ROOTS.find(r=>r.id===p.root)||{}).text;
+    rs.onclick = () => { p.steps = []; render(); };
+    chain.appendChild(rs);
+    p.steps.forEach((st,si) => {
+      const s = document.createElement('span');
+      s.className = 'seg prop'; s.textContent = '.' + propName(st.k);
+      s.onclick = () => { p.steps = p.steps.slice(0,si); render(); };
+      chain.appendChild(s);
+    });
+
+    const t = pathType(p, undefined, null);
+    const badge = document.createElement('div');
+    badge.className = 'badge';
+    badge.textContent = '当前类型：' + valName(t.kind) + (t.entity!=='Any' ? '（'+ENTITY[t.entity]+'）' : '');
+    if (t.entity !== v.argEntity && t.kind === 'Entity') badge.style.color = 'var(--danger)';
+    el.appendChild(badge);
+
+    if (t.kind === 'Entity'){
+      const props = PROPS[t.entity] || [];
+      if (props.length){
+        h3(el, '继续读属性');
+        const list = div(el, 'opt-list');
+        for (const pr of props){
+          const b = opt(list, '.' + pr.n, propTag(pr), '');
+          b.onclick = () => { p.steps.push(prop(pr.k)); render(); };
+        }
+      }
+    }
+    if (t.kind === 'EntitySet'){
+      h3(el, '归约');
+      const list = div(el, 'opt-list');
+      for (const r of REDUCES){
+        const b = opt(list, '.' + r.n, '→ ' + valName(r.to), 'red');
+        b.onclick = () => { p.steps.push(red(r.n)); render(); };
+      }
+    }
+
+    const why = [];
+    if (t.kind === 'Entity' && t.entity !== v.argEntity)
+      why.push('宾语要 <b>' + ENTITY[v.argEntity] + '</b>，现在这条路径产出 <b>' + ENTITY[t.entity] + '</b>');
+    if (t.kind === 'Entity' && t.entity === v.argEntity)
+      why.push('<span class="ok">✓ 类型对上了</span>：' + v.k + ' 可以接这条路径');
+    renderWhy(el, why, false);
+  }
+}
+
+function renderWhy(el, items, always){
+  if (!items || !items.length){
+    if (!always) return;
+    return;
+  }
+  const box = document.createElement('div');
+  box.className = 'why';
+  const h = document.createElement('h4');
+  h.textContent = always ? '诊断：为什么能加的就这么几个' : '诊断：这些为什么不可选';
+  box.appendChild(h);
+  const ul = document.createElement('ul');
+  for (const it of items){
+    const li = document.createElement('li');
+    li.innerHTML = it;
+    ul.appendChild(li);
+  }
+  box.appendChild(ul);
+  el.appendChild(box);
+}
+
+/* ═══════════════ 生成文本 ═══════════════ */
+
+function clauseText(c){
+  const s = c.path.root ? pathText(c.path) : '（未选主语）';
+  const p = c.verb || '（未选谓语）';
+  const o = objText(c);
+  return s + ' ' + p + (o ? ' ' + o : '');
+}
+
+function renderGenerated(){
+  const parts = [];
+  let seenOp = false;
+  state.clauses.forEach((c,i) => {
+    let pre;
+    if (i === 0){ pre = '当 '; if (c.kind === 'operate') seenOp = true; }
+    else if (c.kind === 'operate' && !seenOp){ pre = '， '; seenOp = true; }
+    else pre = '且 ';
+    parts.push(pre + clauseText(c));
+  });
+  document.getElementById('generated').textContent =
+    parts.length ? parts.join('\n') : '（空规则）';
+}
+
+/* ═══════════════ 操作 ═══════════════ */
+
+function addClause(kind){
+  const nc = {kind:kind, path:P(null), verb:null, obj:null};
+  if (kind === 'detect'){
+    const idx = state.clauses.filter(c => c.kind === 'detect').length;
+    state.clauses.splice(idx, 0, nc);
+    state.sel = {ci:idx, slot:'subject'};
+  } else {
+    state.clauses.push(nc);
+    state.sel = {ci:state.clauses.length-1, slot:'subject'};
+  }
+  render();
+}
+
+/* ═══════════════ 预设 ═══════════════ */
+
+const PRESETS = {
+  '天冷进屋': () => ({
+    binding:'freeColonists',
+    clauses:[
+      {kind:'detect', path:P('Subject',[prop('pawn.mood')]), verb:'小于', obj:{value:0.3}},
+      {kind:'detect', path:P('Map',[prop('map.outdoorTemp')]), verb:'小于', obj:{value:0}},
+      {kind:'operate', path:P('Subject',[]), verb:'前往', obj:{path:P('Subject',[prop('pawn.shelterCell')])}},
+    ]
+  }),
+  '袭击回家': () => ({
+    binding:'freeColonists',
+    clauses:[
+      {kind:'detect', path:P('Map',[]), verb:'收到信件', obj:{value:'ThreatBig'}},
+      {kind:'detect', path:P('Subject',[]), verb:'能动', obj:null},
+      {kind:'operate', path:P('Subject',[]), verb:'前往', obj:{path:P('Subject',[prop('pawn.shelterCell')])}},
+    ]
+  }),
+  '戴着坏帽子': () => ({
+    binding:'freeColonists',
+    clauses:[
+      {kind:'detect', path:P('Subject',[prop('pawn.apparel'), {t:'filter', leaf:{path:P('Element',[prop('thing.durability')]), verb:'小于', obj:{value:0.5}}}, red('数量')]), verb:'大于', obj:{value:0}},
+      {kind:'operate', path:P('Subject',[]), verb:'脱下', obj:{path:P('Subject',[prop('pawn.apparel'), {t:'filter', leaf:{path:P('Element',[prop('thing.durability')]), verb:'小于', obj:{value:0.5}}}, red('第一个')])}},
+    ]
+  }),
+  '人太少了': () => ({
+    binding:null,
+    clauses:[
+      {kind:'detect', path:P('Map',[prop('map.colonistCount')]), verb:'小于', obj:{value:3}},
+      {kind:'operate', path:P('Map',[]), verb:'写日志', obj:{value:'人手不足'}},
+    ]
+  }),
+  '写不出的例子': () => ({
+    binding:'freeColonists',
+    clauses:[
+      {kind:'detect', path:P('Subject',[prop('pawn.apparel'), red('第一个'), prop('thing.durability')]), verb:'小于', obj:{value:0.5}},
+      {kind:'operate', path:P('Subject',[]), verb:'写日志', obj:{value:'这只能问「有一件耐久低」，问不了「每一件都低」——缺量词'}},
+    ]
+  }),
+
+  /* ── 这一版新增的：主体是谁，决定你能写什么 ── */
+
+  '机械族充电': () => ({
+    binding:'colonyMechs',
+    clauses:[
+      // **没有一句"他是机械族"**：绑定已经说了。属性列表里也只有电量，没有饱食度。
+      {kind:'detect', path:P('Subject',[prop('pawn.energy')]), verb:'小于', obj:{value:0.3}},
+      {kind:'operate', path:P('Subject',[]), verb:'前往', obj:{path:P('Subject',[prop('pawn.shelterCell')])}},
+    ]
+  }),
+  '点名小明': () => ({
+    binding:'namedPawn', named:'Human12',
+    clauses:[
+      {kind:'detect', path:P('Subject',[prop('pawn.mood')]), verb:'小于', obj:{value:0.25}},
+      {kind:'operate', path:P('Subject',[]), verb:'写日志', obj:{value:'句子里的主语是「小明」，不是「本主体」'}},
+    ]
+  }),
+  '点名阿珍': () => ({
+    binding:'namedPawn', named:'Human88',
+    clauses:[
+      {kind:'detect', path:P('Subject',[prop('pawn.mood')]), verb:'小于', obj:{value:0.2}},
+      {kind:'operate', path:P('Subject',[]), verb:'写日志', obj:{value:'点开检查器，他会告诉你阿珍现在是囚犯 —— 你不用在规则里判断'}},
+    ]
+  }),
+  '囚犯快崩溃': () => ({
+    binding:'prisoners',
+    clauses:[
+      {kind:'detect', path:P('Subject',[prop('pawn.mood')]), verb:'小于', obj:{value:0.2}},
+      {kind:'operate', path:P('Map',[]), verb:'写日志', obj:{value:'有囚犯快崩溃了'}},
+    ]
+  }),
+
+  /* ── 地图级操作：这一组补的是"地图上一个谓词都没有" ── */
+  '不下雨就下雨': () => ({
+    binding:null,
+    clauses:[
+      {kind:'detect', path:P('Map',[prop('map.rainRate')]), verb:'小于', obj:{value:0.1}},
+      {kind:'operate', path:P('Map',[]), verb:'变成', obj:{value:'Rain（下雨）'}},
+    ]
+  }),
+  '本图触发事件': () => ({
+    binding:null,
+    clauses:[
+      {kind:'detect', path:P('Map',[prop('map.wealth')]), verb:'小于', obj:{value:5000}},
+      {kind:'operate', path:P('Map',[]), verb:'触发事件', obj:{value:'RaidEnemy（袭击）'}},
+      {kind:'operate', path:P('Map',[]), verb:'发信件', obj:{value:'ThreatBig（大威胁）'}},
+    ]
+  }),
+  '日蚀时报警': () => ({
+    binding:null,
+    clauses:[
+      {kind:'detect', path:P('Map',[]), verb:'处于', obj:{value:'Eclipse（日蚀）'}},
+      {kind:'operate', path:P('Map',[]), verb:'发信件', obj:{value:'NegativeEvent（负面事件）'}},
+    ]
+  }),
+};
+
+function loadPreset(name){
+  const p = PRESETS[name]();
+  state.binding = p.binding;
+  if (p.named) state.named = p.named;
+  state.clauses = p.clauses;
+  state.sel = null;
+  render();
+}
+
+function initPresets(){
+  const el = document.getElementById('presets');
+  for (const name in PRESETS){
+    const b = document.createElement('button');
+    b.className = 'preset'; b.textContent = name;
+    b.onclick = () => loadPreset(name);
+    el.appendChild(b);
+  }
+}
+
+/* ═══════════════ 启动 ═══════════════ */
+
+state.name = '新建规则';
+state.cool = 5000;
+initPresets();
+loadPreset('天冷进屋');
+</script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <OutputType>Library</OutputType>
+    <AssemblyName>RuleCore</AssemblyName>
+    <RootNamespace>RuleCore</RootNamespace>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>..\..\1.6\Assemblies\</OutputPath>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <Deterministic>false</Deterministic>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!--
+      RimWorld 安装目录。**换机器只改这一行**（或用环境变量覆盖，不必改文件）：
+
+        set RimWorldDir=D:\Steam\steamapps\common\RimWorld
+
+      默认值是作者本机的路径，所以别人克隆下来要么改这里、要么设那个环境变量。
+      托管程序集目录跟着它走，下面四个 <HintPath> 就不必各写一遍绝对路径。
+    -->
+    <RimWorldDir Condition="'$(RimWorldDir)' == ''">B:\SteamLibrary\steamapps\common\RimWorld</RimWorldDir>
+    <RimWorldManaged>$(RimWorldDir)\RimWorldWin64_Data\Managed</RimWorldManaged>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      引用本机的游戏程序集，都 <Private>False</Private>：它们在运行时由游戏本体提供，
+      拷进产物里只会让 RimWorld 多加载一份同名程序集。
+    -->
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(RimWorldManaged)\Assembly-CSharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(RimWorldManaged)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>$(RimWorldManaged)\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>$(RimWorldManaged)\UnityEngine.TextRenderingModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Core">
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!--
+    刻意**不引用 0Harmony**：本模组全项目没有一处 HarmonyLib / HarmonyPatch，
+    引用它只是让编译依赖一个与运行时无关的二进制（还诱导人把它拷进 Assemblies/）。
+    真要打补丁时再加回来，并同时在 About.xml 里声明对 Harmony mod 的依赖。
+  -->
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Message Text="RuleCore 编译完成 → $(OutputPath)$(AssemblyName).dll" Importance="high" />
+  </Target>
+</Project>

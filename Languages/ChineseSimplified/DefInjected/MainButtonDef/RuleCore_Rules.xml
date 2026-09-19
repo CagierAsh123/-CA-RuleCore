@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <RuleCore_Rules.label>指令核心</RuleCore_Rules.label>
+  <RuleCore_Rules.description>编写与管理自动化规则，并查看引擎的调试时间线。</RuleCore_Rules.description>
+</LanguageData>

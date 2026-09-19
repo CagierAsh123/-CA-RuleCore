@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <!--
+    内置样例规则包 —— 新语义的第一个落点。
+
+    形状说明（读一遍就能看懂整份 XML）：
+
+      三元组       RuleExprNode（kind=Detect）= 主语 RulePath · 谓语 verbKey · 宾语 RuleOperand
+      实体表达式   RulePath = 根 + 一串步骤（读属性 / 筛选 / 归约）
+      检测树       RuleExprNode 的 And / Or / Not 节点，子节点在 <children> 里
+      操作         RuleClause 的列表，顺序下发
+
+    三条加载器事实（都是读源码确认过的，写错了就是启动报错）：
+
+    1. **可内联配置的必须是普通类**：字段类型是 Def 时加载器不实例化，
+       只把文本当 defName 做交叉引用。所以规则、路径、检测树全是普通类。
+    2. **具体类型的字段不需要写 Class=**：只有抽象类或接口才必须写。
+       新模型里每个字段都是具体类型，所以这份 XML 里 Class 只出现在顶层。
+       反过来，**顶层的 Class 必须写全限定名**——简写回退只对原版命名空间的白名单生效。
+    3. 加载器会自动对每个 Def 调 ConfigErrors()。词表是惰性的，所以类型与键的检查
+       在 RuleLibrary.RebuildModRules() 里补做一次，结果进时间线。
+  -->
+  <RuleCore.RulePackDef>
+    <defName>RuleCore_Samples</defName>
+    <label>内置样例规则</label>
+    <description>规则包演示：从"只写日志"到"检测树 + 实体路径 + 筛选 + 归约 + 操作"的完整跨度。</description>
+
+    <rules>
+
+      <!--
+        最小骨架：没有检测（= 永远成立）+ 写一条日志。
+        它不读世界状态也不改世界状态，用来确认"引擎在采样、词表在生效"。
+        主语用「本图」是因为没有绑定主体——这时"本主体"读不到，写了必然失败。
+      -->
+      <li Class="RuleCore.Rule">
+        <id>heartbeat</id>
+        <label>样例：引擎心跳</label>
+        <description>每 5000 tick 写一条记录。证明引擎在采样、词表在生效。</description>
+        <detect>
+          <kind>Detect</kind>
+          <subject>
+            <rootKind>Map</rootKind>
+          </subject>
+          <verbKey>state.always</verbKey>
+        </detect>
+        <operate>
+          <li>
+            <subject>
+              <rootKind>Map</rootKind>
+            </subject>
+            <verbKey>op.log</verbKey>
+            <argument>
+              <kind>Text</kind>
+              <literal>
+                <kind>Text</kind>
+                <key>引擎心跳：规则定义已加载并可求值。</key>
+              </literal>
+            </argument>
+          </li>
+        </operate>
+        <cooldownTicks>5000</cooldownTicks>
+      </li>
+
+      <!--
+        「天冷了，闲人进屋」——规范里那句「{{实体}} {{检测}} {{宾语}}」的直接落地。
+
+        检测树：
+          And
+            ├─ 本主体 空闲                        （能力类：不成立时安静让开）
+            └─ 本图.室外温度  小于  0             （条件类：不成立时算规则失败）
+
+        操作：本主体 前往 本主体.shelterCell
+        shelterCell 是"最近的、可站立的、有屋顶的、真的走得到"的格子，
+        确定性扫描——同一个世界状态必然解析出同一个格子。
+      -->
+      <li Class="RuleCore.Rule">
+        <id>cold-go-indoor</id>
+        <label>样例：天冷了，闲人进屋</label>
+        <description>检测室外温度是否低于 0℃，是就让闲着的殖民者进屋。演示"检测源 × 比较符 × 阈值"与"能力安静让开"。</description>
+        <subjectKey>freeColonists</subjectKey>
+        <detect>
+          <kind>And</kind>
+          <children>
+            <li>
+              <kind>Detect</kind>
+              <subject>
+                <rootKind>Subject</rootKind>
+              </subject>
+              <verbKey>state.idle</verbKey>
+            </li>
+            <li>
+              <kind>Detect</kind>
+              <subject>
+                <rootKind>Map</rootKind>
+                <steps>
+                  <li>
+                    <kind>Property</kind>
+                    <propertyKey>map.outdoorTemp</propertyKey>
+                  </li>
+                </steps>
+              </subject>
+              <verbKey>compare.lt</verbKey>
+              <argument>
+                <kind>Number</kind>
+                <literal>
+                  <kind>Number</kind>
+                  <number>0</number>
+                </literal>
+              </argument>
+            </li>
+          </children>
+        </detect>
+        <operate>
+          <li>
+            <subject>
+              <rootKind>Subject</rootKind>
+            </subject>
+            <verbKey>op.goto</verbKey>
+            <argument>
+              <kind>Entity</kind>
+              <path>
+                <rootKind>Subject</rootKind>
+                <steps>
+                  <li>
+                    <kind>Property</kind>
+                    <propertyKey>pawn.shelterCell</propertyKey>
+                  </li>
+                </steps>
+              </path>
+            </argument>
+          </li>
+        </operate>
+        <cooldownTicks>3000</cooldownTicks>
+      </li>
+
+      <!--
+        TSD 完整垂直切片：信封弹出 → 选殖民者 → 验能力 → 走到屋顶下。
+
+        能力和上面那条**故意相反**：这里不要求"闲着"——
+        袭击来了就该打断干活，那正是它存在的意义。
+
+        `state.able`：倒地 / 崩溃 / 被征召的人让开，其余全部回家。
+        被征召默认视为"做不了"，因为玩家接管了这个人——"原版第一顺位"在能力层的体现。
+      -->
+      <li Class="RuleCore.Rule">
+        <id>raid-go-home</id>
+        <label>样例：袭击来了，在外面的人回家</label>
+        <description>收到"大威胁"信件 → 能动的人全部走到最近的屋顶下。</description>
+        <subjectKey>freeColonists</subjectKey>
+        <detect>
+          <kind>And</kind>
+          <children>
+            <li>
+              <kind>Detect</kind>
+              <subject>
+                <rootKind>Map</rootKind>
+              </subject>
+              <verbKey>event.letter</verbKey>
+              <argument>
+                <kind>Enum</kind>
+                <literal>
+                  <kind>Enum</kind>
+                  <key>ThreatBig</key>
+                </literal>
+              </argument>
+            </li>
+            <li>
+              <kind>Detect</kind>
+              <subject>
+                <rootKind>Subject</rootKind>
+              </subject>
+              <verbKey>state.able</verbKey>
+            </li>
+          </children>
+        </detect>
+        <operate>
+          <li>
+            <subject>
+              <rootKind>Subject</rootKind>
+            </subject>
+            <verbKey>op.goto</verbKey>
+            <argument>
+              <kind>Entity</kind>
+              <path>
+                <rootKind>Subject</rootKind>
+                <steps>
+                  <li>
+                    <kind>Property</kind>
+                    <propertyKey>pawn.shelterCell</propertyKey>
+                  </li>
+                </steps>
+              </path>
+            </argument>
+          </li>
+        </operate>
+        <cooldownTicks>600</cooldownTicks>
+        <priority>10</priority>
+      </li>
+
+      <!--
+        实体表达式路径的完整演示：**筛选 + 归约 + God 操作**。
+        「谁的帽子耐久低于 30%，就把它脱下来」
+
+        句子拆解：
+          本主体.着装 [ thing.durability 小于 0.3 ] .数量   大于  0
+          └─根─┘└属性┘ └────── 筛选（一棵检测树）──────┘ └归约┘
+
+        · **筛选里的 `thing.durability` 用的是 Element 根**（当前元素 = 那件衣服），
+          不是本主体——这正是"筛选器要自己的根"那条决定的用处。
+        · **归约必须写出来**：`.数量 大于 0` 说的是"有一件"，不是"每一件"。
+        · 操作是 **God 级**（开发者模式才生效）：原版没有"给清醒的人脱衣服"的 job，
+          `JobDefOf.Strip` 只对尸体和倒地的人生效。原版不肯替你做的事，只能自己动手。
+      -->
+      <li Class="RuleCore.Rule">
+        <id>low-durability-undress</id>
+        <label>样例：帽子快坏了就脱下来</label>
+        <description>筛选出耐久低于 30% 的着装，脱掉第一件。演示实体路径的 筛选 + 归约 + God 操作。</description>
+        <subjectKey>freeColonists</subjectKey>
+        <detect>
+          <kind>Detect</kind>
+          <subject>
+            <rootKind>Subject</rootKind>
+            <steps>
+              <li>
+                <kind>Property</kind>
+                <propertyKey>pawn.apparel</propertyKey>
+              </li>
+              <li>
+                <kind>Filter</kind>
+                <filter>
+                  <kind>Detect</kind>
+                  <subject>
+                    <rootKind>Element</rootKind>
+                    <steps>
+                      <li>
+                        <kind>Property</kind>
+                        <propertyKey>thing.durability</propertyKey>
+                      </li>
+                    </steps>
+                  </subject>
+                  <verbKey>compare.lt</verbKey>
+                  <argument>
+                    <kind>Number</kind>
+                    <literal>
+                      <kind>Number</kind>
+                      <number>0.3</number>
+                    </literal>
+                  </argument>
+                </filter>
+              </li>
+              <li>
+                <kind>Reduce</kind>
+                <reduce>Count</reduce>
+              </li>
+            </steps>
+          </subject>
+          <verbKey>compare.gt</verbKey>
+          <argument>
+            <kind>Number</kind>
+            <literal>
+              <kind>Number</kind>
+              <number>0</number>
+            </literal>
+          </argument>
+        </detect>
+        <operate>
+          <li>
+            <subject>
+              <rootKind>Subject</rootKind>
+            </subject>
+            <verbKey>op.removeApparel</verbKey>
+            <argument>
+              <kind>Entity</kind>
+              <path>
+                <rootKind>Subject</rootKind>
+                <steps>
+                  <li>
+                    <kind>Property</kind>
+                    <propertyKey>pawn.apparel</propertyKey>
+                  </li>
+                  <li>
+                    <kind>Filter</kind>
+                    <filter>
+                      <kind>Detect</kind>
+                      <subject>
+                        <rootKind>Element</rootKind>
+                        <steps>
+                          <li>
+                            <kind>Property</kind>
+                            <propertyKey>thing.durability</propertyKey>
+                          </li>
+                        </steps>
+                      </subject>
+                      <verbKey>compare.lt</verbKey>
+                      <argument>
+                        <kind>Number</kind>
+                        <literal>
+                          <kind>Number</kind>
+                          <number>0.3</number>
+                        </literal>
+                      </argument>
+                    </filter>
+                  </li>
+                  <li>
+                    <kind>Reduce</kind>
+                    <reduce>First</reduce>
+                  </li>
+                </steps>
+              </path>
+            </argument>
+          </li>
+        </operate>
+        <cooldownTicks>4000</cooldownTicks>
+      </li>
+
+    </rules>
+  </RuleCore.RulePackDef>
+</Defs>

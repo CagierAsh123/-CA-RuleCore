@@ -1,0 +1,443 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- ── Settings ─────────────────────────────────────────────── -->
+  <RuleCore.EnableLog>Log rule activity</RuleCore.EnableLog>
+  <RuleCore.EnableLogDesc>When off, only errors are recorded. Errors are always recorded.</RuleCore.EnableLogDesc>
+  <RuleCore.VerboseLog>Verbose logging (trace)</RuleCore.VerboseLog>
+  <RuleCore.VerboseLogDesc>Record every detection evaluation, not just hits and failures.</RuleCore.VerboseLogDesc>
+  <RuleCore.LogCapacity>Timeline buffer: {0} / {1} entries ({2} evicted)</RuleCore.LogCapacity>
+  <RuleCore.ApplyCapacity>Apply capacity and clear timeline</RuleCore.ApplyCapacity>
+  <RuleCore.OpenPanel>Open rule editor</RuleCore.OpenPanel>
+  <RuleCore.LogToFile>Write log to file</RuleCore.LogToFile>
+  <RuleCore.LogToFileDesc>Mirror the timeline into log/*.md inside the mod folder, so it survives the session and can be shared.</RuleCore.LogToFileDesc>
+  <RuleCore.LogDirectory>Log folder: {0}</RuleCore.LogDirectory>
+  <RuleCore.LogFileOff>File output: off</RuleCore.LogFileOff>
+  <RuleCore.LogFileFailed>File output: failed to start, memory only (see Player.log)</RuleCore.LogFileFailed>
+  <RuleCore.LogFileActive>File output: {0} entries · {1}</RuleCore.LogFileActive>
+  <RuleCore.OpenLogFolder>Open log folder</RuleCore.OpenLogFolder>
+  <RuleCore.FlushLog>Flush now</RuleCore.FlushLog>
+  <RuleCore.LogRetention>Keep log files: {0}</RuleCore.LogRetention>
+
+  <!-- ── Panel and rule list ──────────────────────────────────── -->
+  <RuleCore.Panel.Title>RuleCore</RuleCore.Panel.Title>
+  <RuleCore.Panel.Stats>entries {0}/{1}  evicted {2}  seq {3}</RuleCore.Panel.Stats>
+  <RuleCore.Panel.ShowTrace>Show trace</RuleCore.Panel.ShowTrace>
+  <RuleCore.Panel.FollowLatest>Follow latest</RuleCore.Panel.FollowLatest>
+  <RuleCore.Panel.Clear>Clear</RuleCore.Panel.Clear>
+  <RuleCore.Panel.SelfTest>Self-test</RuleCore.Panel.SelfTest>
+  <RuleCore.Panel.Copy>Copy</RuleCore.Panel.Copy>
+  <RuleCore.Panel.Copied>Copied {0} entries to clipboard</RuleCore.Panel.Copied>
+  <RuleCore.Panel.CopySelected>Copy selected</RuleCore.Panel.CopySelected>
+  <RuleCore.Panel.CopiedOne>Copied #{0} to clipboard</RuleCore.Panel.CopiedOne>
+  <RuleCore.Panel.NoSelection>Click a row to select it first.</RuleCore.Panel.NoSelection>
+  <RuleCore.Panel.RulesHeader>Rules ({0})</RuleCore.Panel.RulesHeader>
+  <RuleCore.Panel.NewRule>New rule</RuleCore.Panel.NewRule>
+  <RuleCore.Panel.RuleLine>{0} · {1} · {2} · {3} op(s)</RuleCore.Panel.RuleLine>
+  <RuleCore.Panel.Enable>On</RuleCore.Panel.Enable>
+  <RuleCore.Panel.Disable>Off</RuleCore.Panel.Disable>
+  <RuleCore.Panel.Delete>Del</RuleCore.Panel.Delete>
+  <RuleCore.Panel.Missing>Could not find the RuleCore panel — its Defs probably failed to load.</RuleCore.Panel.Missing>
+  <RuleCore.Panel.NoRules>No rule definitions were loaded.
+
+Add a RuleCore.RulePackDef under 1.6/Defs/ to create one.</RuleCore.Panel.NoRules>
+  <RuleCore.Origin.Mod>Built-in</RuleCore.Origin.Mod>
+  <RuleCore.Origin.Player>Mine</RuleCore.Origin.Player>
+
+  <RuleCore.Form.NoSelection>Click a rule on the left and it is laid out in three parts: subject / detection / operations.
+
+(This build is read-only inspection — first we settle what a sentence should look like, then make every word clickable.)</RuleCore.Form.NoSelection>
+  <RuleCore.Form.Issues>Checks · {0}</RuleCore.Form.Issues>
+
+  <!-- ── Inspection view ──────────────────────────────────────── -->
+  <RuleCore.Inspect.Cooldown>cooldown {0}t</RuleCore.Inspect.Cooldown>
+  <RuleCore.Inspect.Subject>Subject</RuleCore.Inspect.Subject>
+  <RuleCore.Inspect.NoSubject>no subject binding (evaluated once for the map)</RuleCore.Inspect.NoSubject>
+  <RuleCore.Inspect.UnknownKey>(key not in the vocabulary)</RuleCore.Inspect.UnknownKey>
+  <RuleCore.Inspect.Detect>Detection</RuleCore.Inspect.Detect>
+  <RuleCore.Inspect.Always>(no detection = always true)</RuleCore.Inspect.Always>
+  <RuleCore.Inspect.And>AND</RuleCore.Inspect.And>
+  <RuleCore.Inspect.Or>OR</RuleCore.Inspect.Or>
+  <RuleCore.Inspect.Not>NOT</RuleCore.Inspect.Not>
+  <RuleCore.Inspect.Empty>(empty branch)</RuleCore.Inspect.Empty>
+  <RuleCore.Inspect.Edge>edge</RuleCore.Inspect.Edge>
+  <RuleCore.Inspect.Quiet>stands down quietly when false</RuleCore.Inspect.Quiet>
+  <RuleCore.Inspect.God>developer tier</RuleCore.Inspect.God>
+  <RuleCore.Inspect.Operate>Operations</RuleCore.Inspect.Operate>
+  <RuleCore.Inspect.Nothing>(no operations)</RuleCore.Inspect.Nothing>
+  <RuleCore.Inspect.RootSubject>the subject</RuleCore.Inspect.RootSubject>
+  <RuleCore.Inspect.RootElement>the current element</RuleCore.Inspect.RootElement>
+  <RuleCore.Inspect.RootMap>this map</RuleCore.Inspect.RootMap>
+  <RuleCore.Inspect.RootColonists>all free colonists</RuleCore.Inspect.RootColonists>
+  <RuleCore.Inspect.RootAllMaps>all maps</RuleCore.Inspect.RootAllMaps>
+
+  <!-- ── Defaults for a new rule ──────────────────────────────── -->
+  <RuleCore.NewRuleLabel>New rule</RuleCore.NewRuleLabel>
+  <RuleCore.NewRuleDesc>A freshly created rule. It only writes a log line — it reads nothing and touches nothing, so you cannot break anything by clicking around.</RuleCore.NewRuleDesc>
+  <RuleCore.NewRuleActionText>This is a player rule: if you can still see it after restarting the game, rules really do make it into the config.</RuleCore.NewRuleActionText>
+
+  <!-- ── Subject bindings ─────────────────────────────────────── -->
+  <RuleCore.Subject.freeColonists>Free colonists</RuleCore.Subject.freeColonists>
+  <RuleCore.Subject.freeColonistsDesc>Run the rule once per free colonist on the map. Cooldowns and loop detection are tracked per pawn too — one pawn firing must not spend another pawn's budget.</RuleCore.Subject.freeColonistsDesc>
+
+  <!-- ── Properties ───────────────────────────────────────────── -->
+  <RuleCore.Prop.map.outdoorTemp>Outdoor temperature</RuleCore.Prop.map.outdoorTemp>
+  <RuleCore.Prop.map.outdoorTempDesc>Outdoor temperature of the map, in Celsius.</RuleCore.Prop.map.outdoorTempDesc>
+  <RuleCore.Prop.map.weather>Weather</RuleCore.Prop.map.weather>
+  <RuleCore.Prop.map.weatherDesc>The current weather type: Clear / Rain / Thunderstorm, plus anything mods add.</RuleCore.Prop.map.weatherDesc>
+  <RuleCore.Prop.map.colonistCount>Free colonist count</RuleCore.Prop.map.colonistCount>
+  <RuleCore.Prop.map.colonistCountDesc>Spawned free colonists on this map (caravans away from home do not count).</RuleCore.Prop.map.colonistCountDesc>
+  <RuleCore.Prop.map.rainRate>Rain rate</RuleCore.Prop.map.rainRate>
+  <RuleCore.Prop.map.rainRateDesc>0 means no rain, 1 means heavy rain. Use "greater than 0" for "is it raining", "greater than 0.5" for "is it pouring".</RuleCore.Prop.map.rainRateDesc>
+  <RuleCore.Prop.map.snowRate>Snow rate</RuleCore.Prop.map.snowRate>
+  <RuleCore.Prop.map.snowRateDesc>0 means no snow, 1 means heavy snow.</RuleCore.Prop.map.snowRateDesc>
+
+  <RuleCore.Prop.pawn.health>Health</RuleCore.Prop.pawn.health>
+  <RuleCore.Prop.pawn.healthDesc>Overall health, 1 being unharmed (the bar at the top of the vanilla health tab).</RuleCore.Prop.pawn.healthDesc>
+  <RuleCore.Prop.pawn.position>Position</RuleCore.Prop.pawn.position>
+  <RuleCore.Prop.pawn.positionDesc>The cell they are standing on.</RuleCore.Prop.pawn.positionDesc>
+  <RuleCore.Prop.pawn.locationTemp>Temperature where they are</RuleCore.Prop.pawn.locationTemp>
+  <RuleCore.Prop.pawn.locationTempDesc>Their own warmth: room temperature indoors, outdoor temperature outside. The two should be continuous — stepping through a doorway should not make the reading jump.</RuleCore.Prop.pawn.locationTempDesc>
+  <RuleCore.Prop.pawn.apparel>Apparel</RuleCore.Prop.pawn.apparel>
+  <RuleCore.Prop.pawn.apparelDesc>Everything they are wearing (a group). Because it yields a group, a reduction must follow: `.Count` asks how many, `.First` picks one to read further.</RuleCore.Prop.pawn.apparelDesc>
+  <RuleCore.Prop.pawn.shelterCell>Shelter cell</RuleCore.Prop.pawn.shelterCell>
+  <RuleCore.Prop.pawn.shelterCellDesc>The nearest standable roofed cell that is actually reachable. A deterministic scan — the same world state always resolves to the same cell, so saves and replays do not drift.</RuleCore.Prop.pawn.shelterCellDesc>
+
+  <RuleCore.Prop.thing.durability>Durability</RuleCore.Prop.thing.durability>
+  <RuleCore.Prop.thing.durabilityDesc>Remaining durability as a fraction, 1 being pristine. Inside a filter this reads as "durability less than 50%".</RuleCore.Prop.thing.durabilityDesc>
+  <RuleCore.Prop.thing.defName>Thing type</RuleCore.Prop.thing.defName>
+  <RuleCore.Prop.thing.defNameDesc>The defName of the thing — how "is this a hat" gets answered.</RuleCore.Prop.thing.defNameDesc>
+
+  <!-- ── Detections ───────────────────────────────────────────── -->
+  <RuleCore.Verb.compare.gt>greater than</RuleCore.Verb.compare.gt>
+  <RuleCore.Verb.compare.gtDesc>Number comparison. Stays true while it keeps holding (level).</RuleCore.Verb.compare.gtDesc>
+  <RuleCore.Verb.compare.lt>less than</RuleCore.Verb.compare.lt>
+  <RuleCore.Verb.compare.ltDesc>Number comparison. Stays true while it keeps holding (level).</RuleCore.Verb.compare.ltDesc>
+  <RuleCore.Verb.compare.gte>at least</RuleCore.Verb.compare.gte>
+  <RuleCore.Verb.compare.gteDesc>Inclusive: equality counts as true.</RuleCore.Verb.compare.gteDesc>
+  <RuleCore.Verb.compare.lte>at most</RuleCore.Verb.compare.lte>
+  <RuleCore.Verb.compare.lteDesc>Inclusive: equality counts as true.</RuleCore.Verb.compare.lteDesc>
+  <RuleCore.Verb.compare.eq>equal to</RuleCore.Verb.compare.eq>
+  <RuleCore.Verb.compare.eqDesc>With a float tolerance (0.0001). Readings like temperature are nudged every tick, so exact equality is unreliable.</RuleCore.Verb.compare.eqDesc>
+  <RuleCore.Verb.compare.ne>not equal to</RuleCore.Verb.compare.ne>
+  <RuleCore.Verb.compare.neDesc>The complement of "equal to", sharing the same tolerance.</RuleCore.Verb.compare.neDesc>
+
+  <RuleCore.Verb.match.is>is</RuleCore.Verb.match.is>
+  <RuleCore.Verb.match.isDesc>Name comparison: is the current value this one. Which word shows up in the dropdown depends on what the subject yields — numbers get "equal to", names get "is".</RuleCore.Verb.match.isDesc>
+
+  <RuleCore.Verb.state.always>always</RuleCore.Verb.state.always>
+  <RuleCore.Verb.state.alwaysDesc>Always true. Use it for purely periodic rules ("do this every N ticks") or just to confirm the engine is running.</RuleCore.Verb.state.alwaysDesc>
+  <RuleCore.Verb.state.idle>idle</RuleCore.Verb.state.idle>
+  <RuleCore.Verb.state.idleDesc>This pawn is free right now (wandering counts). When false the rule stands down quietly: no interrupting hauling, building or cooking, and it is not a rule failure.</RuleCore.Verb.state.idleDesc>
+  <RuleCore.Verb.state.able>able</RuleCore.Verb.state.able>
+  <RuleCore.Verb.state.ableDesc>Not downed, not in a mental break, not drafted, still mobile. When false the rule stands down quietly. It does interrupt current work — a raid should interrupt work.</RuleCore.Verb.state.ableDesc>
+  <RuleCore.Verb.event.letter>received letter</RuleCore.Verb.event.letter>
+  <RuleCore.Verb.event.letterDesc>A letter of this type arrived recently — the moment a red letter pops up and the game pauses, i.e. when the player realises something happened. It is edge semantics implemented as a time window: detection lags up to one sample step (250 ticks, about 4 seconds), and dismissing the letter inside the window suppresses it.</RuleCore.Verb.event.letterDesc>
+
+  <!-- ── Operations ───────────────────────────────────────────── -->
+  <RuleCore.Verb.op.log>write log</RuleCore.Verb.op.log>
+  <RuleCore.Verb.op.logDesc>Write one entry to the timeline. Changes nothing — the simplest way to prove a rule is actually being evaluated.</RuleCore.Verb.op.logDesc>
+  <RuleCore.Verb.op.goto>go to</RuleCore.Verb.op.goto>
+  <RuleCore.Verb.op.gotoDesc>Send the actor walking to a cell. Issues one job and lets go — pathing and anything on the way belong to vanilla AI. If vanilla refuses (drafted, higher-priority job) the rule stands down: vanilla comes first.</RuleCore.Verb.op.gotoDesc>
+  <RuleCore.Verb.op.removeApparel>take off</RuleCore.Verb.op.removeApparel>
+  <RuleCore.Verb.op.removeApparelDesc>Remove one worn item from the actor. Developer tier: vanilla has no job for undressing a conscious pawn (JobDefOf.Strip only works on corpses and downed pawns), so this has to change world state directly. What vanilla will not do for you, you do yourself.</RuleCore.Verb.op.removeApparelDesc>
+
+  <!-- ── Reductions ───────────────────────────────────────────── -->
+  <!-- ── Map-level operations: change the world directly ─────── -->
+  <RuleCore.Verb.map.setWeather>Set weather to</RuleCore.Verb.map.setWeather>
+  <RuleCore.Verb.map.setWeatherDesc>Switch the weather to another type ("the map becomes rain"). Developer tier: this changes world state directly rather than delegating to someone.</RuleCore.Verb.map.setWeatherDesc>
+  <RuleCore.Verb.map.incident>Trigger incident</RuleCore.Verb.map.incident>
+  <RuleCore.Verb.map.incidentDesc>Fire a vanilla incident (raid, solar flare, toxic fallout, eclipse, wanderers join...). It goes **through vanilla's incident system**, so the incident's own duration, letter, difficulty limits, "fired too recently" and scenario bans all still apply; if vanilla says it cannot happen now, the operation quietly stands down instead of forcing it. Developer tier.</RuleCore.Verb.map.incidentDesc>
+  <RuleCore.Verb.map.sendLetter>Send letter</RuleCore.Verb.map.sendLetter>
+  <RuleCore.Verb.map.sendLetterDesc>Pop a letter telling the player what happened. For starting a game condition, use Trigger incident — vanilla conditions ARE incidents and their duration lives on the incident (IncidentDef.durationDays); registering a GameCondition yourself could only guess. Player tier.</RuleCore.Verb.map.sendLetterDesc>
+  <RuleCore.Verb.map.hasCondition>Is under</RuleCore.Verb.map.hasCondition>
+  <RuleCore.Verb.map.hasConditionDesc>Whether a persistent condition is currently active on this map (eclipse, toxic fallout, cold snap, psychic drone). It is the read side of Trigger incident: start it with one, watch it with the other.</RuleCore.Verb.map.hasConditionDesc>
+
+  <!-- ── Permission tier ─────────────────────────────────────── -->
+  <RuleCore.Edit.TagGodDenied>developer · not granted</RuleCore.Edit.TagGodDenied>
+  <RuleCore.Edit.GodDeniedHint>The actions tagged "not granted" above will not take effect. To allow them: mod settings → "指令核心 RuleCore" → tick "Allow developer-tier operations".</RuleCore.Edit.GodDeniedHint>
+  <RuleCore.AllowDeveloperOps>Allow developer-tier operations</RuleCore.AllowDeveloperOps>
+  <RuleCore.AllowDeveloperOpsDesc>Lets rules change world state directly: set weather, trigger incidents. These are powerful, so this is off by default and it is your call. Note it only decides whether they are allowed — a rule made of player-tier actions does not become developer-tier because of it.</RuleCore.AllowDeveloperOpsDesc>
+  <RuleCore.TierNow>Currently allowed tier: {0}</RuleCore.TierNow>
+  <RuleCore.TierByDevMode>developer (vanilla dev mode is on)</RuleCore.TierByDevMode>
+  <RuleCore.TierGranted>developer (you ticked "Allow developer-tier operations" below)</RuleCore.TierGranted>
+  <RuleCore.TierNotGranted>player (delegate only)</RuleCore.TierNotGranted>
+
+  <RuleCore.Reduce.First>first</RuleCore.Reduce.First>
+  <RuleCore.Reduce.Nearest>nearest</RuleCore.Reduce.Nearest>
+  <RuleCore.Reduce.Count>count</RuleCore.Reduce.Count>
+
+  <!-- ── Enums ────────────────────────────────────────────────── -->
+  <RuleCore.Enum.RuleTier.Player>player tier</RuleCore.Enum.RuleTier.Player>
+  <RuleCore.Enum.RuleTier.Developer>developer tier</RuleCore.Enum.RuleTier.Developer>
+
+  <RuleCore.Enum.RuleEntityKind.Any>anything</RuleCore.Enum.RuleEntityKind.Any>
+  <RuleCore.Enum.RuleEntityKind.Map>map</RuleCore.Enum.RuleEntityKind.Map>
+  <RuleCore.Enum.RuleEntityKind.Pawn>pawn</RuleCore.Enum.RuleEntityKind.Pawn>
+  <RuleCore.Enum.RuleEntityKind.Thing>thing</RuleCore.Enum.RuleEntityKind.Thing>
+  <RuleCore.Enum.RuleEntityKind.Room>room</RuleCore.Enum.RuleEntityKind.Room>
+  <RuleCore.Enum.RuleEntityKind.Cell>cell</RuleCore.Enum.RuleEntityKind.Cell>
+  <RuleCore.Enum.RuleEntityKind.Event>event</RuleCore.Enum.RuleEntityKind.Event>
+  <RuleCore.Enum.RuleEntityKind.Set>group</RuleCore.Enum.RuleEntityKind.Set>
+  <!-- ── Editor ───────────────────────────────────────────────── -->
+  <RuleCore.Panel.Pending>● unsaved</RuleCore.Panel.Pending>
+
+  <RuleCore.Edit.HeaderLine>{0} · cooldown {1}t · {2}</RuleCore.Edit.HeaderLine>
+  <RuleCore.Edit.HasEdge>has edge detection</RuleCore.Edit.HasEdge>
+  <RuleCore.Edit.AllLevel>all level detection</RuleCore.Edit.AllLevel>
+  <RuleCore.Edit.ReadOnlyHint>Built-in rules are read-only. Create your own rule to change things.</RuleCore.Edit.ReadOnlyHint>
+
+  <RuleCore.Edit.Section.Identity>Identity</RuleCore.Edit.Section.Identity>
+  <RuleCore.Edit.Section.Subject>Subject</RuleCore.Edit.Section.Subject>
+  <RuleCore.Edit.Section.Detect>Detection</RuleCore.Edit.Section.Detect>
+  <RuleCore.Edit.Section.Operate>Operations</RuleCore.Edit.Section.Operate>
+
+  <RuleCore.Edit.Field.Name>Name</RuleCore.Edit.Field.Name>
+  <RuleCore.Edit.Field.Desc>Notes</RuleCore.Edit.Field.Desc>
+  <RuleCore.Edit.Field.Cooldown>Cooldown</RuleCore.Edit.Field.Cooldown>
+  <RuleCore.Edit.Field.CooldownHint>ticks, 60 = 1s</RuleCore.Edit.Field.CooldownHint>
+  <RuleCore.Edit.Field.Enabled>Rule enabled</RuleCore.Edit.Field.Enabled>
+
+  <RuleCore.Edit.Subject.None>no subject binding</RuleCore.Edit.Subject.None>
+  <RuleCore.Edit.Subject.NoneHint>evaluated once for the map; anything reading the subject is always false</RuleCore.Edit.Subject.NoneHint>
+
+  <RuleCore.Edit.NoDetect>No detection = always true.</RuleCore.Edit.NoDetect>
+  <RuleCore.Edit.AddDetect>+ detection</RuleCore.Edit.AddDetect>
+  <RuleCore.Edit.NoOperate>No operations, so this rule does nothing.</RuleCore.Edit.NoOperate>
+  <RuleCore.Edit.AddOperate>+ add operation</RuleCore.Edit.AddOperate>
+  <RuleCore.Edit.NoIssues>No problems found.</RuleCore.Edit.NoIssues>
+
+  <RuleCore.Edit.And>AND</RuleCore.Edit.And>
+  <RuleCore.Edit.Or>OR</RuleCore.Edit.Or>
+  <RuleCore.Edit.Not>NOT</RuleCore.Edit.Not>
+  <RuleCore.Edit.AddAnd>+ AND</RuleCore.Edit.AddAnd>
+  <RuleCore.Edit.AddOr>+ OR</RuleCore.Edit.AddOr>
+  <RuleCore.Edit.AddNot>+ NOT</RuleCore.Edit.AddNot>
+  <RuleCore.Edit.NotEmpty>NOT is empty — give it a detection.</RuleCore.Edit.NotEmpty>
+
+  <RuleCore.Edit.Filter>filter…</RuleCore.Edit.Filter>
+  <RuleCore.Edit.Filtered>Filter:</RuleCore.Edit.Filtered>
+  <RuleCore.Edit.AddStep>+ step</RuleCore.Edit.AddStep>
+  <RuleCore.Edit.AppendProperty>read: {0}</RuleCore.Edit.AppendProperty>
+  <RuleCore.Edit.AppendReduce>reduce: {0}</RuleCore.Edit.AppendReduce>
+  <RuleCore.Edit.AppendFilter>add a filter…</RuleCore.Edit.AppendFilter>
+  <RuleCore.Edit.NothingToAppend>This path is at its end.</RuleCore.Edit.NothingToAppend>
+  <RuleCore.Edit.NoPropertyFor>{0} has no readable properties.</RuleCore.Edit.NoPropertyFor>
+  <RuleCore.Edit.NoReduce>No reduction applies here (this is already a single value).</RuleCore.Edit.NoReduce>
+  <RuleCore.Edit.PickVerb>pick a predicate…</RuleCore.Edit.PickVerb>
+  <RuleCore.Edit.NoVerbFor>No predicate applies to {0}.</RuleCore.Edit.NoVerbFor>
+  <RuleCore.Edit.PickValue>pick a value…</RuleCore.Edit.PickValue>
+  <RuleCore.Edit.EnumNeedsTyping>This predicate declares no value domain, so it has to be typed.</RuleCore.Edit.EnumNeedsTyping>
+  <RuleCore.Edit.NoValueDomain>No selectable values (this vocabulary entry declares no Def type).</RuleCore.Edit.NoValueDomain>
+  <RuleCore.Edit.TooManyValues>…too many candidates, only the first 60 are listed.</RuleCore.Edit.TooManyValues>
+  <RuleCore.Edit.UnsupportedArg>The editor does not support {0} arguments yet.</RuleCore.Edit.UnsupportedArg>
+
+  <RuleCore.Edit.Root.Subject>the subject</RuleCore.Edit.Root.Subject>
+  <RuleCore.Edit.Root.SubjectDesc>The actor of this evaluation. The rule runs once per bound subject.</RuleCore.Edit.Root.SubjectDesc>
+  <RuleCore.Edit.Root.Element>the current element</RuleCore.Edit.Root.Element>
+  <RuleCore.Edit.Root.ElementDesc>The item a filter is walking. Only meaningful inside a filter.</RuleCore.Edit.Root.ElementDesc>
+  <RuleCore.Edit.Root.Map>this map</RuleCore.Edit.Root.Map>
+  <RuleCore.Edit.Root.MapDesc>The map being evaluated. The engine is instantiated per map, so the rule runs once per map.</RuleCore.Edit.Root.MapDesc>
+  <RuleCore.Edit.Root.Colonists>all free colonists</RuleCore.Edit.Root.Colonists>
+  <RuleCore.Edit.Root.ColonistsDesc>Everyone on the map (a group). A reduction must follow.</RuleCore.Edit.Root.ColonistsDesc>
+  <RuleCore.Edit.Root.AllMaps>all maps</RuleCore.Edit.Root.AllMaps>
+  <RuleCore.Edit.Root.AllMapsDesc>Every map (a group). A reduction must follow.</RuleCore.Edit.Root.AllMapsDesc>
+  <RuleCore.Prop.map.skyGlow>Sky glow</RuleCore.Prop.map.skyGlow>
+  <RuleCore.Prop.map.skyGlowDesc>0-1: near 1 in daylight, near 0 at night, continuous through dusk. Use "less than 0.3" for "it is getting dark".</RuleCore.Prop.map.skyGlowDesc>
+  <RuleCore.Prop.map.wealth>Map wealth</RuleCore.Prop.map.wealth>
+  <RuleCore.Prop.map.wealthDesc>Total value of everything on this map.</RuleCore.Prop.map.wealthDesc>
+
+  <RuleCore.Prop.pawn.mood>Mood</RuleCore.Prop.pawn.mood>
+  <RuleCore.Prop.pawn.moodDesc>Mood need as a fraction, 1 being satisfied. Unreadable on mechanoids, which have no mood.</RuleCore.Prop.pawn.moodDesc>
+  <RuleCore.Prop.pawn.food>Food</RuleCore.Prop.pawn.food>
+  <RuleCore.Prop.pawn.foodDesc>Food need as a fraction, 1 being full.</RuleCore.Prop.pawn.foodDesc>
+  <RuleCore.Prop.pawn.rest>Rest</RuleCore.Prop.pawn.rest>
+  <RuleCore.Prop.pawn.restDesc>Rest need as a fraction, 1 being fully rested.</RuleCore.Prop.pawn.restDesc>
+  <RuleCore.Prop.pawn.isDrafted>Drafted</RuleCore.Prop.pawn.isDrafted>
+  <RuleCore.Prop.pawn.isDraftedDesc>Whether the player has taken this pawn over. A boolean fact — pair it with "is true".</RuleCore.Prop.pawn.isDraftedDesc>
+  <RuleCore.Prop.pawn.isDowned>Downed</RuleCore.Prop.pawn.isDowned>
+  <RuleCore.Prop.pawn.isDownedDesc>Whether they are down on the ground. A boolean fact — pair it with "is true".</RuleCore.Prop.pawn.isDownedDesc>
+  <RuleCore.Prop.pawn.room>Their room</RuleCore.Prop.pawn.room>
+  <RuleCore.Prop.pawn.roomDesc>The room they are in. Unreadable outdoors — that is "no room", not "a room of zero", and conflating the two makes room checks silently true outside.</RuleCore.Prop.pawn.roomDesc>
+
+  <RuleCore.Prop.room.temperature>Room temperature</RuleCore.Prop.room.temperature>
+  <RuleCore.Prop.room.temperatureDesc>Temperature inside the room, in Celsius.</RuleCore.Prop.room.temperatureDesc>
+  <RuleCore.Prop.room.cellCount>Room size</RuleCore.Prop.room.cellCount>
+  <RuleCore.Prop.room.cellCountDesc>How many cells the room has. "Less than 20" means cramped.</RuleCore.Prop.room.cellCountDesc>
+
+  <RuleCore.Prop.thing.hitPoints>Hit points</RuleCore.Prop.thing.hitPoints>
+  <RuleCore.Prop.thing.hitPointsDesc>Absolute hit points (not a fraction). Use "durability" for the fraction.</RuleCore.Prop.thing.hitPointsDesc>
+
+  <RuleCore.Verb.state.holds>is true</RuleCore.Verb.state.holds>
+  <RuleCore.Verb.state.holdsDesc>Use a boolean fact as a detection. With this, facts like "drafted" or "downed" do not each need their own predicate — adding a fact is adding a property row.</RuleCore.Verb.state.holdsDesc>
+
+  <RuleCore.Edit.Collapse>collapse</RuleCore.Edit.Collapse>
+  <RuleCore.Picker.Title>Pick: {0}</RuleCore.Picker.Title>
+  <RuleCore.Picker.NoMatch>Nothing matches. Try another word — defName and label both work.</RuleCore.Picker.NoMatch>
+  <RuleCore.Edit.KwWhen>when</RuleCore.Edit.KwWhen>
+  <RuleCore.Edit.KwAnd>and</RuleCore.Edit.KwAnd>
+  <RuleCore.Edit.KwOr>or</RuleCore.Edit.KwOr>
+  <RuleCore.Edit.KwNot>not</RuleCore.Edit.KwNot>
+  <RuleCore.Edit.KwComma>,</RuleCore.Edit.KwComma>
+  <RuleCore.Edit.SlotEntity>pick entity…</RuleCore.Edit.SlotEntity>
+  <RuleCore.Edit.SlotPredicate>pick predicate…</RuleCore.Edit.SlotPredicate>
+  <RuleCore.Edit.SlotObject>object…</RuleCore.Edit.SlotObject>
+  <RuleCore.Edit.Section.Root>Pick a root</RuleCore.Edit.Section.Root>
+  <RuleCore.Edit.Section.Path>Entity path (click a segment to cut back to it)</RuleCore.Edit.Section.Path>
+  <RuleCore.Edit.Section.AddProperty>Add property</RuleCore.Edit.Section.AddProperty>
+  <RuleCore.Edit.Section.Filter>Filter</RuleCore.Edit.Section.Filter>
+  <RuleCore.Edit.Section.Reduce>Reduce (required for a set)</RuleCore.Edit.Section.Reduce>
+  <RuleCore.Edit.Section.Predicate>Predicates for {0}</RuleCore.Edit.Section.Predicate>
+  <RuleCore.Edit.Section.Object>Object</RuleCore.Edit.Section.Object>
+  <RuleCore.Edit.Section.Presets>Common values</RuleCore.Edit.Section.Presets>
+  <RuleCore.Edit.Section.RawKey>Raw defName</RuleCore.Edit.Section.RawKey>
+  <RuleCore.Edit.Section.EntityPath>Target entity path</RuleCore.Edit.Section.EntityPath>
+  <RuleCore.Edit.CurrentType>current type: {0}</RuleCore.Edit.CurrentType>
+  <RuleCore.Edit.CrumbDetect>detection clause</RuleCore.Edit.CrumbDetect>
+  <RuleCore.Edit.CrumbOperate>operation clause</RuleCore.Edit.CrumbOperate>
+  <RuleCore.Edit.CrumbFilter>filter condition</RuleCore.Edit.CrumbFilter>
+  <RuleCore.Edit.CrumbSubject>subject</RuleCore.Edit.CrumbSubject>
+  <RuleCore.Edit.CrumbPredicate>predicate</RuleCore.Edit.CrumbPredicate>
+  <RuleCore.Edit.CrumbObject>object</RuleCore.Edit.CrumbObject>
+  <RuleCore.Edit.Generated>Generated text</RuleCore.Edit.Generated>
+  <RuleCore.Edit.ClauseEmpty>No clauses yet — use the buttons below.</RuleCore.Edit.ClauseEmpty>
+  <RuleCore.Edit.InspectorHint>Click any slot in the sentence to start editing.
+The options for that slot show up here — no popup covering the sentence.</RuleCore.Edit.InspectorHint>
+  <RuleCore.Edit.AddFilter>add a filter…</RuleCore.Edit.AddFilter>
+  <RuleCore.Edit.ComplexFilter>complex filter</RuleCore.Edit.ComplexFilter>
+  <RuleCore.Edit.TagEdge>edge</RuleCore.Edit.TagEdge>
+  <RuleCore.Edit.TagGod>developer</RuleCore.Edit.TagGod>
+  <RuleCore.Edit.TagQuiet>stands down</RuleCore.Edit.TagQuiet>
+  <RuleCore.Edit.NoVerbForType>No predicate applies to this subject type.</RuleCore.Edit.NoVerbForType>
+  <RuleCore.Edit.PickPredicateFirst>Pick a predicate first.</RuleCore.Edit.PickPredicateFirst>
+  <RuleCore.Edit.NoArgument>This predicate takes no object.</RuleCore.Edit.NoArgument>
+  <RuleCore.Edit.PathEnd>This path is at its end.</RuleCore.Edit.PathEnd>
+  <RuleCore.Edit.BrokenPath>The path has an unknown key (hand-edited XML?).</RuleCore.Edit.BrokenPath>
+  <RuleCore.Edit.Type.Number>number</RuleCore.Edit.Type.Number>
+  <RuleCore.Edit.Type.Percent>percent</RuleCore.Edit.Type.Percent>
+  <RuleCore.Edit.Type.Temp>temp</RuleCore.Edit.Type.Temp>
+  <RuleCore.Edit.Type.Bool>bool</RuleCore.Edit.Type.Bool>
+  <RuleCore.Edit.Type.Enum>name</RuleCore.Edit.Type.Enum>
+  <RuleCore.Edit.Type.Coord>coord</RuleCore.Edit.Type.Coord>
+  <RuleCore.Edit.Type.Text>text</RuleCore.Edit.Type.Text>
+  <RuleCore.Edit.Type.Unknown>unknown</RuleCore.Edit.Type.Unknown>
+  <RuleCore.Edit.Section.Subject>Subject binding (who "the subject" is)</RuleCore.Edit.Section.Subject>
+  <RuleCore.Edit.SlotSubject>pick subject…</RuleCore.Edit.SlotSubject>
+  <RuleCore.Edit.CrumbBinding>rule subject</RuleCore.Edit.CrumbBinding>
+  <RuleCore.Edit.Subject.NoneTag>once per map</RuleCore.Edit.Subject.NoneTag>
+  <RuleCore.Edit.Subject.Hint>With no subject binding the engine evaluates the rule once for the map — and any detection reading "the subject" is then always false.</RuleCore.Edit.Subject.Hint>
+  <RuleCore.Edit.NeedBinding>This clause reads the subject, but the rule has no subject binding yet — pick one in the bar at the top.</RuleCore.Edit.NeedBinding>
+  <RuleCore.Edit.TextNoSubject>(no subject)</RuleCore.Edit.TextNoSubject>
+  <RuleCore.Edit.TextNoPredicate>(no predicate)</RuleCore.Edit.TextNoPredicate>
+  <RuleCore.Edit.PickRootHint>Pick a root above first, then read properties off it.</RuleCore.Edit.PickRootHint>
+  <RuleCore.Edit.BindFirst>⚠ This rule has no subject binding — click here to pick one</RuleCore.Edit.BindFirst>
+  <RuleCore.Edit.NeedsReduceFirst>A group is not something a predicate can act on. Go back a level and add a reduction first (.count to count, .first to take one), then come back.</RuleCore.Edit.NeedsReduceFirst>
+
+  <!-- ══ Subject binding: from "a group of people" to "this one person" ══ -->
+  <RuleCore.Subject.prisoners>Prisoners</RuleCore.Subject.prisoners>
+  <RuleCore.Subject.prisonersDesc>Runs the rule once per colony prisoner on the map. Cooldowns and loop detection are per person — one prisoner firing must not consume another's turn.</RuleCore.Subject.prisonersDesc>
+  <RuleCore.Subject.slaves>Slaves</RuleCore.Subject.slaves>
+  <RuleCore.Subject.slavesDesc>Runs the rule once per colony slave on the map. A slave is also a colony member, but when the question is "who is he", the situation outranks the membership.</RuleCore.Subject.slavesDesc>
+  <RuleCore.Subject.colonyMechs>Colony mechanoids</RuleCore.Subject.colonyMechs>
+  <RuleCore.Subject.colonyMechsDesc>Runs the rule once per player-owned mechanoid on the map. They have no food need, only energy — pick this and "food" disappears from the property list.</RuleCore.Subject.colonyMechsDesc>
+  <RuleCore.Subject.colonyAnimals>Colony animals</RuleCore.Subject.colonyAnimals>
+  <RuleCore.Subject.colonyAnimalsDesc>Runs the rule once per player-owned animal on the map. Animals have no ideoligion and cannot be drafted, so those options never show up for them.</RuleCore.Subject.colonyAnimalsDesc>
+  <RuleCore.Subject.guests>Guests</RuleCore.Subject.guests>
+  <RuleCore.Subject.guestsDesc>Runs the rule once per pawn who is hosted but is neither a prisoner nor a slave: visiting caravans, refugees, deserters.</RuleCore.Subject.guestsDesc>
+  <RuleCore.Subject.namedPawn>One named pawn</RuleCore.Subject.namedPawn>
+  <RuleCore.Subject.namedPawnDesc>Runs the whole rule once, for that one named pawn, and writes his name straight into the sentence. Once you have named him, "what he is" no longer needs judging inside the rule — the editor just tells you. One honest limitation: player rules live in global config while a pawn reference is issued per save, so in another save he cannot be found and the rule will not fire (the editor says so).</RuleCore.Subject.namedPawnDesc>
+
+  <!-- ══ Why there is no "is prisoner" property here ════════════
+       Identity is decided entirely by the subject binding: bind "prisoners" and
+       every pawn in that run IS a prisoner. So `subject.isPrisoner` would be a
+       tautology for every rule — no information, just a row in the list.
+       To make "prisoners do X", bind the subject to prisoners. -->
+  <RuleCore.Prop.pawn.energy>Energy</RuleCore.Prop.pawn.energy>
+  <RuleCore.Prop.pawn.energyDesc>A mechanoid's charge level, 1 = full. This is the mechanoid's "food" — the same slot meaning the same thing, just a different name and a different need object. Mechanoids list this one instead of food.</RuleCore.Prop.pawn.energyDesc>
+  <RuleCore.Prop.pawn.age>Age</RuleCore.Prop.pawn.age>
+  <RuleCore.Prop.pawn.ageDesc>Biological age in years. "He is still a child" is `less than 16`.</RuleCore.Prop.pawn.ageDesc>
+  <RuleCore.Prop.pawn.equipment>Held weapon</RuleCore.Prop.pawn.equipment>
+  <RuleCore.Prop.pawn.equipmentDesc>The thing in his primary hand. Empty hands read as unavailable, not as "holding an empty thing" — conflating the two would make `Held weapon.durability less than 50%` silently true while empty-handed.</RuleCore.Prop.pawn.equipmentDesc>
+
+  <RuleCore.Prop.map.prisonerCount>Prisoner count</RuleCore.Prop.map.prisonerCount>
+  <RuleCore.Prop.map.prisonerCountDesc>Spawned colony prisoners on this map (those away on caravans do not count).</RuleCore.Prop.map.prisonerCountDesc>
+  <RuleCore.Prop.map.slaveCount>Slave count</RuleCore.Prop.map.slaveCount>
+  <RuleCore.Prop.map.slaveCountDesc>Spawned colony slaves on this map.</RuleCore.Prop.map.slaveCountDesc>
+  <RuleCore.Prop.map.colonyMechCount>Mechanoid count</RuleCore.Prop.map.colonyMechCount>
+  <RuleCore.Prop.map.colonyMechCountDesc>Spawned player-owned mechanoids on this map.</RuleCore.Prop.map.colonyMechCountDesc>
+  <RuleCore.Prop.map.colonyAnimalCount>Animal count</RuleCore.Prop.map.colonyAnimalCount>
+  <RuleCore.Prop.map.colonyAnimalCountDesc>Spawned player-owned animals on this map.</RuleCore.Prop.map.colonyAnimalCountDesc>
+  <RuleCore.Prop.map.pawnCount>Total pawn count</RuleCore.Prop.map.pawnCount>
+  <RuleCore.Prop.map.pawnCountDesc>Every spawned pawn on this map, hostiles and animals included. This is how you ask "how big was that raid, really".</RuleCore.Prop.map.pawnCountDesc>
+
+  <!-- ── Identity values ──────────────────────────────────────── -->
+  <RuleCore.Enum.PawnCategory.colonist>Colonist</RuleCore.Enum.PawnCategory.colonist>
+  <RuleCore.Enum.PawnCategory.slave>Slave</RuleCore.Enum.PawnCategory.slave>
+  <RuleCore.Enum.PawnCategory.prisoner>Prisoner</RuleCore.Enum.PawnCategory.prisoner>
+  <RuleCore.Enum.PawnCategory.guest>Guest</RuleCore.Enum.PawnCategory.guest>
+  <RuleCore.Enum.PawnCategory.hostile>Hostile</RuleCore.Enum.PawnCategory.hostile>
+  <RuleCore.Enum.PawnCategory.mechanoid>Mechanoid</RuleCore.Enum.PawnCategory.mechanoid>
+  <RuleCore.Enum.PawnCategory.animal>Animal</RuleCore.Enum.PawnCategory.animal>
+  <RuleCore.Enum.PawnCategory.entity>Entity</RuleCore.Enum.PawnCategory.entity>
+  <RuleCore.Enum.PawnCategory.subhuman>Subhuman</RuleCore.Enum.PawnCategory.subhuman>
+  <RuleCore.Enum.PawnCategory.wildman>Wild man</RuleCore.Enum.PawnCategory.wildman>
+  <RuleCore.Enum.PawnCategory.other>Other</RuleCore.Enum.PawnCategory.other>
+
+  <!-- ── Capability bits: how the editor says "he lacks …" ────── -->
+  <RuleCore.Cap.Pawn>is a pawn</RuleCore.Cap.Pawn>
+  <RuleCore.Cap.Map>is a map</RuleCore.Cap.Map>
+  <RuleCore.Cap.Thing>is a thing</RuleCore.Cap.Thing>
+  <RuleCore.Cap.Room>is a room</RuleCore.Cap.Room>
+  <RuleCore.Cap.Cell>is a cell</RuleCore.Cap.Cell>
+  <RuleCore.Cap.Humanlike>humanlike</RuleCore.Cap.Humanlike>
+  <RuleCore.Cap.Mechanoid>mechanoid</RuleCore.Cap.Mechanoid>
+  <RuleCore.Cap.Animal>animal</RuleCore.Cap.Animal>
+  <RuleCore.Cap.Biological>flesh and blood</RuleCore.Cap.Biological>
+  <RuleCore.Cap.NeedMood>a mood need</RuleCore.Cap.NeedMood>
+  <RuleCore.Cap.NeedFood>a food need</RuleCore.Cap.NeedFood>
+  <RuleCore.Cap.NeedRest>a rest need</RuleCore.Cap.NeedRest>
+  <RuleCore.Cap.NeedEnergy>an energy need</RuleCore.Cap.NeedEnergy>
+  <RuleCore.Cap.NeedJoy>a joy need</RuleCore.Cap.NeedJoy>
+  <RuleCore.Cap.NeedComfort>a comfort need</RuleCore.Cap.NeedComfort>
+  <RuleCore.Cap.NeedBeauty>a beauty need</RuleCore.Cap.NeedBeauty>
+  <RuleCore.Cap.Apparel>the ability to wear apparel</RuleCore.Cap.Apparel>
+  <RuleCore.Cap.Equipment>the ability to hold equipment</RuleCore.Cap.Equipment>
+  <RuleCore.Cap.Inventory>an inventory</RuleCore.Cap.Inventory>
+  <RuleCore.Cap.Bed>the ability to own a bed</RuleCore.Cap.Bed>
+  <RuleCore.Cap.Colonist>colony membership</RuleCore.Cap.Colonist>
+  <RuleCore.Cap.Prisoner>prisoner status</RuleCore.Cap.Prisoner>
+  <RuleCore.Cap.Slave>slave status</RuleCore.Cap.Slave>
+  <RuleCore.Cap.Guest>guest status</RuleCore.Cap.Guest>
+  <RuleCore.Cap.Hostile>hostility</RuleCore.Cap.Hostile>
+  <RuleCore.Cap.CanDraft>the ability to be drafted</RuleCore.Cap.CanDraft>
+  <RuleCore.Cap.Skills>skills</RuleCore.Cap.Skills>
+  <RuleCore.Cap.Ideo>an ideoligion</RuleCore.Cap.Ideo>
+  <RuleCore.Cap.Age>an age</RuleCore.Cap.Age>
+
+  <!-- ── Editor: subject and "options that do not apply" ──────── -->
+  <RuleCore.Edit.Section.SubjectNamed>Name one pawn</RuleCore.Edit.Section.SubjectNamed>
+  <RuleCore.Edit.Section.SubjectGroup>or, run it once per member of a class</RuleCore.Edit.Section.SubjectGroup>
+  <RuleCore.Edit.ScopeSingle>just this one</RuleCore.Edit.ScopeSingle>
+  <RuleCore.Edit.ScopeGroup>once per member</RuleCore.Edit.ScopeGroup>
+  <RuleCore.Edit.Section.NotForThis>Not usable here (the current subject lacks what they need)</RuleCore.Edit.Section.NotForThis>
+  <RuleCore.Edit.MissingCapability>needs {0}</RuleCore.Edit.MissingCapability>
+  <RuleCore.Edit.Subject.NamedHint>The rule runs once, for the pawn you name, and the sentence uses his name. Once he is named, "what he is" no longer needs judging inside the rule.</RuleCore.Edit.Subject.NamedHint>
+  <RuleCore.Edit.Subject.IsNow>{0} is currently: {1}</RuleCore.Edit.Subject.IsNow>
+  <RuleCore.Edit.Subject.MissingHint>"{0}" cannot be found in this save. Player rules live in global config while a pawn reference is issued per save — in another save he is gone and this rule will not fire.</RuleCore.Edit.Subject.MissingHint>
+  <RuleCore.Edit.Subject.GroupIdentityHint>The binding IS the identity: bind "prisoners" and everyone in that run is a prisoner — no need to also write "he is a prisoner". The property list follows too: a mechanoid has no food, only energy.</RuleCore.Edit.Subject.GroupIdentityHint>
+  <RuleCore.Edit.Subject.MemberCountShort>{0} pawn(s)</RuleCore.Edit.Subject.MemberCountShort>
+  <RuleCore.Edit.Subject.NoMemberShort>0</RuleCore.Edit.Subject.NoMemberShort>
+  <RuleCore.Edit.Subject.NoMember>No subjects matched this tick (nobody on the map fits), so the rule will not run.</RuleCore.Edit.Subject.NoMember>
+  <RuleCore.Edit.Subject.NoCandidate>There is nobody on this map to name.</RuleCore.Edit.Subject.NoCandidate>
+  <RuleCore.Edit.Subject.Lost>(not found: {0})</RuleCore.Edit.Subject.Lost>
+  <RuleCore.Edit.Subject.Unpicked>(nobody picked yet)</RuleCore.Edit.Subject.Unpicked>
+  <RuleCore.Edit.BackToSentence>Once you are done here, click any slot in the sentence to keep editing subject / predicate / object.</RuleCore.Edit.BackToSentence>
+  <RuleCore.Picker.PawnTitle>Pick a pawn</RuleCore.Picker.PawnTitle>
+
+  <!-- ── Object: only list the ways that actually produce that type ── -->
+  <RuleCore.Edit.NoObject>No target picked yet.</RuleCore.Edit.NoObject>
+  <RuleCore.Edit.Section.WaysToMake>Ways to produce "{0}"</RuleCore.Edit.Section.WaysToMake>
+  <RuleCore.Edit.NoWayToMake>Nothing in the vocabulary produces "{0}" right now — you need a mod to add a row, or reword this rule so it does not need one.</RuleCore.Edit.NoWayToMake>
+  <RuleCore.Edit.ObjectTypeOk>✓ type matches: {0}</RuleCore.Edit.ObjectTypeOk>
+  <RuleCore.Edit.ObjectTypeBad>⚠ this verb wants "{0}", but the path currently yields "{1}"</RuleCore.Edit.ObjectTypeBad>
+  <RuleCore.Edit.VerbNoLongerValid>"{0}" no longer applies: its subject is now "{1}" — pick a new predicate above.</RuleCore.Edit.VerbNoLongerValid>
+</LanguageData>

@@ -1,0 +1,442 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- ── 设置页 ───────────────────────────────────────────────── -->
+  <RuleCore.EnableLog>記錄規則日誌</RuleCore.EnableLog>
+  <RuleCore.EnableLogDesc>關閉後只保留錯誤記錄。錯誤永遠輸出。</RuleCore.EnableLogDesc>
+  <RuleCore.VerboseLog>詳細日誌（Trace）</RuleCore.VerboseLog>
+  <RuleCore.VerboseLogDesc>記錄每一次檢測求值，而不只是命中與失敗。排障时開啟。</RuleCore.VerboseLogDesc>
+  <RuleCore.LogCapacity>時間線緩衝：{0} / {1} 条（已淘汰 {2} 条）</RuleCore.LogCapacity>
+  <RuleCore.ApplyCapacity>套用容量并清空時間線</RuleCore.ApplyCapacity>
+  <RuleCore.OpenPanel>開啟規則編輯器</RuleCore.OpenPanel>
+  <RuleCore.LogToFile>日誌落盤</RuleCore.LogToFile>
+  <RuleCore.LogToFileDesc>把時間線同时写進模組目錄下的 log/*.md，便於事後比對與贴给别人。</RuleCore.LogToFileDesc>
+  <RuleCore.LogDirectory>日誌目錄：{0}</RuleCore.LogDirectory>
+  <RuleCore.LogFileOff>文件輸出：已關閉</RuleCore.LogFileOff>
+  <RuleCore.LogFileFailed>文件輸出：啟動失敗，已回落到僅記憶體（原因见 Player.log）</RuleCore.LogFileFailed>
+  <RuleCore.LogFileActive>文件輸出：已写入 {0} 条 · {1}</RuleCore.LogFileActive>
+  <RuleCore.OpenLogFolder>開啟日誌目錄</RuleCore.OpenLogFolder>
+  <RuleCore.FlushLog>立即落盤</RuleCore.FlushLog>
+  <RuleCore.LogRetention>日誌保留份數：{0}</RuleCore.LogRetention>
+
+  <!-- ── 面板與規則清單 ───────────────────────────────────────── -->
+  <RuleCore.Panel.Title>指令核心</RuleCore.Panel.Title>
+  <RuleCore.Panel.Stats>記錄 {0}/{1}　淘汰 {2}　序號 {3}</RuleCore.Panel.Stats>
+  <RuleCore.Panel.ShowTrace>顯示 Trace</RuleCore.Panel.ShowTrace>
+  <RuleCore.Panel.FollowLatest>跟隨最新</RuleCore.Panel.FollowLatest>
+  <RuleCore.Panel.Clear>清空</RuleCore.Panel.Clear>
+  <RuleCore.Panel.SelfTest>自檢</RuleCore.Panel.SelfTest>
+  <RuleCore.Panel.Copy>複製</RuleCore.Panel.Copy>
+  <RuleCore.Panel.Copied>已複製 {0} 条到剪貼簿</RuleCore.Panel.Copied>
+  <RuleCore.Panel.CopySelected>複製選取</RuleCore.Panel.CopySelected>
+  <RuleCore.Panel.CopiedOne>已複製 #{0} 到剪貼簿</RuleCore.Panel.CopiedOne>
+  <RuleCore.Panel.NoSelection>先點一行選取它，再複製。</RuleCore.Panel.NoSelection>
+  <RuleCore.Panel.RulesHeader>規則（{0}）</RuleCore.Panel.RulesHeader>
+  <RuleCore.Panel.NewRule>新建規則</RuleCore.Panel.NewRule>
+  <RuleCore.Panel.RuleLine>{0} · {1} · {2} · 操作{3}</RuleCore.Panel.RuleLine>
+  <RuleCore.Panel.Enable>啟用</RuleCore.Panel.Enable>
+  <RuleCore.Panel.Disable>停用</RuleCore.Panel.Disable>
+  <RuleCore.Panel.Delete>刪除</RuleCore.Panel.Delete>
+  <RuleCore.Panel.Missing>找不到「指令核心」面板——Defs 可能没有載入成功。</RuleCore.Panel.Missing>
+  <RuleCore.Panel.NoRules>没有載入到任何規則定義。
+
+在 1.6/Defs/ 下新增一個 RuleCore.RulePackDef 即可加入。</RuleCore.Panel.NoRules>
+  <RuleCore.Origin.Mod>內建</RuleCore.Origin.Mod>
+  <RuleCore.Origin.Player>我的</RuleCore.Origin.Player>
+
+  <RuleCore.Form.NoSelection>在左欄點一条規則，這裡會把它按三段式攤開：主體 / 檢測 / 操作。
+
+（这一版是唯讀檢視——先把"一句話该长什麼样"定下來，再让每個词可點。）</RuleCore.Form.NoSelection>
+  <RuleCore.Form.Issues>校驗 · {0} 项</RuleCore.Form.Issues>
+
+  <!-- ── 檢視视图 ─────────────────────────────────────────────── -->
+  <RuleCore.Inspect.Cooldown>冷卻 {0}t</RuleCore.Inspect.Cooldown>
+  <RuleCore.Inspect.Subject>主體</RuleCore.Inspect.Subject>
+  <RuleCore.Inspect.NoSubject>不綁定主體（整圖評估一次）</RuleCore.Inspect.NoSubject>
+  <RuleCore.Inspect.UnknownKey>（詞表里没有这個键）</RuleCore.Inspect.UnknownKey>
+  <RuleCore.Inspect.Detect>檢測</RuleCore.Inspect.Detect>
+  <RuleCore.Inspect.Always>（没有檢測 = 永遠成立）</RuleCore.Inspect.Always>
+  <RuleCore.Inspect.And>且</RuleCore.Inspect.And>
+  <RuleCore.Inspect.Or>或</RuleCore.Inspect.Or>
+  <RuleCore.Inspect.Not>非</RuleCore.Inspect.Not>
+  <RuleCore.Inspect.Empty>（空的分支）</RuleCore.Inspect.Empty>
+  <RuleCore.Inspect.Edge>邊沿</RuleCore.Inspect.Edge>
+  <RuleCore.Inspect.Quiet>不成立时安靜讓開</RuleCore.Inspect.Quiet>
+  <RuleCore.Inspect.God>開發者級</RuleCore.Inspect.God>
+  <RuleCore.Inspect.Operate>操作</RuleCore.Inspect.Operate>
+  <RuleCore.Inspect.Nothing>（没有操作）</RuleCore.Inspect.Nothing>
+  <RuleCore.Inspect.RootSubject>本主體</RuleCore.Inspect.RootSubject>
+  <RuleCore.Inspect.RootElement>當前元素</RuleCore.Inspect.RootElement>
+  <RuleCore.Inspect.RootMap>本圖</RuleCore.Inspect.RootMap>
+  <RuleCore.Inspect.RootColonists>全部自由殖民者</RuleCore.Inspect.RootColonists>
+  <RuleCore.Inspect.RootAllMaps>全部地图</RuleCore.Inspect.RootAllMaps>
+
+  <!-- ── 新建規則的默认值 ─────────────────────────────────────── -->
+  <RuleCore.NewRuleLabel>新建規則</RuleCore.NewRuleLabel>
+  <RuleCore.NewRuleDesc>剛建出來的規則。它只写一条日誌，不讀世界也不改世界，所以怎麼點都不會出事。</RuleCore.NewRuleDesc>
+  <RuleCore.NewRuleActionText>這條是玩家規則：如果你在重啟遊戲後還能看到它，說明規則確實進了設定。</RuleCore.NewRuleActionText>
+
+  <!-- ── 主體綁定方式 ─────────────────────────────────────────── -->
+  <RuleCore.Subject.freeColonists>自由殖民者</RuleCore.Subject.freeColonists>
+  <RuleCore.Subject.freeColonistsDesc>地图上每個自由殖民者各跑一遍規則。冷卻與自觸發环也按人分開算——一個人的一次觸發不該消耗掉别人的。</RuleCore.Subject.freeColonistsDesc>
+
+  <!-- ── 屬性 ─────────────────────────────────────────────────── -->
+  <RuleCore.Prop.map.outdoorTemp>室外溫度</RuleCore.Prop.map.outdoorTemp>
+  <RuleCore.Prop.map.outdoorTempDesc>地图的室外溫度（攝氏度）。</RuleCore.Prop.map.outdoorTempDesc>
+  <RuleCore.Prop.map.weather>天氣</RuleCore.Prop.map.weather>
+  <RuleCore.Prop.map.weatherDesc>當前的天氣類型，如 Clear / Rain / Thunderstorm，以及 mod 加的天氣。</RuleCore.Prop.map.weatherDesc>
+  <RuleCore.Prop.map.colonistCount>自由殖民者数</RuleCore.Prop.map.colonistCount>
+  <RuleCore.Prop.map.colonistCountDesc>地图上已生成的自由殖民者人數（在外遠征的不算）。</RuleCore.Prop.map.colonistCountDesc>
+  <RuleCore.Prop.map.rainRate>降雨強度</RuleCore.Prop.map.rainRate>
+  <RuleCore.Prop.map.rainRateDesc>0 表示沒下雨，1 表示大雨。想知道"下沒下雨"就写「大於 0」，想知道"雨大不大"就写「大於 0.5」。</RuleCore.Prop.map.rainRateDesc>
+  <RuleCore.Prop.map.snowRate>降雪強度</RuleCore.Prop.map.snowRate>
+  <RuleCore.Prop.map.snowRateDesc>0 表示沒下雪，1 表示大雪。</RuleCore.Prop.map.snowRateDesc>
+
+  <RuleCore.Prop.pawn.health>血量</RuleCore.Prop.pawn.health>
+  <RuleCore.Prop.pawn.healthDesc>總體健康度，1 = 滿血（原版健康面板頂上那條）。</RuleCore.Prop.pawn.healthDesc>
+  <RuleCore.Prop.pawn.position>位置</RuleCore.Prop.pawn.position>
+  <RuleCore.Prop.pawn.positionDesc>所在格子的座標。</RuleCore.Prop.pawn.positionDesc>
+  <RuleCore.Prop.pawn.locationTemp>所在位置溫度</RuleCore.Prop.pawn.locationTemp>
+  <RuleCore.Prop.pawn.locationTempDesc>他本人的冷熱：在房間里读房間溫度，在戶外读室外溫度。这兩者本來就该連續——站在門口不該让讀數跳一下。</RuleCore.Prop.pawn.locationTempDesc>
+  <RuleCore.Prop.pawn.apparel>著裝</RuleCore.Prop.pawn.apparel>
+  <RuleCore.Prop.pawn.apparelDesc>身上穿的所有衣物（一組）。產出是一組，所以後面必須接一個歸約：`.數量` 问"有幾件"，`.第一個` 取一件再读它的屬性。</RuleCore.Prop.pawn.apparelDesc>
+  <RuleCore.Prop.pawn.shelterCell>避難格</RuleCore.Prop.pawn.shelterCell>
+  <RuleCore.Prop.pawn.shelterCellDesc>最近的、可站立的、有屋頂的、而且真的走得到的格子。確定性掃描——同一個世界狀態必然解析出同一個格子，讀檔與重放不會漂。</RuleCore.Prop.pawn.shelterCellDesc>
+
+  <RuleCore.Prop.thing.durability>耐久</RuleCore.Prop.thing.durability>
+  <RuleCore.Prop.thing.durabilityDesc>剩餘耐久比例，1 = 完好。用在篩選里就是「耐久 小於 50%」這種话。</RuleCore.Prop.thing.durabilityDesc>
+  <RuleCore.Prop.thing.defName>物品類型</RuleCore.Prop.thing.defName>
+  <RuleCore.Prop.thing.defNameDesc>這件東西的 defName，用來判斷"是不是帽子"這類問題。</RuleCore.Prop.thing.defNameDesc>
+
+  <!-- ── 檢測 ─────────────────────────────────────────────────── -->
+  <RuleCore.Verb.compare.gt>大於</RuleCore.Verb.compare.gt>
+  <RuleCore.Verb.compare.gtDesc>數值比較。持續成立就是持續為真（電平）。</RuleCore.Verb.compare.gtDesc>
+  <RuleCore.Verb.compare.lt>小於</RuleCore.Verb.compare.lt>
+  <RuleCore.Verb.compare.ltDesc>數值比較。持續成立就是持續為真（電平）。</RuleCore.Verb.compare.ltDesc>
+  <RuleCore.Verb.compare.gte>不小於</RuleCore.Verb.compare.gte>
+  <RuleCore.Verb.compare.gteDesc>含端點：等於也算成立。</RuleCore.Verb.compare.gteDesc>
+  <RuleCore.Verb.compare.lte>不大於</RuleCore.Verb.compare.lte>
+  <RuleCore.Verb.compare.lteDesc>含端點：等於也算成立。</RuleCore.Verb.compare.lteDesc>
+  <RuleCore.Verb.compare.eq>等於</RuleCore.Verb.compare.eq>
+  <RuleCore.Verb.compare.eqDesc>带浮點容差（0.0001）。溫度這類讀數每 tick 都在被推著走，直接判等不可靠。</RuleCore.Verb.compare.eqDesc>
+  <RuleCore.Verb.compare.ne>不等於</RuleCore.Verb.compare.ne>
+  <RuleCore.Verb.compare.neDesc>與「等於」互補，用的是同一個容差。</RuleCore.Verb.compare.neDesc>
+
+  <RuleCore.Verb.match.is>是</RuleCore.Verb.match.is>
+  <RuleCore.Verb.match.isDesc>枚举比較：當前值是不是这個名字。它在下拉里的位置由主語產出什麼決定——產出數值时出現的是「等於」，產出名字时出現的才是「是」。</RuleCore.Verb.match.isDesc>
+
+  <RuleCore.Verb.state.always>恆真</RuleCore.Verb.state.always>
+  <RuleCore.Verb.state.alwaysDesc>永遠成立。想写"每 N tick 做一次某事"的纯週期規則，或者只想确认引擎在跑时用它。</RuleCore.Verb.state.alwaysDesc>
+  <RuleCore.Verb.state.idle>空閒</RuleCore.Verb.state.idle>
+  <RuleCore.Verb.state.idleDesc>这個人現在閒著（遊蕩也算）。不成立的後果是安靜讓開：不打斷搬運、建造、做飯，也不算規則失敗。</RuleCore.Verb.state.idleDesc>
+  <RuleCore.Verb.state.able>能動</RuleCore.Verb.state.able>
+  <RuleCore.Verb.state.ableDesc>未倒地、未崩潰、未被徵召、還有移動能力。不成立时安靜讓開。會打斷手上的活——襲擊來了就该打斷。</RuleCore.Verb.state.ableDesc>
+  <RuleCore.Verb.event.letter>收到信件</RuleCore.Verb.event.letter>
+  <RuleCore.Verb.event.letterDesc>最近收到過某類信件——螢幕彈出紅色信件、遊戲自動暫停的那一刻，也就是玩家意識到"出事了"的瞬間。它是邊沿語意，但实现是"按到達时间开一個視窗"：檢測最多滯後一個采样檔位（250 tick 约 4 秒），玩家在視窗内手動關掉那封信则不會觸發。</RuleCore.Verb.event.letterDesc>
+
+  <!-- ── 操作 ─────────────────────────────────────────────────── -->
+  <RuleCore.Verb.op.log>写日誌</RuleCore.Verb.op.log>
+  <RuleCore.Verb.op.logDesc>往時間線写一条記錄。不改变世界，是验证"這條規則到底有沒有被求值到"的最簡手段。</RuleCore.Verb.op.logDesc>
+  <RuleCore.Verb.op.goto>前往</RuleCore.Verb.op.goto>
+  <RuleCore.Verb.op.gotoDesc>让執行者走到某個格子。下一條 job 就撒手，路徑與路上的意外全部交回原版 AI。原版拒絕（被徵召、更高優先級的 job）就安靜讓開——这是"原版第一順位"。</RuleCore.Verb.op.gotoDesc>
+  <RuleCore.Verb.op.removeApparel>脫下</RuleCore.Verb.op.removeApparel>
+  <RuleCore.Verb.op.removeApparelDesc>脫下執行者身上的一件衣物。開發者級：原版没有"给清醒的人脫衣服"的 job（JobDefOf.Strip 只對屍體和倒地的人生效），所以它只能直接改世界狀態。原版不肯替你做的事，只能自己動手。</RuleCore.Verb.op.removeApparelDesc>
+
+  <!-- ── 歸約 ─────────────────────────────────────────────────── -->
+  <!-- ── 地圖級操作：直接改世界狀態 ───────────────────────────── -->
+  <RuleCore.Verb.map.setWeather>變成</RuleCore.Verb.map.setWeather>
+  <RuleCore.Verb.map.setWeatherDesc>把天氣換成另一種（如「本圖 變成 下雨」）。開發者級：這是直接改世界狀態，不是「讓誰去做」。</RuleCore.Verb.map.setWeatherDesc>
+  <RuleCore.Verb.map.incident>觸發事件</RuleCore.Verb.map.incident>
+  <RuleCore.Verb.map.incidentDesc>觸發一個原版事件（襲擊、太陽耀斑、毒霧、日蝕、流浪者加入…）。**走原版的事件系統**，所以事件自己的時長、信件、難度限制、「最近剛發生過」、劇本禁用全都還在；原版判斷「現在不能發生」就安靜讓開，不硬塞。開發者級。</RuleCore.Verb.map.incidentDesc>
+  <RuleCore.Verb.map.sendLetter>發信件</RuleCore.Verb.map.sendLetter>
+  <RuleCore.Verb.map.sendLetterDesc>彈一封信告訴玩家發生了什麼。要起遊戲狀態就用「觸發事件」——原版那些狀態本來就是事件，時長也在事件那邊（IncidentDef.durationDays），自己塞一個 GameCondition 只能靠猜。玩家級。</RuleCore.Verb.map.sendLetterDesc>
+  <RuleCore.Verb.map.hasCondition>處於</RuleCore.Verb.map.hasCondition>
+  <RuleCore.Verb.map.hasConditionDesc>這張圖上某個持續狀態現在有沒有在生效（日蝕、毒霧、寒潮、心靈低語）。它是「觸發事件」的讀取側：用「觸發」起，用「處於」監視。</RuleCore.Verb.map.hasConditionDesc>
+
+  <!-- ── 權限層級 ─────────────────────────────────────────────── -->
+  <RuleCore.Edit.TagGodDenied>開發者級 · 未授權</RuleCore.Edit.TagGodDenied>
+  <RuleCore.Edit.GodDeniedHint>上面標著「未授權」的動作現在不會生效。要放行：模組設定 →「指令核心 RuleCore」→ 勾上「允許開發者級操作」。</RuleCore.Edit.GodDeniedHint>
+  <RuleCore.AllowDeveloperOps>允許開發者級操作</RuleCore.AllowDeveloperOps>
+  <RuleCore.AllowDeveloperOpsDesc>讓規則能直接改世界狀態：改天氣、觸發事件。這類操作很強，所以預設關著，由你自己決定。注意：打開它只影響「放不放行」——一條只含玩家級動作的規則不會因此變成開發者級。</RuleCore.AllowDeveloperOpsDesc>
+  <RuleCore.TierNow>當前允許的層級：{0}</RuleCore.TierNow>
+  <RuleCore.TierByDevMode>開發者級（因為你開著原版開發者模式）</RuleCore.TierByDevMode>
+  <RuleCore.TierGranted>開發者級（你在下面勾了「允許開發者級操作」）</RuleCore.TierGranted>
+  <RuleCore.TierNotGranted>玩家級（只能「讓誰去做」）</RuleCore.TierNotGranted>
+
+  <RuleCore.Reduce.First>第一個</RuleCore.Reduce.First>
+  <RuleCore.Reduce.Nearest>最近</RuleCore.Reduce.Nearest>
+  <RuleCore.Reduce.Count>數量</RuleCore.Reduce.Count>
+
+  <!-- ── 枚举 ─────────────────────────────────────────────────── -->
+  <RuleCore.Enum.RuleTier.Player>玩家级</RuleCore.Enum.RuleTier.Player>
+  <RuleCore.Enum.RuleTier.Developer>開發者級</RuleCore.Enum.RuleTier.Developer>
+
+  <RuleCore.Enum.RuleEntityKind.Any>任意</RuleCore.Enum.RuleEntityKind.Any>
+  <RuleCore.Enum.RuleEntityKind.Map>地图</RuleCore.Enum.RuleEntityKind.Map>
+  <RuleCore.Enum.RuleEntityKind.Pawn>小人</RuleCore.Enum.RuleEntityKind.Pawn>
+  <RuleCore.Enum.RuleEntityKind.Thing>物品</RuleCore.Enum.RuleEntityKind.Thing>
+  <RuleCore.Enum.RuleEntityKind.Room>房間</RuleCore.Enum.RuleEntityKind.Room>
+  <RuleCore.Enum.RuleEntityKind.Cell>格子</RuleCore.Enum.RuleEntityKind.Cell>
+  <RuleCore.Enum.RuleEntityKind.Event>事件</RuleCore.Enum.RuleEntityKind.Event>
+  <RuleCore.Enum.RuleEntityKind.Set>一組</RuleCore.Enum.RuleEntityKind.Set>
+  <!-- ── 編輯器 ───────────────────────────────────────────────── -->
+  <RuleCore.Panel.Pending>● 待落盤</RuleCore.Panel.Pending>
+
+  <RuleCore.Edit.HeaderLine>{0} · 冷卻 {1}t · {2}</RuleCore.Edit.HeaderLine>
+  <RuleCore.Edit.HasEdge>含邊沿檢測</RuleCore.Edit.HasEdge>
+  <RuleCore.Edit.AllLevel>全是電平檢測</RuleCore.Edit.AllLevel>
+  <RuleCore.Edit.ReadOnlyHint>內建規則是唯讀的。要改就照著自己的想法新增一條。</RuleCore.Edit.ReadOnlyHint>
+
+  <RuleCore.Edit.Section.Identity>身份</RuleCore.Edit.Section.Identity>
+  <RuleCore.Edit.Section.Subject>主體</RuleCore.Edit.Section.Subject>
+  <RuleCore.Edit.Section.Detect>檢測</RuleCore.Edit.Section.Detect>
+  <RuleCore.Edit.Section.Operate>動作</RuleCore.Edit.Section.Operate>
+
+  <RuleCore.Edit.Field.Name>名称</RuleCore.Edit.Field.Name>
+  <RuleCore.Edit.Field.Desc>說明</RuleCore.Edit.Field.Desc>
+  <RuleCore.Edit.Field.Cooldown>冷卻</RuleCore.Edit.Field.Cooldown>
+  <RuleCore.Edit.Field.CooldownHint>tick，60 = 1 秒</RuleCore.Edit.Field.CooldownHint>
+  <RuleCore.Edit.Field.Enabled>啟用这條規則</RuleCore.Edit.Field.Enabled>
+
+  <RuleCore.Edit.Subject.None>不綁定主體</RuleCore.Edit.Subject.None>
+  <RuleCore.Edit.Subject.NoneHint>整圖評估一次，读「本主體」的檢測會永遠不成立</RuleCore.Edit.Subject.NoneHint>
+
+  <RuleCore.Edit.NoDetect>没有檢測 = 永遠成立。</RuleCore.Edit.NoDetect>
+  <RuleCore.Edit.AddDetect>+ 檢測</RuleCore.Edit.AddDetect>
+  <RuleCore.Edit.NoOperate>没有動作，这條規則什麼也不做。</RuleCore.Edit.NoOperate>
+  <RuleCore.Edit.AddOperate>+ 添加動作</RuleCore.Edit.AddOperate>
+  <RuleCore.Edit.NoIssues>没有發現問題。</RuleCore.Edit.NoIssues>
+
+  <RuleCore.Edit.And>且</RuleCore.Edit.And>
+  <RuleCore.Edit.Or>或</RuleCore.Edit.Or>
+  <RuleCore.Edit.Not>非</RuleCore.Edit.Not>
+  <RuleCore.Edit.AddAnd>+ 且</RuleCore.Edit.AddAnd>
+  <RuleCore.Edit.AddOr>+ 或</RuleCore.Edit.AddOr>
+  <RuleCore.Edit.AddNot>+ 非</RuleCore.Edit.AddNot>
+  <RuleCore.Edit.NotEmpty>「非」裡面還沒有東西，給它加一句檢測。</RuleCore.Edit.NotEmpty>
+
+  <RuleCore.Edit.Filter>篩選…</RuleCore.Edit.Filter>
+  <RuleCore.Edit.Filtered>篩選條件：</RuleCore.Edit.Filtered>
+  <RuleCore.Edit.AddStep>+ 下一步</RuleCore.Edit.AddStep>
+  <RuleCore.Edit.AppendProperty>读屬性：{0}</RuleCore.Edit.AppendProperty>
+  <RuleCore.Edit.AppendReduce>歸約：{0}</RuleCore.Edit.AppendReduce>
+  <RuleCore.Edit.AppendFilter>加一層篩選…</RuleCore.Edit.AppendFilter>
+  <RuleCore.Edit.NothingToAppend>这條路已經走到頭了。</RuleCore.Edit.NothingToAppend>
+  <RuleCore.Edit.NoPropertyFor>{0} 身上没有可讀的屬性。</RuleCore.Edit.NoPropertyFor>
+  <RuleCore.Edit.NoReduce>這個類型没有可用的歸約（它已經是一個單值了）。</RuleCore.Edit.NoReduce>
+  <RuleCore.Edit.PickVerb>選一個謂詞…</RuleCore.Edit.PickVerb>
+  <RuleCore.Edit.NoVerbFor>{0} 身上没有能用的謂詞。</RuleCore.Edit.NoVerbFor>
+  <RuleCore.Edit.PickValue>選一個值…</RuleCore.Edit.PickValue>
+  <RuleCore.Edit.EnumNeedsTyping>這個謂詞没宣告取值來源，只能手填。</RuleCore.Edit.EnumNeedsTyping>
+  <RuleCore.Edit.NoValueDomain>讀不到可選的取值（這個詞表條目没宣告 Def 類型）。</RuleCore.Edit.NoValueDomain>
+  <RuleCore.Edit.TooManyValues>…候選太多，只列出了前 60 个。</RuleCore.Edit.TooManyValues>
+  <RuleCore.Edit.UnsupportedArg>編輯器還沒支援 {0} 類型的賓語。</RuleCore.Edit.UnsupportedArg>
+
+  <RuleCore.Edit.Root.Subject>本主體</RuleCore.Edit.Root.Subject>
+  <RuleCore.Edit.Root.SubjectDesc>本次求值的執行者。規則对綁定的每个主體各跑一遍。</RuleCore.Edit.Root.SubjectDesc>
+  <RuleCore.Edit.Root.Element>當前元素</RuleCore.Edit.Root.Element>
+  <RuleCore.Edit.Root.ElementDesc>篩選器裡正在遍歷的那一個。只在篩選裡有意義。</RuleCore.Edit.Root.ElementDesc>
+  <RuleCore.Edit.Root.Map>本图</RuleCore.Edit.Root.Map>
+  <RuleCore.Edit.Root.MapDesc>本次求值所在的地圖。引擎按地圖實例化，所以規則对每張地圖各跑一遍。</RuleCore.Edit.Root.MapDesc>
+  <RuleCore.Edit.Root.Colonists>全部自由殖民者</RuleCore.Edit.Root.Colonists>
+  <RuleCore.Edit.Root.ColonistsDesc>地圖上所有人（一组）。後面必須接一個歸約。</RuleCore.Edit.Root.ColonistsDesc>
+  <RuleCore.Edit.Root.AllMaps>全部地圖</RuleCore.Edit.Root.AllMaps>
+  <RuleCore.Edit.Root.AllMapsDesc>所有地圖（一组）。後面必須接一個歸約。</RuleCore.Edit.Root.AllMapsDesc>
+  <RuleCore.Prop.map.skyGlow>天空亮度</RuleCore.Prop.map.skyGlow>
+  <RuleCore.Prop.map.skyGlowDesc>0~1：白天接近 1，夜裡接近 0，日落时連續變化。想知道"天快黑了"就写「小于 0.3」。</RuleCore.Prop.map.skyGlowDesc>
+  <RuleCore.Prop.map.wealth>地圖財富</RuleCore.Prop.map.wealth>
+  <RuleCore.Prop.map.wealthDesc>这张地圖上所有東西的總價值。</RuleCore.Prop.map.wealthDesc>
+
+  <RuleCore.Prop.pawn.mood>心情</RuleCore.Prop.pawn.mood>
+  <RuleCore.Prop.pawn.moodDesc>心情需求的比例，1 = 滿足。沒有心情的機械體讀不到。</RuleCore.Prop.pawn.moodDesc>
+  <RuleCore.Prop.pawn.food>飽食度</RuleCore.Prop.pawn.food>
+  <RuleCore.Prop.pawn.foodDesc>食物需求的比例，1 = 吃飽。</RuleCore.Prop.pawn.foodDesc>
+  <RuleCore.Prop.pawn.rest>精力</RuleCore.Prop.pawn.rest>
+  <RuleCore.Prop.pawn.restDesc>休息需求的比例，1 = 睡飽。</RuleCore.Prop.pawn.restDesc>
+  <RuleCore.Prop.pawn.isDrafted>被徵召</RuleCore.Prop.pawn.isDrafted>
+  <RuleCore.Prop.pawn.isDraftedDesc>玩家有沒有接管这个人。布林屬性，配「為真」用。</RuleCore.Prop.pawn.isDraftedDesc>
+  <RuleCore.Prop.pawn.isDowned>倒地</RuleCore.Prop.pawn.isDowned>
+  <RuleCore.Prop.pawn.isDownedDesc>他是不是倒在地上。布林屬性，配「為真」用。</RuleCore.Prop.pawn.isDownedDesc>
+  <RuleCore.Prop.pawn.room>所在房間</RuleCore.Prop.pawn.room>
+  <RuleCore.Prop.pawn.roomDesc>他所在的房間。在戶外会讀不到——那是"沒有房間"，不是"房間為零"，混起來会让房間相关的判斷在戶外靜默成立。</RuleCore.Prop.pawn.roomDesc>
+
+  <RuleCore.Prop.room.temperature>房間溫度</RuleCore.Prop.room.temperature>
+  <RuleCore.Prop.room.temperatureDesc>房間里的溫度（攝氏度）。</RuleCore.Prop.room.temperatureDesc>
+  <RuleCore.Prop.room.cellCount>房間大小</RuleCore.Prop.room.cellCount>
+  <RuleCore.Prop.room.cellCountDesc>房間有多少格。想知道"这屋子擠不擠"就写「小于 20」。</RuleCore.Prop.room.cellCountDesc>
+
+  <RuleCore.Prop.thing.hitPoints>當前耐久值</RuleCore.Prop.thing.hitPoints>
+  <RuleCore.Prop.thing.hitPointsDesc>絕對耐久值（不是比例）。要比例用「耐久」。</RuleCore.Prop.thing.hitPointsDesc>
+
+  <RuleCore.Verb.state.holds>為真</RuleCore.Verb.state.holds>
+  <RuleCore.Verb.state.holdsDesc>把这个布林事實当檢測用。有了它，"被徵召 / 倒地"这类事實不需要各自長一个謂詞——加一个事實只是加一行屬性。</RuleCore.Verb.state.holdsDesc>
+
+  <RuleCore.Edit.Collapse>收起</RuleCore.Edit.Collapse>
+  <RuleCore.Picker.Title>選擇：{0}</RuleCore.Picker.Title>
+  <RuleCore.Picker.NoMatch>沒有符合的項目。換個詞試試（defName 和顯示名都能搜）。</RuleCore.Picker.NoMatch>
+  <RuleCore.Edit.KwWhen>當</RuleCore.Edit.KwWhen>
+  <RuleCore.Edit.KwAnd>且</RuleCore.Edit.KwAnd>
+  <RuleCore.Edit.KwOr>或</RuleCore.Edit.KwOr>
+  <RuleCore.Edit.KwNot>非</RuleCore.Edit.KwNot>
+  <RuleCore.Edit.KwComma>，</RuleCore.Edit.KwComma>
+  <RuleCore.Edit.SlotEntity>選擇實體…</RuleCore.Edit.SlotEntity>
+  <RuleCore.Edit.SlotPredicate>選擇謂語…</RuleCore.Edit.SlotPredicate>
+  <RuleCore.Edit.SlotObject>賓語…</RuleCore.Edit.SlotObject>
+  <RuleCore.Edit.Section.Root>選擇根實體</RuleCore.Edit.Section.Root>
+  <RuleCore.Edit.Section.Path>實體路徑（點一段就截斷到那裡）</RuleCore.Edit.Section.Path>
+  <RuleCore.Edit.Section.AddProperty>新增屬性</RuleCore.Edit.Section.AddProperty>
+  <RuleCore.Edit.Section.Filter>篩選</RuleCore.Edit.Section.Filter>
+  <RuleCore.Edit.Section.Reduce>歸約（集合路徑必選）</RuleCore.Edit.Section.Reduce>
+  <RuleCore.Edit.Section.Predicate>可用謂詞（主語類型：{0}）</RuleCore.Edit.Section.Predicate>
+  <RuleCore.Edit.Section.Object>賓語</RuleCore.Edit.Section.Object>
+  <RuleCore.Edit.Section.Presets>常用值</RuleCore.Edit.Section.Presets>
+  <RuleCore.Edit.Section.RawKey>手填 defName</RuleCore.Edit.Section.RawKey>
+  <RuleCore.Edit.Section.EntityPath>目标實體的路徑</RuleCore.Edit.Section.EntityPath>
+  <RuleCore.Edit.CurrentType>當前类型：{0}</RuleCore.Edit.CurrentType>
+  <RuleCore.Edit.CrumbDetect>檢測子句</RuleCore.Edit.CrumbDetect>
+  <RuleCore.Edit.CrumbOperate>動作子句</RuleCore.Edit.CrumbOperate>
+  <RuleCore.Edit.CrumbFilter>篩選条件</RuleCore.Edit.CrumbFilter>
+  <RuleCore.Edit.CrumbSubject>主语</RuleCore.Edit.CrumbSubject>
+  <RuleCore.Edit.CrumbPredicate>謂語</RuleCore.Edit.CrumbPredicate>
+  <RuleCore.Edit.CrumbObject>賓語</RuleCore.Edit.CrumbObject>
+  <RuleCore.Edit.Generated>生成文字</RuleCore.Edit.Generated>
+  <RuleCore.Edit.ClauseEmpty>還沒有子句，點下面的按鈕開始。</RuleCore.Edit.ClauseEmpty>
+  <RuleCore.Edit.InspectorHint>點句子里的任意槽位開始编辑。
+每个槽位點开之后，可用選項都在這裡列出來——不會彈選單擋住句子。</RuleCore.Edit.InspectorHint>
+  <RuleCore.Edit.AddFilter>加一層篩選…</RuleCore.Edit.AddFilter>
+  <RuleCore.Edit.ComplexFilter>复杂篩選</RuleCore.Edit.ComplexFilter>
+  <RuleCore.Edit.TagEdge>邊沿</RuleCore.Edit.TagEdge>
+  <RuleCore.Edit.TagGod>開發者級</RuleCore.Edit.TagGod>
+  <RuleCore.Edit.TagQuiet>安靜讓開</RuleCore.Edit.TagQuiet>
+  <RuleCore.Edit.NoVerbForType>这个主語類型没有能用的谓词。</RuleCore.Edit.NoVerbForType>
+  <RuleCore.Edit.PickPredicateFirst>先选謂語。</RuleCore.Edit.PickPredicateFirst>
+  <RuleCore.Edit.NoArgument>这个谓词没有賓語。</RuleCore.Edit.NoArgument>
+  <RuleCore.Edit.PathEnd>這條路已經走到頭了。</RuleCore.Edit.PathEnd>
+  <RuleCore.Edit.BrokenPath>路徑里有认不出的键（手改 XML 寫壞的？）。</RuleCore.Edit.BrokenPath>
+  <RuleCore.Edit.Type.Number>數值</RuleCore.Edit.Type.Number>
+  <RuleCore.Edit.Type.Percent>百分比</RuleCore.Edit.Type.Percent>
+  <RuleCore.Edit.Type.Temp>溫度</RuleCore.Edit.Type.Temp>
+  <RuleCore.Edit.Type.Bool>布林</RuleCore.Edit.Type.Bool>
+  <RuleCore.Edit.Type.Enum>名字</RuleCore.Edit.Type.Enum>
+  <RuleCore.Edit.Type.Coord>座標</RuleCore.Edit.Type.Coord>
+  <RuleCore.Edit.Type.Text>文字</RuleCore.Edit.Type.Text>
+  <RuleCore.Edit.Type.Unknown>未知</RuleCore.Edit.Type.Unknown>
+  <RuleCore.Edit.Section.Subject>主體綁定（「本主體」指誰）</RuleCore.Edit.Section.Subject>
+  <RuleCore.Edit.SlotSubject>選擇主體…</RuleCore.Edit.SlotSubject>
+  <RuleCore.Edit.CrumbBinding>規則主體</RuleCore.Edit.CrumbBinding>
+  <RuleCore.Edit.Subject.NoneTag>整圖一次</RuleCore.Edit.Subject.NoneTag>
+  <RuleCore.Edit.Subject.Hint>不綁定主體時，引擎整圖只評估一次——這時任何讀「本主體」的檢測都永遠不成立。</RuleCore.Edit.Subject.Hint>
+  <RuleCore.Edit.NeedBinding>這一句的主語是「本主體」，但這條規則還沒綁定主體——先在頂上的身分欄裡選一個。</RuleCore.Edit.NeedBinding>
+  <RuleCore.Edit.TextNoSubject>（未選主語）</RuleCore.Edit.TextNoSubject>
+  <RuleCore.Edit.TextNoPredicate>（未選謂語）</RuleCore.Edit.TextNoPredicate>
+  <RuleCore.Edit.PickRootHint>先在上面選一個根實體，再從它身上讀屬性。</RuleCore.Edit.PickRootHint>
+  <RuleCore.Edit.BindFirst>⚠ 這條規則還沒綁定主體 —— 點這裡去選一個</RuleCore.Edit.BindFirst>
+  <RuleCore.Edit.NeedsReduceFirst>手上是一組東西，謂語作用不到它上面。先回上一層接一個歸約（.數量 數個數，或 .第一個 取一個），再回來選謂語。</RuleCore.Edit.NeedsReduceFirst>
+
+  <!-- ══ 主體綁定：從「一群人」到「指定的某個人」 ═══════════════ -->
+  <RuleCore.Subject.prisoners>囚犯</RuleCore.Subject.prisoners>
+  <RuleCore.Subject.prisonersDesc>地圖上每個殖民地囚犯各跑一遍規則。冷卻與自觸發環按人分開算——一個人的一次觸發不該消耗掉別人的。</RuleCore.Subject.prisonersDesc>
+  <RuleCore.Subject.slaves>奴隸</RuleCore.Subject.slaves>
+  <RuleCore.Subject.slavesDesc>地圖上每個殖民地奴隸各跑一遍規則。奴隸也是殖民地成員，但「他是誰」這個問題上，處境優先於身份。</RuleCore.Subject.slavesDesc>
+  <RuleCore.Subject.colonyMechs>殖民機械族</RuleCore.Subject.colonyMechs>
+  <RuleCore.Subject.colonyMechsDesc>地圖上每個屬於殖民地的機械族各跑一遍規則。它們沒有飽食度，只有電量——選了這個綁定，屬性清單裡就不會再出現飽食度。</RuleCore.Subject.colonyMechsDesc>
+  <RuleCore.Subject.colonyAnimals>殖民地動物</RuleCore.Subject.colonyAnimals>
+  <RuleCore.Subject.colonyAnimalsDesc>地圖上每隻屬於殖民地的動物各跑一遍規則。動物沒有理念、不能被徵召，那些選項在它們身上不會出現。</RuleCore.Subject.colonyAnimalsDesc>
+  <RuleCore.Subject.guests>訪客</RuleCore.Subject.guests>
+  <RuleCore.Subject.guestsDesc>地圖上每個「有人接待、但既不是囚犯也不是奴隸」的人各跑一遍規則：來參觀的商隊、求助者、來投降的逃兵都算。</RuleCore.Subject.guestsDesc>
+  <RuleCore.Subject.namedPawn>點名一個人</RuleCore.Subject.namedPawn>
+  <RuleCore.Subject.namedPawnDesc>整條規則只對點名的那一個人跑一遍，句子裡直接寫他的名字。鎖定了是誰，「他是什麼」就不需要你在規則裡判斷——編輯器直接告訴你。注意一個誠實的局限：玩家規則住在全域設定裡，而人的參照是每個存檔各自發的——換一個存檔就找不到他，規則不會觸發（編輯器會說出來）。</RuleCore.Subject.namedPawnDesc>
+
+  <!-- ══ 為什麼這裡沒有「是囚犯」這類屬性 ═══════════════════════
+       身份完全由主體綁定決定：綁成「囚犯」，那一輪裡每個人的身份就都是囚犯。
+       於是 `本主體.是囚犯` 對任何一條規則都是**恆真句**——它不提供資訊，
+       只佔屬性清單的位置。要「囚犯做某事」就把主體綁成囚犯。 -->
+  <RuleCore.Prop.pawn.energy>電量</RuleCore.Prop.pawn.energy>
+  <RuleCore.Prop.pawn.energyDesc>機械族的電量，1 = 滿電。這是機械族的「飽食度」——同一個位置上的同一件事，只是名字和需求物件不同。機械族身上只列這一條，不列飽食度。</RuleCore.Prop.pawn.energyDesc>
+  <RuleCore.Prop.pawn.age>年齡</RuleCore.Prop.pawn.age>
+  <RuleCore.Prop.pawn.ageDesc>生物年齡（歲）。想知道「他還是個孩子」就寫「小於 16」。</RuleCore.Prop.pawn.ageDesc>
+  <RuleCore.Prop.pawn.equipment>手持武器</RuleCore.Prop.pawn.equipment>
+  <RuleCore.Prop.pawn.equipmentDesc>他主手裡拿的那件東西。空手是讀不到，不是「拿了一件空的東西」——混起來會讓「手持武器.耐久 小於 50%」在空手時靜默成立。</RuleCore.Prop.pawn.equipmentDesc>
+
+  <RuleCore.Prop.map.prisonerCount>囚犯數</RuleCore.Prop.map.prisonerCount>
+  <RuleCore.Prop.map.prisonerCountDesc>地圖上已生成的殖民地囚犯人數（在外遠征的不算）。</RuleCore.Prop.map.prisonerCountDesc>
+  <RuleCore.Prop.map.slaveCount>奴隸數</RuleCore.Prop.map.slaveCount>
+  <RuleCore.Prop.map.slaveCountDesc>地圖上已生成的殖民地奴隸人數。</RuleCore.Prop.map.slaveCountDesc>
+  <RuleCore.Prop.map.colonyMechCount>機械族數</RuleCore.Prop.map.colonyMechCount>
+  <RuleCore.Prop.map.colonyMechCountDesc>地圖上已生成的殖民機械族數量。</RuleCore.Prop.map.colonyMechCountDesc>
+  <RuleCore.Prop.map.colonyAnimalCount>動物數</RuleCore.Prop.map.colonyAnimalCount>
+  <RuleCore.Prop.map.colonyAnimalCountDesc>地圖上已生成的殖民地動物數量。</RuleCore.Prop.map.colonyAnimalCountDesc>
+  <RuleCore.Prop.map.pawnCount>總人數</RuleCore.Prop.map.pawnCount>
+  <RuleCore.Prop.map.pawnCountDesc>地圖上已生成的所有小人（含敵人、動物、機械族）。想知道「襲擊到底來了多少人」就用它。</RuleCore.Prop.map.pawnCountDesc>
+
+  <!-- ── 身份的取值 ───────────────────────────────────────────── -->
+  <RuleCore.Enum.PawnCategory.colonist>殖民者</RuleCore.Enum.PawnCategory.colonist>
+  <RuleCore.Enum.PawnCategory.slave>奴隸</RuleCore.Enum.PawnCategory.slave>
+  <RuleCore.Enum.PawnCategory.prisoner>囚犯</RuleCore.Enum.PawnCategory.prisoner>
+  <RuleCore.Enum.PawnCategory.guest>訪客</RuleCore.Enum.PawnCategory.guest>
+  <RuleCore.Enum.PawnCategory.hostile>敵人</RuleCore.Enum.PawnCategory.hostile>
+  <RuleCore.Enum.PawnCategory.mechanoid>機械族</RuleCore.Enum.PawnCategory.mechanoid>
+  <RuleCore.Enum.PawnCategory.animal>動物</RuleCore.Enum.PawnCategory.animal>
+  <RuleCore.Enum.PawnCategory.entity>異象實體</RuleCore.Enum.PawnCategory.entity>
+  <RuleCore.Enum.PawnCategory.subhuman>亞人</RuleCore.Enum.PawnCategory.subhuman>
+  <RuleCore.Enum.PawnCategory.wildman>野人</RuleCore.Enum.PawnCategory.wildman>
+  <RuleCore.Enum.PawnCategory.other>其他</RuleCore.Enum.PawnCategory.other>
+
+  <!-- ── 能力位：編輯器說「他缺什麼」時的用語 ─────────────────── -->
+  <RuleCore.Cap.Pawn>是小人</RuleCore.Cap.Pawn>
+  <RuleCore.Cap.Map>是地圖</RuleCore.Cap.Map>
+  <RuleCore.Cap.Thing>是物品</RuleCore.Cap.Thing>
+  <RuleCore.Cap.Room>是房間</RuleCore.Cap.Room>
+  <RuleCore.Cap.Cell>是格子</RuleCore.Cap.Cell>
+  <RuleCore.Cap.Humanlike>人形</RuleCore.Cap.Humanlike>
+  <RuleCore.Cap.Mechanoid>機械族</RuleCore.Cap.Mechanoid>
+  <RuleCore.Cap.Animal>動物</RuleCore.Cap.Animal>
+  <RuleCore.Cap.Biological>血肉之軀</RuleCore.Cap.Biological>
+  <RuleCore.Cap.NeedMood>心情需求</RuleCore.Cap.NeedMood>
+  <RuleCore.Cap.NeedFood>飽食需求</RuleCore.Cap.NeedFood>
+  <RuleCore.Cap.NeedRest>休息需求</RuleCore.Cap.NeedRest>
+  <RuleCore.Cap.NeedEnergy>電量需求</RuleCore.Cap.NeedEnergy>
+  <RuleCore.Cap.NeedJoy>娛樂需求</RuleCore.Cap.NeedJoy>
+  <RuleCore.Cap.NeedComfort>舒適需求</RuleCore.Cap.NeedComfort>
+  <RuleCore.Cap.NeedBeauty>美觀需求</RuleCore.Cap.NeedBeauty>
+  <RuleCore.Cap.Apparel>能穿衣服</RuleCore.Cap.Apparel>
+  <RuleCore.Cap.Equipment>能拿東西</RuleCore.Cap.Equipment>
+  <RuleCore.Cap.Inventory>有隨身物品</RuleCore.Cap.Inventory>
+  <RuleCore.Cap.Bed>能擁有床位</RuleCore.Cap.Bed>
+  <RuleCore.Cap.Colonist>殖民地成員</RuleCore.Cap.Colonist>
+  <RuleCore.Cap.Prisoner>囚犯</RuleCore.Cap.Prisoner>
+  <RuleCore.Cap.Slave>奴隸</RuleCore.Cap.Slave>
+  <RuleCore.Cap.Guest>訪客</RuleCore.Cap.Guest>
+  <RuleCore.Cap.Hostile>敵對</RuleCore.Cap.Hostile>
+  <RuleCore.Cap.CanDraft>能被徵召</RuleCore.Cap.CanDraft>
+  <RuleCore.Cap.Skills>有技能</RuleCore.Cap.Skills>
+  <RuleCore.Cap.Ideo>有理念</RuleCore.Cap.Ideo>
+  <RuleCore.Cap.Age>有年齡</RuleCore.Cap.Age>
+
+  <!-- ── 編輯器：主體與「用不上的選項」 ───────────────────────── -->
+  <RuleCore.Edit.Section.SubjectNamed>點名一個人</RuleCore.Edit.Section.SubjectNamed>
+  <RuleCore.Edit.Section.SubjectGroup>或者，讓一類人各做一遍</RuleCore.Edit.Section.SubjectGroup>
+  <RuleCore.Edit.ScopeSingle>就這一個</RuleCore.Edit.ScopeSingle>
+  <RuleCore.Edit.ScopeGroup>每個成員各跑一遍</RuleCore.Edit.ScopeGroup>
+  <RuleCore.Edit.Section.NotForThis>這些用不上（當前主體身上沒有它們要的東西）</RuleCore.Edit.Section.NotForThis>
+  <RuleCore.Edit.MissingCapability>缺：{0}</RuleCore.Edit.MissingCapability>
+  <RuleCore.Edit.Subject.NamedHint>規則只對點名的這個人跑一遍，句子裡直接寫他的名字。鎖定了是誰，「他是什麼」就不需要你在規則裡判斷。</RuleCore.Edit.Subject.NamedHint>
+  <RuleCore.Edit.Subject.IsNow>{0} 現在是：{1}</RuleCore.Edit.Subject.IsNow>
+  <RuleCore.Edit.Subject.MissingHint>當前存檔裡找不到「{0}」。玩家規則住在全域設定裡，而人的參照是每個存檔各自發的——換一個存檔就找不到他，這條規則不會觸發。</RuleCore.Edit.Subject.MissingHint>
+  <RuleCore.Edit.Subject.GroupIdentityHint>綁定就是身份：綁成「囚犯」，這一輪裡每個人的身份就都是囚犯，不需要再寫一句「他是囚犯」。屬性清單也會跟著變——機械族身上沒有飽食度，只有電量。</RuleCore.Edit.Subject.GroupIdentityHint>
+  <RuleCore.Edit.Subject.MemberCountShort>{0} 個</RuleCore.Edit.Subject.MemberCountShort>
+  <RuleCore.Edit.Subject.NoMemberShort>0 個</RuleCore.Edit.Subject.NoMemberShort>
+  <RuleCore.Edit.Subject.NoMember>這一輪一個主體都沒收出來（地圖上沒有這樣的人），規則不會跑。</RuleCore.Edit.Subject.NoMember>
+  <RuleCore.Edit.Subject.NoCandidate>當前地圖上沒有可以指名的人。</RuleCore.Edit.Subject.NoCandidate>
+  <RuleCore.Edit.Subject.Lost>（找不到：{0}）</RuleCore.Edit.Subject.Lost>
+  <RuleCore.Edit.Subject.Unpicked>（還沒選是哪一位）</RuleCore.Edit.Subject.Unpicked>
+  <RuleCore.Edit.BackToSentence>選好之後，點句子裡的任意槽位繼續編輯主語 / 謂語 / 賓語。</RuleCore.Edit.BackToSentence>
+  <RuleCore.Picker.PawnTitle>選擇一個人</RuleCore.Picker.PawnTitle>
+
+  <!-- ── 賓語：只列「能產出這個類型」的走法 ───────────────────── -->
+  <RuleCore.Edit.NoObject>還沒選目標。</RuleCore.Edit.NoObject>
+  <RuleCore.Edit.Section.WaysToMake>能產出「{0}」的走法</RuleCore.Edit.Section.WaysToMake>
+  <RuleCore.Edit.NoWayToMake>詞表裡現在沒有能產出「{0}」的屬性——你需要一個 mod 加一條，或者把這條規則改寫成不需要它的樣子。</RuleCore.Edit.NoWayToMake>
+  <RuleCore.Edit.ObjectTypeOk>✓ 類型對上了：{0}</RuleCore.Edit.ObjectTypeOk>
+  <RuleCore.Edit.ObjectTypeBad>⚠ 這一條要「{0}」，當前給的是「{1}」</RuleCore.Edit.ObjectTypeBad>
+  <RuleCore.Edit.VerbNoLongerValid>「{0}」現在用不上了：它的主語已經變成「{1}」——在上面重選一個謂語。</RuleCore.Edit.VerbNoLongerValid>
+</LanguageData>

@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>RuleCore.CoreTests</AssemblyName>
+    <RootNamespace>RuleCore.CoreTests</RootNamespace>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- 直接编译 Core 层源码：这一层不依赖 Verse / RimWorld，可以脱离游戏跑。 -->
+    <Compile Include="Program.cs" />
+    <Compile Include="SemanticsTests.cs" />
+    <Compile Include="RunnerTests.cs" />
+    <Compile Include="..\..\Source\RuleCore\Core\**\*.cs" LinkBase="Core" />
+  </ItemGroup>
+</Project>

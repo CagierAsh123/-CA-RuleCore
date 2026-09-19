@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+    <name>【CA】指令核心 - RuleCore</name>
+    <author>Cagier.阳</author>
+    <packageId>Cagier.RuleCore</packageId>
+    <supportedVersions>
+        <li>1.6</li>
+    </supportedVersions>
+    <description>
+通用的反应式自动化规则引擎。
+
+用「当〔条件〕满足 → 让〔谁〕去做〔什么〕」的方式，把你的殖民地行为写成可直接分享的规则。
+不做规划器——路径怎么走、战斗怎么打，全部交回原版 AI；规则只负责回答「现在该让谁去做哪件事」。
+内置游戏内规则编辑器与调试时间线，每一次求值都能回答「为什么没触发」。
+
+A general-purpose reactive automation layer for RimWorld.
+
+Write colony behaviour as shareable rules: when conditions hold, delegate the right pawn to do the right thing.
+No planner — pathing and combat stay with vanilla AI; rules only answer "who should do what, now".
+Ships with an in-game rule editor and a debugging timeline that answers "why didn't it fire".
+
+许可证 License：GNU LGPL v3.0 或更新版本（LGPL-3.0-or-later）。源码与完整许可文本见仓库。
+Licensed under the GNU Lesser General Public License v3.0 or later; full source and license text in the repository.
+    </description>
+</ModMetaData>
