@@ -97,6 +97,7 @@ namespace RuleCore.CoreTests
                 public string PropertyKeyAt(int index) { return null; }
                 public IRuleExprSource FilterAt(int index) { return null; }
                 public RuleReduceKind ReduceAt(int index) { return RuleReduceKind.First; }
+                public RuleQuantifier QuantifyAt(int index) { return RuleQuantifier.All; }
             }
         }
 

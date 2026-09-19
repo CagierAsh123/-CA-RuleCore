@@ -86,6 +86,7 @@ namespace RuleCore.Core
         string PropertyKeyAt(int index);
         IRuleExprSource FilterAt(int index);
         RuleReduceKind ReduceAt(int index);
+        RuleQuantifier QuantifyAt(int index);
     }
 
     public interface IRuleOperandSource
@@ -343,6 +344,58 @@ namespace RuleCore.Core
                         }
 
                         value = reduced;
+                        break;
+                    }
+
+                    case RuleStepKind.Quantify:
+                    {
+                        if (!value.IsSet)
+                        {
+                            return RulePathOutcome.Fail("path.quantify_on_scalar",
+                                "「全都满足 / 有一个满足 / 一个都不满足」只能用在成组的东西上，当前的 "
+                                + value + " 是单个的。");
+                        }
+
+                        var condition = path.FilterAt(i);
+                        if (condition == null)
+                        {
+                            return RulePathOutcome.Fail("path.empty_quantifier",
+                                "这一句量词还没有条件。");
+                        }
+
+                        var quantifier = path.QuantifyAt(i);
+                        int matched = 0;
+                        var restoreElement = host.Element;
+
+                        for (int k = 0; k < value.Count; k++)
+                        {
+                            host.Element = value.AsItems[k];
+
+                            var inner = RuleExprEval.EvaluateWithDepth(condition, host, vocabulary, filterDepth + 1);
+                            if (inner.passed)
+                            {
+                                matched++;
+                            }
+                        }
+
+                        host.Element = restoreElement;
+
+                        bool held;
+                        switch (quantifier)
+                        {
+                            case RuleQuantifier.All:
+                                // 空集合上成立（空真）。理由写在 RuleQuantifier 的注释里。
+                                held = matched == value.Count;
+                                break;
+                            case RuleQuantifier.Any:
+                                held = matched > 0;
+                                break;
+                            default:
+                                held = matched == 0;
+                                break;
+                        }
+
+                        value = RuleValue.OfBool(held);
                         break;
                     }
 

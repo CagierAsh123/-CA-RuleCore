@@ -1313,6 +1313,8 @@ namespace RuleCore
                     y += OptionHeight + OptionGap;
                 }
 
+                y = QuantifyEntries(y, width, path, readOnly);
+
                 // ── 这里是最容易走错的一步，所以**当场说清它和主体绑定的区别** ──
                 //
                 // 玩家的直觉是：「全部机械族.电量 小于 50%」= 每个机械族的电量都小于 50%。
@@ -1569,6 +1571,12 @@ namespace RuleCore
                     text = FilterSummary(step.filter, currentRule);
                     color = new Color(1f, 0.83f, 0.47f);
                 }
+                else if (step.kind == RuleStepKind.Quantify)
+                {
+                    text = Label(RuleQuantifiers.LabelKey(step.quantifier),
+                        step.quantifier.ToString()) + FilterSummary(step.filter, currentRule);
+                    color = new Color(0.86f, 0.72f, 1f);
+                }
                 else
                 {
                     var info = RuleVocabulary.ReduceInfo(step.reduce);
@@ -1580,9 +1588,9 @@ namespace RuleCore
                 int capture = i;
                 if (ChainSegment(ref cursor, ref row, width, text, color, readOnly))
                 {
-                    if (step.kind == RuleStepKind.Filter)
+                    if (step.kind == RuleStepKind.Filter || step.kind == RuleStepKind.Quantify)
                     {
-                        // 点筛选段 = 选中它内部的条件（而不是截断路径）
+                        // 点筛选段/量词段 = 选中它内部的条件（而不是截断路径）
                         Select(step.filter, null, Slot.Predicate, true);
                         selection.FilterPath = path;
                         selection.FilterStepIndex = capture;
@@ -1625,6 +1633,54 @@ namespace RuleCore
 
             cursor += w + 2f;
             return Widgets.ButtonInvisible(rect) && !readOnly;
+        }
+
+        /// <summary>
+        /// 「这一组怎么样」——量词入口。
+        ///
+        /// 它和归约挨着放，是因为玩家此刻站的位置就是"我手上是一组东西，现在能干嘛"。
+        /// 而两者的区别**必须在界面上说清**：
+        /// 归约是**选出一个单值**（一个 / 最近的一个 / 几个），
+        /// 量词是**给出一句话**（这一组全都满足 / 有一个满足 / 一个都不满足）。
+        ///
+        /// 点一下就顺手把新条件的编辑器打开——和「选完谓语自动跳到宾语槽」同一个道理：
+        /// 界面不该让人去找那个刚生成的 <c>[条件]</c>。
+        /// </summary>
+        private float QuantifyEntries(float y, float width, RulePath path, bool readOnly)
+        {
+            if (path == null) return y;
+
+            y = Section(y, width, "RuleCore.Edit.Section.Quantify".Translate());
+
+            var all = RuleQuantifiers.All;
+            for (int i = 0; i < all.Length; i++)
+            {
+                var quantifier = all[i];
+
+                if (Option(y, width, Label(RuleQuantifiers.LabelKey(quantifier), quantifier.ToString()),
+                        "→ " + TypeTagOf(RuleValueKind.Bool), ReduceColor) && !readOnly)
+                {
+                    var step = new RulePathStep
+                    {
+                        kind = RuleStepKind.Quantify,
+                        quantifier = quantifier,
+                        filter = NewFilterLeaf()
+                    };
+                    path.steps.Add(step);
+
+                    // 先让路径复查一次谓语（集合 → 布尔，原来那个谓语多半已经不成立了），
+                    // **再**把编辑焦点移进新条件。顺序反了复查就会被跳过。
+                    AfterPathEdit(path);
+
+                    Select(step.filter, null, Slot.Predicate, true);
+                    selection.FilterPath = path;
+                    selection.FilterStepIndex = path.StepCount - 1;
+                }
+
+                y += OptionHeight + OptionGap;
+            }
+
+            return Hint(y, width, "RuleCore.Edit.QuantifyHint".Translate());
         }
 
         private float DrawPredicateInspector(float y, float width, bool readOnly)
@@ -1683,7 +1739,7 @@ namespace RuleCore
                     y += OptionHeight + OptionGap;
                 }
 
-                return y;
+                return QuantifyEntries(y, width, subject, readOnly);
             }
 
             if (list.Count == 0 && rejectedVerbs.Count == 0)
@@ -2554,6 +2610,8 @@ namespace RuleCore
                     }
                     y += OptionHeight + OptionGap;
                 }
+
+                y = QuantifyEntries(y, width, operand.path, false);
             }
 
             return y;
@@ -2960,7 +3018,13 @@ namespace RuleCore
                         return i;
                     }
 
-                    if (step.kind == RuleStepKind.Filter)
+                    if (step.kind == RuleStepKind.Quantify && step.filter == target)
+                    {
+                        foundPath = node.subject;
+                        return i;
+                    }
+
+                    if (step.kind == RuleStepKind.Filter || step.kind == RuleStepKind.Quantify)
                     {
                         int hit = FindFilterStep(step.filter, target, null);
                         if (hit >= 0) return hit;
@@ -3196,6 +3260,11 @@ namespace RuleCore
                 else if (step.kind == RuleStepKind.Filter)
                 {
                     sb.Append(FilterSummary(step.filter, rule));
+                }
+                else if (step.kind == RuleStepKind.Quantify)
+                {
+                    sb.Append(Label(RuleQuantifiers.LabelKey(step.quantifier),
+                        step.quantifier.ToString())).Append(FilterSummary(step.filter, rule));
                 }
                 else
                 {

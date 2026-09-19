@@ -204,7 +204,51 @@ namespace RuleCore.Core
         Filter = 1,
 
         /// <summary>归约：<c>.第一个</c> <c>.数量</c></summary>
-        Reduce = 2
+        Reduce = 2,
+
+        /// <summary>
+        /// 量词：对集合里**每个元素各判一次**同一个条件，再把结果合成一个布尔。
+        ///
+        /// 它和 <see cref="Reduce"/> 的区别是形状，不是省事：
+        /// 归约产出的是"这一组里的某一个/个数"，而量词产出的是"**关于这一组的一句话**"。
+        /// 少了它，「每件帽子耐久都低于 50%」永远写不出来——那需要否定，
+        /// 而语言里没有否定（`数量[非P] 等于 0` 是同一件事，但玩家得自己做那道逻辑题）。
+        /// </summary>
+        Quantify = 3
+    }
+
+    /// <summary>
+    /// 量词的三种。都产出布尔。
+    ///
+    /// <b>空集合上「全都满足」是成立的</b>（空真），这是刻意的、也是数学上的标准读法：
+    /// 「我的帽子都没问题」在没有帽子时是句实话。副作用要记住：
+    /// `全部囚犯 全都满足 …` 在殖民地一个囚犯都没有时也成立——
+    /// 所以**"一共几个"和"每个怎么样"是两件事**，前者用 `.数量`。
+    /// </summary>
+    public enum RuleQuantifier
+    {
+        /// <summary>每个元素都满足。空集合算成立。</summary>
+        All = 0,
+
+        /// <summary>至少有一个满足。空集合算不成立。</summary>
+        Any = 1,
+
+        /// <summary>一个都不满足。空集合算成立。</summary>
+        None = 2
+    }
+
+    /// <summary>量词在界面与日志里的名字。<c>RuleCore.Step.Quantify.*</c></summary>
+    public static class RuleQuantifiers
+    {
+        public static string LabelKey(RuleQuantifier kind)
+        {
+            return "RuleCore.Step.Quantify." + kind;
+        }
+
+        public static readonly RuleQuantifier[] All =
+        {
+            RuleQuantifier.All, RuleQuantifier.Any, RuleQuantifier.None
+        };
     }
 
     /// <summary>

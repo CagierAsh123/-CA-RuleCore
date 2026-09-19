@@ -306,6 +306,12 @@
   <RuleCore.Prop.pawn.bedDesc>他**自己認領的那張床**。沒認領過床（或沒有歸屬資訊）就讀不到——這不是「讀出來是空」，是這條判斷直接讓開。要寫「去床上」，接一格：`本主體.床位.互動格`。</RuleCore.Prop.pawn.bedDesc>
   <RuleCore.Prop.thing.interactionCell>互動格</RuleCore.Prop.thing.interactionCell>
   <RuleCore.Prop.thing.interactionCellDesc>別人站上去就能用這件東西的那一格（原版的 `Thing.InteractionCell`）。這是「去某個地方」最誠實的來源——**遊戲裡真有這個格子**。東西不在任何地圖上就算不出來。</RuleCore.Prop.thing.interactionCellDesc>
+  <!-- ══ 量詞：一組東西「怎麼樣」═══════════════════════════════ -->
+  <RuleCore.Step.Quantify.All>全都滿足</RuleCore.Step.Quantify.All>
+  <RuleCore.Step.Quantify.Any>有一個滿足</RuleCore.Step.Quantify.Any>
+  <RuleCore.Step.Quantify.None>一個都不滿足</RuleCore.Step.Quantify.None>
+  <RuleCore.Edit.Section.Quantify>這一組怎麼樣（對每個元素各判一次）</RuleCore.Edit.Section.Quantify>
+  <RuleCore.Edit.QuantifyHint>上面的歸約是**選出一個**（幾個 / 哪一個），這裡是**問一句關於整組的話**，產出真或假。比如「每件帽子都耐久低於 50%」= 著裝 全都滿足（耐久 小於 50%）。注意：**這一組是空的時候，「全都滿足」和「一個都不滿足」都成立**——「我沒有帽子」確實是「我的帽子都沒問題」。</RuleCore.Edit.QuantifyHint>
   <!-- ══ 管制介面那一列（玩家設定）══════════════════════════════ -->
   <RuleCore.Prop.pawn.medCare>醫療級別</RuleCore.Prop.pawn.medCare>
   <RuleCore.Prop.pawn.medCareDesc>他在管制介面裡設的醫療護理等級（無 / 不用藥 / 草藥或更差 / 普通或更差 / 最佳）。配「是」用。</RuleCore.Prop.pawn.medCareDesc>

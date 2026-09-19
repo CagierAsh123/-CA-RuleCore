@@ -306,6 +306,12 @@ Add a RuleCore.RulePackDef under 1.6/Defs/ to create one.</RuleCore.Panel.NoRule
   <RuleCore.Prop.pawn.bedDesc>The bed he has **claimed as his own**. Unclaimed (or no ownership record) means it cannot be read — not "reads as empty", the check stands down. To write "go to bed", append a cell: `本主体.床位.交互格`.</RuleCore.Prop.pawn.bedDesc>
   <RuleCore.Prop.thing.interactionCell>Interaction cell</RuleCore.Prop.thing.interactionCell>
   <RuleCore.Prop.thing.interactionCellDesc>The cell others stand on to use this thing (vanilla `Thing.InteractionCell`). This is the honest source for "go somewhere" — **the cell really exists in the game**. Off-map things can't produce one.</RuleCore.Prop.thing.interactionCellDesc>
+  <!-- ══ Quantifiers: what a whole group is like ═══════════════ -->
+  <RuleCore.Step.Quantify.All>all of them satisfy</RuleCore.Step.Quantify.All>
+  <RuleCore.Step.Quantify.Any>at least one satisfies</RuleCore.Step.Quantify.Any>
+  <RuleCore.Step.Quantify.None>none of them satisfy</RuleCore.Step.Quantify.None>
+  <RuleCore.Edit.Section.Quantify>What is this group like (each element judged separately)</RuleCore.Edit.Section.Quantify>
+  <RuleCore.Edit.QuantifyHint>The reductions above **pick one out** (how many / which one); this **asks one question about the whole group** and yields true or false. E.g. "every hat has durability below 50%" = apparel, all of them satisfy (durability &lt; 50%). Note: **on an empty group both "all satisfy" and "none satisfy" hold** — "I have no hats" really does mean "all my hats are fine".</RuleCore.Edit.QuantifyHint>
   <!-- ══ The Assign/Restrict column (player settings) ═══════════ -->
   <RuleCore.Prop.pawn.medCare>Medical care</RuleCore.Prop.pawn.medCare>
   <RuleCore.Prop.pawn.medCareDesc>The medical care level set on the Assign tab (no care / no meds / herbal or worse / normal or worse / best). Use it with "is".</RuleCore.Prop.pawn.medCareDesc>

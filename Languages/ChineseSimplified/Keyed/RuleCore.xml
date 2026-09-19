@@ -306,6 +306,13 @@
   <RuleCore.Prop.pawn.bedDesc>他**自己认领的那张床**。没认领过床（或没有归属信息）就读不到——这不是"读出来是空"，是这条判断直接让开。要写"去床上"，接一格：`本主体.床位.交互格`。</RuleCore.Prop.pawn.bedDesc>
   <RuleCore.Prop.thing.interactionCell>交互格</RuleCore.Prop.thing.interactionCell>
   <RuleCore.Prop.thing.interactionCellDesc>别人站上去就能用这件东西的那一格（原版的 `Thing.InteractionCell`）。这是「去某个地方」最诚实的来源——**游戏里真有这个格子**。东西不在任何地图上就算不出来。</RuleCore.Prop.thing.interactionCellDesc>
+  <!-- ══ 量词：一组东西「怎么样」═══════════════════════════════
+       归约选出一个单值（.数量 / .第一个 / .最近），量词给出一句话（真/假）。 -->
+  <RuleCore.Step.Quantify.All>全都满足</RuleCore.Step.Quantify.All>
+  <RuleCore.Step.Quantify.Any>有一个满足</RuleCore.Step.Quantify.Any>
+  <RuleCore.Step.Quantify.None>一个都不满足</RuleCore.Step.Quantify.None>
+  <RuleCore.Edit.Section.Quantify>这一组怎么样（对每个元素各判一次）</RuleCore.Edit.Section.Quantify>
+  <RuleCore.Edit.QuantifyHint>上面的归约是**选出一个**（几个 / 哪一个），这里是**问一句关于整组的话**，产出真或假。比如「每件帽子都耐久低于 50%」= 着装 全都满足（耐久 小于 50%）。注意：**这一组是空的时候，「全都满足」和「一个都不满足」都成立**——「我没有帽子」确实是「我的帽子都没问题」。</RuleCore.Edit.QuantifyHint>
   <!-- ══ 管制界面那一列（玩家设置）══════════════════════════════
        医疗 / 着装 / 食物限制 / 药物政策 / 敌对反应 / 作息 / 活动区。
        改这些**玩家自己在管制界面点两下也能做**，所以全部玩家级。 -->

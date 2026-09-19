@@ -118,6 +118,7 @@ namespace RuleCore.CoreTests
             public string property;
             public FakeExpr filter;
             public RuleReduceKind reduce;
+            public RuleQuantifier quantifier;
         }
 
         private sealed class FakePath : IRulePathSource
@@ -145,6 +146,17 @@ namespace RuleCore.CoreTests
                 return this;
             }
 
+            public FakePath Quantify(RuleQuantifier quantifier, FakeExpr condition)
+            {
+                Steps.Add(new FakeStep
+                {
+                    kind = RuleStepKind.Quantify,
+                    quantifier = quantifier,
+                    filter = condition
+                });
+                return this;
+            }
+
             public RuleRootKind RootKind { get { return rootKind; } }
             public RuleValue RootLiteral { get { return rootLiteral; } }
             public int StepCount { get { return Steps.Count; } }
@@ -153,6 +165,7 @@ namespace RuleCore.CoreTests
             public string PropertyKeyAt(int index) { return Steps[index].property; }
             public IRuleExprSource FilterAt(int index) { return Steps[index].filter; }
             public RuleReduceKind ReduceAt(int index) { return Steps[index].reduce; }
+            public RuleQuantifier QuantifyAt(int index) { return Steps[index].quantifier; }
         }
 
         private sealed class FakeOperand : IRuleOperandSource
@@ -910,6 +923,97 @@ namespace RuleCore.CoreTests
             Program.Check("筛选结束后本主体被复原（不残留元素绑定）",
                 outcome.ok && Math.Abs(outcome.value.AsNumber - 0.4f) < 0.0001f,
                 outcome.ok ? outcome.value.ToString() : outcome.reasonCode);
+
+            // ── 量词：一组东西「怎么样」 ────────────────────────────
+            //
+            // 这一组的四件事必须分开验：条件本身、三个量词各自的合并规则、
+            // **空集合上「全都满足」成立**（这条是刻意决定的，不是碰巧），
+            // 以及量词结束后元素绑定要复原。
+            var duraBelowHalf = FakeExpr.Not(FakeExpr.Detect("compare.greater",
+                new FakePath { rootKind = RuleRootKind.Element }.Property("thing.durability"),
+                FakeOperand.Number(0.5f)));
+
+            // {帽子 0.3, 大衣 0.9}：不是全都满足。
+            var allBelow = Subject().Property("pawn.apparel")
+                .Quantify(RuleQuantifier.All, duraBelowHalf);
+            outcome = RulePathEval.Evaluate(allBelow, host, vocab);
+            Program.Check("量词：{0.3, 0.9} 全都满足(耐久<50%) → 假",
+                outcome.ok && !outcome.value.AsBool,
+                outcome.ok ? outcome.value.ToString() : outcome.reasonCode);
+
+            outcome = RulePathEval.Evaluate(Subject().Property("pawn.apparel")
+                .Quantify(RuleQuantifier.Any, duraBelowHalf), host, vocab);
+            Program.Check("量词：{0.3, 0.9} 有一个满足(耐久<50%) → 真",
+                outcome.ok && outcome.value.AsBool,
+                outcome.ok ? outcome.value.ToString() : outcome.reasonCode);
+
+            outcome = RulePathEval.Evaluate(Subject().Property("pawn.apparel")
+                .Quantify(RuleQuantifier.None, duraBelowHalf), host, vocab);
+            Program.Check("量词：{0.3, 0.9} 一个都不满足(耐久<50%) → 假",
+                outcome.ok && !outcome.value.AsBool,
+                outcome.ok ? outcome.value.ToString() : outcome.reasonCode);
+
+            // 只有那件低的：三个量词这时互不相同。
+            host.Props["pawnA:pawn.apparel"] = RuleValue.OfSet(RuleEntityKind.Thing,
+                new List<RuleValue> { hat });
+            outcome = RulePathEval.Evaluate(Subject().Property("pawn.apparel")
+                .Quantify(RuleQuantifier.All, duraBelowHalf), host, vocab);
+            Program.Check("量词：{0.3} 全都满足(耐久<50%) → 真（单个元素也不能短路）",
+                outcome.ok && outcome.value.AsBool,
+                outcome.ok ? outcome.value.ToString() : outcome.reasonCode);
+
+            // ── 空集合：这条是**决定**，不是实现细节 ────────────────
+            host.Props["pawnA:pawn.apparel"] = RuleValue.OfSet(RuleEntityKind.Thing,
+                new List<RuleValue>());
+            outcome = RulePathEval.Evaluate(Subject().Property("pawn.apparel")
+                .Quantify(RuleQuantifier.All, duraBelowHalf), host, vocab);
+            Program.Check("量词：空集合「全都满足」→ 真（空真：「我没有帽子」确实是「我的帽子都没问题」）",
+                outcome.ok && outcome.value.AsBool,
+                outcome.ok ? outcome.value.ToString() : outcome.reasonCode);
+
+            outcome = RulePathEval.Evaluate(Subject().Property("pawn.apparel")
+                .Quantify(RuleQuantifier.Any, duraBelowHalf), host, vocab);
+            Program.Check("量词：空集合「有一个满足」→ 假",
+                outcome.ok && !outcome.value.AsBool,
+                outcome.ok ? outcome.value.ToString() : outcome.reasonCode);
+
+            outcome = RulePathEval.Evaluate(Subject().Property("pawn.apparel")
+                .Quantify(RuleQuantifier.None, duraBelowHalf), host, vocab);
+            Program.Check("量词：空集合「一个都不满足」→ 真",
+                outcome.ok && outcome.value.AsBool,
+                outcome.ok ? outcome.value.ToString() : outcome.reasonCode);
+
+            // 对单个东西写量词。
+            outcome = RulePathEval.Evaluate(Subject().Property("pawn.health")
+                .Quantify(RuleQuantifier.All, duraBelowHalf), host, vocab);
+            Program.Check("路径：对单值写量词 → quantify_on_scalar",
+                !outcome.ok && outcome.reasonCode == "path.quantify_on_scalar",
+                outcome.reasonCode);
+
+            // 量词没写条件就存下来了。
+            outcome = RulePathEval.Evaluate(Subject().Property("pawn.apparel")
+                .Quantify(RuleQuantifier.All, null), host, vocab);
+            Program.Check("路径：量词没有条件 → empty_quantifier（不是静默成立）",
+                !outcome.ok && outcome.reasonCode == "path.empty_quantifier",
+                outcome.reasonCode);
+
+            // 量词结束后元素绑定必须复原（和筛选同一个坑）。
+            host.Props["pawnA:pawn.apparel"] = RuleValue.OfSet(RuleEntityKind.Thing,
+                new List<RuleValue> { hat, coat });
+            RulePathEval.Evaluate(Subject().Property("pawn.apparel")
+                .Quantify(RuleQuantifier.Any, duraBelowHalf), host, vocab);
+            outcome = RulePathEval.Evaluate(Subject().Property("pawn.health"), host, vocab);
+            Program.Check("量词结束后本主体被复原（不残留元素绑定）",
+                outcome.ok && Math.Abs(outcome.value.AsNumber - 0.4f) < 0.0001f,
+                outcome.ok ? outcome.value.ToString() : outcome.reasonCode);
+
+            // 量词产出的是布尔，所以能接「为真」，而不能再接属性。
+            outcome = RulePathEval.Evaluate(Subject().Property("pawn.apparel")
+                .Quantify(RuleQuantifier.All, duraBelowHalf).Property("thing.durability"),
+                host, vocab);
+            Program.Check("量词之后读属性 → property_wrong_type（它已经是一个布尔了）",
+                !outcome.ok && outcome.reasonCode == "path.property_wrong_type",
+                outcome.reasonCode);
 
             // 注册表写错：词表说产出 Number，实现给了 Enum。
             host.Props["mapA:map.outdoorTemp"] = RuleValue.OfKey("Rain");

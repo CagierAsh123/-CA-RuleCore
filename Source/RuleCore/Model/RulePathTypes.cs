@@ -123,6 +123,20 @@ namespace RuleCore
                     kind = info.to;
                     if (kind == RuleValueKind.Number) entityKind = RuleEntityKind.Any;
                 }
+                else if (step.kind == RuleStepKind.Quantify)
+                {
+                    // 量词把一组东西合成一个布尔。集合上**没有**别的出路了——
+                    // 「全都满足」之后就是一个普通布尔，可以接「为真」。
+                    if (kind != RuleValueKind.EntitySet)
+                    {
+                        kind = RuleValueKind.None;
+                        entityKind = RuleEntityKind.Any;
+                        return;
+                    }
+
+                    kind = RuleValueKind.Bool;
+                    entityKind = RuleEntityKind.Any;
+                }
 
                 // 筛选不改类型：还是同一组东西，只是少了一些。
             }
@@ -216,6 +230,22 @@ namespace RuleCore
 
                     kind = info.to;
                     if (kind == RuleValueKind.Number) entityKind = RuleEntityKind.Any;
+                }
+                else if (step.kind == RuleStepKind.Quantify)
+                {
+                    if (kind != RuleValueKind.EntitySet)
+                    {
+                        return "步骤 " + (i + 1) + " 是一个量词，但它前面不是一组东西（是 "
+                            + kind + "）——量词只能问「这一组里的每个怎么样」。";
+                    }
+
+                    if (step.filter == null)
+                    {
+                        return "步骤 " + (i + 1) + " 的量词还没写条件（「全都满足」什么？）。";
+                    }
+
+                    kind = RuleValueKind.Bool;
+                    entityKind = RuleEntityKind.Any;
                 }
             }
 

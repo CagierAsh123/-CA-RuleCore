@@ -84,12 +84,16 @@ namespace RuleCore
         /// <summary>kind == Reduce：归约算子。</summary>
         public RuleReduceKind reduce = RuleReduceKind.First;
 
+        /// <summary>kind == Quantify：哪个量词。条件复用 <see cref="filter"/>。</summary>
+        public RuleQuantifier quantifier = RuleQuantifier.All;
+
         public void ExposeData()
         {
             Scribe_Values.Look(ref kind, "kind", RuleStepKind.Property);
             Scribe_Values.Look(ref propertyKey, "propertyKey");
             Scribe_Deep.Look(ref filter, "filter");
             Scribe_Values.Look(ref reduce, "reduce", RuleReduceKind.First);
+            Scribe_Values.Look(ref quantifier, "quantifier", RuleQuantifier.All);
         }
 
         public override string ToString()
@@ -99,6 +103,8 @@ namespace RuleCore
                 case RuleStepKind.Property: return "." + (propertyKey ?? "?");
                 case RuleStepKind.Filter: return "[" + (filter != null ? filter.ToString() : "?") + "]";
                 case RuleStepKind.Reduce: return "." + reduce;
+                case RuleStepKind.Quantify:
+                    return "." + quantifier + "[" + (filter != null ? filter.ToString() : "?") + "]";
                 default: return "?";
             }
         }
@@ -163,6 +169,11 @@ namespace RuleCore
         public RuleReduceKind ReduceAt(int index)
         {
             return steps[index].reduce;
+        }
+
+        public RuleQuantifier QuantifyAt(int index)
+        {
+            return steps[index].quantifier;
         }
 
         // ── 编辑期的小工具（编辑器与校验都直接用）────────────────────

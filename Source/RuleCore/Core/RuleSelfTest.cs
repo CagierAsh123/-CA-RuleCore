@@ -415,6 +415,7 @@ namespace RuleCore.Core
             public string PropertyKeyAt(int index) { return properties[index]; }
             public IRuleExprSource FilterAt(int index) { return null; }
             public RuleReduceKind ReduceAt(int index) { return RuleReduceKind.First; }
+            public RuleQuantifier QuantifyAt(int index) { return RuleQuantifier.All; }
         }
     }
 }
