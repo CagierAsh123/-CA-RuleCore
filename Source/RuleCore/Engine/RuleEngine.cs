@@ -112,7 +112,9 @@ namespace RuleCore
             for (int i = 0; i < rules.Count; i++)
             {
                 var rule = rules[i];
-                if (rule == null || !rule.enabled)
+                // **不问 `rule.enabled`，问库里"它现在该不该跑"**：
+                // "关掉"与"隐藏"都是玩家覆盖，只有库知道全部条件。
+                if (!RuleLibrary.IsActive(rule))
                 {
                     continue;
                 }

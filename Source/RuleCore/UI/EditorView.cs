@@ -661,11 +661,14 @@ namespace RuleCore
 
             var prev = GUI.color;
             GUI.color = MutedColor;
-            Widgets.Label(new Rect(rect.x + 8f, rect.y + 4f, rect.width - 16f, 14f),
+            // Tiny 也要给够 16：汉字的下沿（"成""本"这类）比拉丁字母低，
+            // 只按字母高度留位就会切掉一点。
+            Widgets.Label(new Rect(rect.x + 8f, rect.y + 4f, rect.width - 16f, 16f),
                 "RuleCore.Edit.Generated".Translate());
             GUI.color = new Color(0.66f, 0.85f, 0.73f);
-            Widgets.Label(new Rect(rect.x + 8f, rect.y + 20f,
-                Mathf.Max(rect.width - 16f, 16f), Mathf.Max(rect.height - 24f, 16f)),
+            // 正文从标题下面 22 开始，别贴着——原来 20 会和加高后的标题叠半个字。
+            Widgets.Label(new Rect(rect.x + 8f, rect.y + 22f,
+                Mathf.Max(rect.width - 16f, 16f), Mathf.Max(rect.height - 26f, 16f)),
                 RuleText(rule));
             GUI.color = prev;
 
@@ -702,10 +705,12 @@ namespace RuleCore
 
             float y = 0f;
 
+            // 面包屑：22 而不是 18。Small 字体的行高约 22，给 18 会切掉汉字下沿
+            // （玩家截图里「检测子句 · 宾语」下半截就是没的）。
             GUI.color = MutedColor;
-            Widgets.LabelEllipses(new Rect(0f, y, width, 18f), CrumbText());
+            Widgets.LabelEllipses(new Rect(0f, y, width, 22f), CrumbText());
             GUI.color = Color.white;
-            y += 24f;
+            y += 28f;
 
             if (selection.Binding)
             {
@@ -837,25 +842,27 @@ namespace RuleCore
                 x += 64f;
             }
 
-            // 启用
-            if (!readOnly)
+            // 启用 —— **两种规则都给这个开关。**
+            //
+            // 内置规则不可编辑，但"我不想让它跑"是**玩家的偏好**，不是编辑它的定义。
+            // 原来这里只对玩家规则显示，内置规则连关都关不掉——那个不对称是错的。
             {
+                // **标签用短的，并给一个够宽的框。**
+                // 原来写的是「启用这条规则」+ 100px 宽：六个汉字约 78px，加上复选框
+                // 24px 就超过 100 了，于是折成两行而那一行只有 24px 高——
+                // 第二行被切掉（玩家截图里「启用这条规 / 则」就是这么来的）。
+                // 完整解释放进悬停提示，那里没有宽度限制。
                 var enabledRect = new Rect(Mathf.Max(x, rect.xMax - 104f), y, 100f, h);
                 bool enabled = rule.enabled;
-                Widgets.CheckboxLabeled(enabledRect, "RuleCore.Edit.Field.Enabled".Translate(),
-                    ref enabled);
+                Widgets.CheckboxLabeled(enabledRect, "RuleCore.Panel.Enable".Translate(), ref enabled);
+                TooltipHandler.TipRegion(enabledRect, "RuleCore.Edit.Field.Enabled".Translate());
+
                 if (enabled != rule.enabled)
                 {
-                    rule.enabled = enabled;
-                    ValueChanged = true;
+                    // 走库的入口而不是直接改字段：内置规则的开关要写进覆盖层，
+                    // 否则下次读档会被 XML 里的 enabled 顶回来。
+                    RuleLibrary.SetDisabled(rule.id, !enabled);
                 }
-            }
-            else if (!rule.enabled)
-            {
-                GUI.color = MutedColor;
-                Widgets.LabelEllipses(new Rect(Mathf.Max(x, rect.xMax - 104f), y, 100f, h),
-                    "RuleCore.Panel.Disable".Translate());
-                GUI.color = previous;
             }
 
             Text.Anchor = TextAnchor.UpperLeft;
@@ -2498,19 +2505,46 @@ namespace RuleCore
             var prev = GUI.color;
             GUI.color = MutedColor;
             Text.Font = GameFont.Tiny;
-            Widgets.LabelEllipses(new Rect(0f, y + 6f, width, 16f), title);
+            // 18 而不是 16：Tiny 的字高加上下沿差不多就是这个数，
+            // 16 会把汉字的下半截切掉（"字体被遮挡"最常见的来源）。
+            Widgets.LabelEllipses(new Rect(0f, y + 6f, width, 18f), title);
             Text.Font = GameFont.Small;
             GUI.color = prev;
-            return y + 22f;
+            return y + 24f;
         }
 
+        /// <summary>
+        /// 一段灰字说明。**高度按实测来，而且要开折行。**
+        ///
+        /// 原来是 `Widgets.Label(new Rect(0f, y + 6f, width, 40f), text)`：高度写死 40，
+        /// 而检查器里 <c>Text.WordWrap</c> 是 <b>false</b>（为了槽位不折行）——
+        /// 于是每一句较长的说明都是**一行画出去、被矩形横向切掉半句**，
+        /// 后面还跟着一块空白。这正是"字体被遮挡"里最难看的一处：
+        /// 玩家看到的是半句话，而剩下半句永远不会显示。
+        ///
+        /// 现在按 <see cref="Text.CalcHeight"/> 实测高度，画完把折行状态还原回去。
+        /// </summary>
         private float Hint(float y, float width, string text)
         {
-            var prev = GUI.color;
+            if (string.IsNullOrEmpty(text)) return y;
+
+            var prevColor = GUI.color;
+            var prevWrap = Text.WordWrap;
+            var prevAnchor = Text.Anchor;
+
             GUI.color = MutedColor;
-            Widgets.Label(new Rect(0f, y + 6f, width, 40f), text);
-            GUI.color = prev;
-            return y + 46f;
+            Text.WordWrap = true;
+            Text.Anchor = TextAnchor.UpperLeft;
+
+            float usable = Mathf.Max(width, 16f);
+            float h = Mathf.Max(Text.CalcHeight(text, usable), 18f);
+            Widgets.Label(new Rect(0f, y + 4f, usable, h), text);
+
+            Text.WordWrap = prevWrap;
+            Text.Anchor = prevAnchor;
+            GUI.color = prevColor;
+
+            return y + h + 10f;
         }
 
         private float TypeBadge(float y, float width, RuleValueKind kind, RuleEntityKind entityKind)

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Verse;
 using RuleCore.Core;
 
@@ -103,6 +103,11 @@ namespace RuleCore
                             "rule.config_error", null, problems[p]);
                     }
 
+                    // **玩家的覆盖在这里生效。**
+                    // XML 说 `enabled=true` 是**作者**的意图；玩家关掉过它才是当下的状态。
+                    // 覆盖层是权威——否则"关掉内置规则"每次读档都会被 XML 顶回来。
+                    rule.enabled = !IsDisabled(rule.id);
+
                     modRules.Add(rule);
                 }
             }
@@ -118,6 +123,126 @@ namespace RuleCore
         public static void NotifyChanged()
         {
             Version++;
+        }
+
+        // ── 玩家对「内置规则」的覆盖 ──────────────────────────────────
+        //
+        // 内置规则是模组带来的**定义**：不可编辑、不可删除。
+        // 但"我不想让它跑 / 我不想在列表里看见它"是**玩家的偏好**，
+        // 跟"它定义成什么样"完全是两件事——不该因为拿不到编辑权就连关都关不掉。
+        //
+        // 覆盖层住在全局配置里（和玩家规则一起），载入时套回去。
+        // 「隐藏」**不删任何数据**，所以随时能恢复：那些定义在别人的模组里。
+
+        private static readonly List<string> emptyIds = new List<string>();
+
+        private static List<string> DisabledIds
+        {
+            get
+            {
+                var settings = RuleCoreMod.Settings;
+                return settings != null ? settings.disabledRuleIds : emptyIds;
+            }
+        }
+
+        private static List<string> HiddenIds
+        {
+            get
+            {
+                var settings = RuleCoreMod.Settings;
+                return settings != null ? settings.hiddenRuleIds : emptyIds;
+            }
+        }
+
+        public static bool IsDisabled(string id)
+        {
+            return !string.IsNullOrEmpty(id) && DisabledIds.Contains(id);
+        }
+
+        /// <summary>被玩家从列表里移除的规则：它不跑，也不显示。</summary>
+        public static bool IsHidden(string id)
+        {
+            return !string.IsNullOrEmpty(id) && HiddenIds.Contains(id);
+        }
+
+        /// <summary>
+        /// 这条规则现在该不该跑。**引擎用它，而不是直接看 <c>rule.enabled</c>**——
+        /// "关掉"是玩家覆盖，"隐藏"是干脆不加载，两个都得算。
+        /// </summary>
+        public static bool IsActive(Rule rule)
+        {
+            if (rule == null || !rule.enabled) return false;
+            return !IsHidden(rule.id);
+        }
+
+        /// <summary>关掉/打开一条规则。**内置规则也能关**（写进覆盖层，不动它的定义）。</summary>
+        public static bool SetDisabled(string id, bool disabled)
+        {
+            if (string.IsNullOrEmpty(id)) return false;
+
+            var list = DisabledIds;
+            bool changed = disabled ? Add(list, id) : list.Remove(id);
+            if (!changed) return false;
+
+            var rule = Find(id);
+            if (rule != null) rule.enabled = !disabled;
+
+            SaveSettings();
+            Version++;
+            return true;
+        }
+
+        /// <summary>从列表里移除 / 恢复一条规则。只对内置规则有意义。</summary>
+        public static bool SetHidden(string id, bool hidden)
+        {
+            if (string.IsNullOrEmpty(id)) return false;
+
+            var list = HiddenIds;
+            bool changed = hidden ? Add(list, id) : list.Remove(id);
+            if (!changed) return false;
+
+            SaveSettings();
+            Version++;
+            return true;
+        }
+
+        /// <summary>当前被移除的内置规则条数。面板据此决定要不要给"恢复"入口。</summary>
+        public static int HiddenCount
+        {
+            get
+            {
+                var list = HiddenIds;
+                int n = 0;
+
+                for (int i = 0; i < list.Count; i++)
+                {
+                    for (int k = 0; k < modRules.Count; k++)
+                    {
+                        if (modRules[k] != null && modRules[k].id == list[i]) { n++; break; }
+                    }
+                }
+
+                return n;
+            }
+        }
+
+        /// <summary>把所有被移除的内置规则放回列表。</summary>
+        public static bool RestoreHidden()
+        {
+            var list = HiddenIds;
+            if (list.Count == 0) return false;
+
+            list.Clear();
+            SaveSettings();
+            Version++;
+            return true;
+        }
+
+        private static bool Add(List<string> list, string id)
+        {
+            if (list.Contains(id)) return false;
+            list.Add(id);
+            return true;
         }
 
         public static Rule Find(string id)
@@ -272,15 +397,17 @@ namespace RuleCore
             return false;
         }
 
+        /// <summary>
+        /// 关掉/打开一条规则。**转发到 <see cref="SetDisabled"/>**，
+        /// 不再自己改 <c>rule.enabled</c>。
+        ///
+        /// 这是踩过的坑的收口：留两个"能改 enabled"的入口，早晚会有人走错那条——
+        /// 直接改字段对内置规则是**没用的**，下次读档会被 XML 里的 enabled 顶回来。
+        /// 保留这个名字只是不打断已有调用方。
+        /// </summary>
         public static bool SetPlayerRuleEnabled(string id, bool enabled)
         {
-            var rule = Find(id);
-            if (rule == null || !rule.IsPlayerRule) return false;
-
-            rule.enabled = enabled;
-            SaveSettings();
-            Version++;
-            return true;
+            return SetDisabled(id, !enabled);
         }
 
         private static string NewPlayerRuleId()

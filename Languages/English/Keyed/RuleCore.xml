@@ -179,6 +179,8 @@ Add a RuleCore.RulePackDef under 1.6/Defs/ to create one.</RuleCore.Panel.NoRule
   <RuleCore.Enum.RuleEntityKind.Event>event</RuleCore.Enum.RuleEntityKind.Event>
   <RuleCore.Enum.RuleEntityKind.Set>group</RuleCore.Enum.RuleEntityKind.Set>
   <!-- ── Editor ───────────────────────────────────────────────── -->
+  <RuleCore.Panel.Hide>Remove</RuleCore.Panel.Hide>
+  <RuleCore.Panel.Restore>↩ restore {0} removed built-in rule(s)</RuleCore.Panel.Restore>
   <RuleCore.Panel.Pending>● unsaved</RuleCore.Panel.Pending>
 
   <RuleCore.Edit.HeaderLine>{0} · cooldown {1}t · {2}</RuleCore.Edit.HeaderLine>

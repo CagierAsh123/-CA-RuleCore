@@ -30,6 +30,23 @@ namespace RuleCore
         public bool allowDeveloperOps;
 
         /// <summary>
+        /// 玩家**关掉**的规则 id。内置规则也能被关掉。
+        ///
+        /// 内置规则是模组带来的**定义**：不可编辑、不可删除。但"我不想让它跑"
+        /// 是玩家的偏好，跟"它定义成什么样"是两件事——不该因为没有编辑权
+        /// 就连关都关不掉。存在这里，载入时套回 <see cref="Rule.enabled"/>。
+        /// </summary>
+        public List<string> disabledRuleIds = new List<string>();
+
+        /// <summary>
+        /// 玩家**从列表里移除**的规则 id（只对内置规则有意义——玩家规则是直接删）。
+        ///
+        /// 它**不删任何数据**，只是不再加载、不再显示，所以随时能恢复。
+        /// 对内置规则，"清除"只能是这个意思：那些定义住在别人的模组里。
+        /// </summary>
+        public List<string> hiddenRuleIds = new List<string>();
+
+        /// <summary>
         /// 玩家在游戏内创建的规则。跟着**全局配置**走而不是存档——
         /// 规则是玩家的资产，要能跨存档复用、能分享，所以默认住在全局库里。
         /// （"这条规则只对本殖民地生效"那层筛选以后再加。）
@@ -44,6 +61,8 @@ namespace RuleCore
             Scribe_Values.Look(ref logToFile, "logToFile", true);
             Scribe_Values.Look(ref logRetention, "logRetention", 10);
             Scribe_Values.Look(ref allowDeveloperOps, "allowDeveloperOps", false);
+            Scribe_Collections.Look(ref disabledRuleIds, "disabledRuleIds", LookMode.Value);
+            Scribe_Collections.Look(ref hiddenRuleIds, "hiddenRuleIds", LookMode.Value);
             Scribe_Collections.Look(ref playerRules, "playerRules", LookMode.Deep);
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
@@ -65,6 +84,19 @@ namespace RuleCore
             if (playerRules == null)
             {
                 playerRules = new List<Rule>();
+            }
+
+            if (disabledRuleIds == null) disabledRuleIds = new List<string>();
+            if (hiddenRuleIds == null) hiddenRuleIds = new List<string>();
+
+            // 写坏的 id（空串）清掉：它们在列表里会变成一条点不动、也恢复不了的空行。
+            for (int i = disabledRuleIds.Count - 1; i >= 0; i--)
+            {
+                if (string.IsNullOrEmpty(disabledRuleIds[i])) disabledRuleIds.RemoveAt(i);
+            }
+            for (int i = hiddenRuleIds.Count - 1; i >= 0; i--)
+            {
+                if (string.IsNullOrEmpty(hiddenRuleIds[i])) hiddenRuleIds.RemoveAt(i);
             }
 
             // 手改 XML / 版本迁移留下的空位在这里被清掉，加载完就是干净的。

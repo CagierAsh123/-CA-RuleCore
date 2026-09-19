@@ -38,8 +38,12 @@ namespace RuleCore
         private const float MinRowHeight = 22f;
         private const float BottomPadding = 4f;
         private const float ScrollBarAllowance = 20f;
-        private const float RuleRowHeight = 40f;
+        private const float RuleRowHeight = 44f;
         private const float RuleRowButtonWidth = 44f;
+
+        /// <summary>列表里实际要画的规则。**被玩家移除的内置规则不进来**——
+        /// 它们仍在库里（<see cref="RuleLibrary.IsHidden"/>），所以"恢复"只是换个过滤条件。</summary>
+        private readonly List<Rule> visibleRules = new List<Rule>();
 
         private static readonly Color SelectedRowColor = new Color(0.26f, 0.45f, 0.70f, 0.55f);
 
@@ -471,7 +475,17 @@ namespace RuleCore
             Widgets.DrawMenuSection(rect);
 
             var inner = rect.ContractedBy(8f);
-            var rules = RuleLibrary.All;
+
+            // 先把被移除的内置规则滤掉：列表要显示的是"我现在关心的那些"。
+            var everything = RuleLibrary.All;
+            visibleRules.Clear();
+            for (int i = 0; i < everything.Count; i++)
+            {
+                var r = everything[i];
+                if (r == null || RuleLibrary.IsHidden(r.id)) continue;
+                visibleRules.Add(r);
+            }
+            var rules = visibleRules;
 
             Text.Font = GameFont.Small;
             Text.Anchor = TextAnchor.UpperLeft;
@@ -493,7 +507,24 @@ namespace RuleCore
                 }
             }
 
-            var body = new Rect(inner.x, inner.y + 28f, inner.width, inner.height - 28f);
+            // 有内置规则被移除时，给一条**回得去**的路。
+            // 没有它，"移除"就是一个单向操作，玩家不敢点。
+            float listTop = inner.y + 28f;
+            int hiddenCount = RuleLibrary.HiddenCount;
+            if (hiddenCount > 0)
+            {
+                var restore = new Rect(inner.x, listTop, inner.width, 20f);
+                GUI.color = new Color(0.68f, 0.68f, 0.68f);
+                if (Widgets.ButtonText(restore,
+                        "RuleCore.Panel.Restore".Translate(hiddenCount)))
+                {
+                    RuleLibrary.RestoreHidden();
+                }
+                GUI.color = Color.white;
+                listTop += 22f;
+            }
+
+            var body = new Rect(inner.x, listTop, inner.width, Mathf.Max(inner.height - (listTop - inner.y), 1f));
 
             if (rules.Count == 0)
             {
@@ -524,21 +555,25 @@ namespace RuleCore
                 }
 
                 bool playerRule = rule.IsPlayerRule;
-                float textWidth = playerRule ? rowRect.width - RuleRowButtonWidth - 4f : rowRect.width;
+                float textWidth = rowRect.width - RuleRowButtonWidth - 4f;
 
                 var previous = GUI.color;
                 if (!rule.enabled)
                 {
                     GUI.color = new Color(1f, 1f, 1f, 0.45f);
                 }
-                Widgets.LabelEllipses(new Rect(rowRect.x, rowRect.y, textWidth, 16f), rule.DisplayLabel);
+
+                // 关掉的规则前面加一个记号：只靠变暗在窄栏里不够明显，
+                // 而"它到底跑不跑"是这张列表最要紧的一条信息。
+                Widgets.LabelEllipses(new Rect(rowRect.x, rowRect.y, textWidth, 17f),
+                    rule.enabled ? rule.DisplayLabel : "⏸ " + rule.DisplayLabel);
                 GUI.color = previous;
 
                 // 玩家规则用自己的颜色，一眼能和内置区分开。
                 GUI.color = playerRule
                     ? new Color(0.55f, 0.85f, 1f)
                     : (rule.RequiresDeveloperTier ? new Color(1f, 0.72f, 0.35f) : new Color(0.68f, 0.68f, 0.68f));
-                Widgets.LabelEllipses(new Rect(rowRect.x, rowRect.y + 16f, textWidth, 16f),
+                Widgets.LabelEllipses(new Rect(rowRect.x, rowRect.y + 18f, textWidth, 17f),
                     "RuleCore.Panel.RuleLine".Translate(
                         (playerRule ? "RuleCore.Origin.Player" : "RuleCore.Origin.Mod").Translate(),
                         ScopeText(rule),
@@ -546,17 +581,22 @@ namespace RuleCore
                         rule.operate.Count));
                 GUI.color = previous;
 
+                // ── 按钮：**关掉/打开对两种规则都给** ──────────────────
+                //
+                // 原来只有玩家规则有关掉的按钮，内置规则什么都没有——
+                // 那个不对称是错的：内置规则不可编辑，但"我不想让它跑"是**玩家的偏好**，
+                // 跟"它定义成什么样"是两件事。
+                float buttonX = rowRect.xMax - RuleRowButtonWidth;
+
+                if (Widgets.ButtonText(new Rect(buttonX, rowRect.y + 3f, RuleRowButtonWidth, 18f),
+                        (rule.enabled ? "RuleCore.Panel.Disable" : "RuleCore.Panel.Enable").Translate()))
+                {
+                    RuleLibrary.SetDisabled(rule.id, rule.enabled);
+                }
+
                 if (playerRule)
                 {
-                    float buttonX = rowRect.xMax - RuleRowButtonWidth;
-
-                    if (Widgets.ButtonText(new Rect(buttonX, rowRect.y + 2f, RuleRowButtonWidth, 18f),
-                            (rule.enabled ? "RuleCore.Panel.Disable" : "RuleCore.Panel.Enable").Translate()))
-                    {
-                        RuleLibrary.SetPlayerRuleEnabled(rule.id, !rule.enabled);
-                    }
-
-                    if (Widgets.ButtonText(new Rect(buttonX, rowRect.y + 20f, RuleRowButtonWidth, 18f),
+                    if (Widgets.ButtonText(new Rect(buttonX, rowRect.y + 23f, RuleRowButtonWidth, 18f),
                             "RuleCore.Panel.Delete".Translate()))
                     {
                         string deletedId = rule.id;
@@ -568,6 +608,19 @@ namespace RuleCore
                         // 本帧的列表已经过期，停止绘制剩下的行。
                         break;
                     }
+                }
+                else if (Widgets.ButtonText(new Rect(buttonX, rowRect.y + 23f, RuleRowButtonWidth, 18f),
+                        "RuleCore.Panel.Hide".Translate()))
+                {
+                    // 内置规则**只能移出列表，不能删**：那些定义住在别人的模组里。
+                    // 所以这个按钮做的是"不再加载"，而顶部会给一条恢复的路。
+                    string hiddenId = rule.id;
+                    RuleLibrary.SetHidden(hiddenId, true);
+                    if (selectedRuleId == hiddenId)
+                    {
+                        selectedRuleId = null;
+                    }
+                    break;
                 }
 
                 // 选中区只覆盖文本部分，免得点按钮时把选中也一起触发。

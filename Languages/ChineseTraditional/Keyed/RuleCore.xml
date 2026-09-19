@@ -179,6 +179,8 @@
   <RuleCore.Enum.RuleEntityKind.Event>事件</RuleCore.Enum.RuleEntityKind.Event>
   <RuleCore.Enum.RuleEntityKind.Set>一組</RuleCore.Enum.RuleEntityKind.Set>
   <!-- ── 編輯器 ───────────────────────────────────────────────── -->
+  <RuleCore.Panel.Hide>移除</RuleCore.Panel.Hide>
+  <RuleCore.Panel.Restore>↩ 恢復 {0} 條被移除的內置規則</RuleCore.Panel.Restore>
   <RuleCore.Panel.Pending>● 待落盤</RuleCore.Panel.Pending>
 
   <RuleCore.Edit.HeaderLine>{0} · 冷卻 {1}t · {2}</RuleCore.Edit.HeaderLine>
