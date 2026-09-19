@@ -389,10 +389,17 @@ namespace RuleCore
             /// <summary>
             /// 宾语是枚举、取值来自某个 Def 表（如 <c>IncidentDef</c>）。
             /// 有它编辑器才给得出**带搜索的选择器**；没有就只能让玩家手填 defName。
+            ///
+            /// <paramref name="filter"/> 可选，用来**再筛一道"此刻能不能用"**：
+            /// 参数是候选 <c>Def</c>，返回 false 的不会出现在菜单里。
+            /// 类型对了但用不了的东西（比如目标标签不是地图的事件），
+            /// 摆出来只会让玩家选了才发现不行。
             /// </summary>
-            public VerbBuilder Domain(System.Type defType)
+            public VerbBuilder Domain(System.Type defType,
+                System.Func<object, bool> filter = null)
             {
                 info.argDefType = defType;
+                if (filter != null) info.argFilter = filter;
                 return this;
             }
 

@@ -1256,6 +1256,10 @@ namespace RuleCore
                 subject = RuleEntityKind.Map,
                 argKind = RuleValueKind.Enum,
                 argDefType = typeof(IncidentDef),
+                // **把投不出去的事件从菜单里拿掉。**
+                // 日蚀 / 太阳耀斑 / 极光的目标标签只有 World，从地图上发出去会被
+                // 原版第一关挡下；列出来只会让玩家选了才发现不行。
+                argFilter = RuleIncidentFacts.TargetAvailableFilter,
                 tier = RuleTier.Developer,
                 operate = delegate(IRuleEvalHost host, RuleValue subject, RuleValue arg,
                     out string code, out string reason)
@@ -1278,7 +1282,20 @@ namespace RuleCore
                         return RuleOperateStatus.Failed;
                     }
 
-                    var parms = StorytellerUtility.DefaultParmsNow(def.category, map);
+                    // **目标要选对。** 地图优先，其次世界——日蚀/太阳耀斑/极光
+                    // 的目标标签只有 World，拿地图去喂会让 CanFireNow 第一句就返回 false，
+                    // 而那时的报错完全看不出真正原因（玩家报过的那个 bug）。
+                    IIncidentTarget target;
+                    string targetNote;
+                    if (!RuleIncidentFacts.TryResolveTarget(def, map, out target, out targetNote))
+                    {
+                        code = "incident.no_target";
+                        reason = "「" + def.LabelCap + "」的目标既不是这张地图也不是世界"
+                            + "（targetTags 两边都不匹配），从地图上发不出去。";
+                        return RuleOperateStatus.Rejected;
+                    }
+
+                    var parms = StorytellerUtility.DefaultParmsNow(def.category, target);
 
                     // **原版第一顺位**：先问"现在能不能发生"。
                     // 不硬塞——硬塞会把 minRefireDays、难度里的"禁止大威胁"、
@@ -1286,8 +1303,16 @@ namespace RuleCore
                     if (!def.Worker.CanFireNow(parms))
                     {
                         code = "incident.not_now";
-                        reason = "原版判断现在不能发生「" + def.LabelCap
-                            + "」（太频繁、被难度或剧本禁掉、或条件不满足）。";
+
+                        // **说清是哪一个条件挡的。** 原来只列四种可能，
+                        // 玩家据此没法做任何决定——而这条规则到底为什么不动，
+                        // 恰恰是时间线存在的全部意义。
+                        string why = RuleIncidentFacts.DescribeWhyNot(def, parms);
+                        reason = why != null
+                            ? "「" + def.LabelCap + "」现在不能发生：" + why
+                            : "原版判断现在不能发生「" + def.LabelCap
+                              + "」，但没落在常见原因里（可能是 mod 的 CanFireNowSub、"
+                              + "异常内容、或行星层限制）。";
                         return RuleOperateStatus.Rejected;
                     }
 
@@ -1299,7 +1324,8 @@ namespace RuleCore
                     }
 
                     code = "incident.fired";
-                    reason = "已触发「" + def.LabelCap + "」。";
+                    reason = "已触发「" + def.LabelCap + "」"
+                        + (targetNote != null ? "（" + targetNote + "）" : string.Empty) + "。";
                     return RuleOperateStatus.Done;
                 }
             });

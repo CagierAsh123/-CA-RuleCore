@@ -1928,6 +1928,13 @@ namespace RuleCore
             // 候选清单现在就查（DefsOf 有缓存，不花钱），因为下面三件事都要用它：
             // 按钮文案、走菜单还是走搜索窗口、以及"一条都没有"时该说什么。
             var defs = domain != null ? Dialog_DefPicker.DefsOf(domain) : null;
+
+            // **再按"此刻能不能用"筛一道。**
+            // 类型对不代表用得上：「触发事件」要的事件里，日蚀/太阳耀斑/极光的目标
+            // 只有世界，从地图上发出去会被原版第一关挡下。列出来 = 选了才发现不行。
+            int rawCount = defs != null ? defs.Count : 0;
+            defs = FilterCandidates(defs, verb);
+
             int candidateCount = defs != null
                 ? defs.Count
                 : (options != null ? options.Length : 0);
@@ -1960,10 +1967,19 @@ namespace RuleCore
 
             if (!readOnly && candidateCount == 0 && hasSource)
             {
-                // 声明了取值来源却查不到候选：**这不是"没得选"，是我们坏了。**
-                // 含糊过去的话，玩家会以为自己漏看了什么。
-                y = Hint(y, width, "RuleCore.Edit.NoCandidateAtAll".Translate(
-                    domain != null ? domain.Name : verb.key));
+                // 两种"0 个"要分开说：
+                //   · 查出来就是空的   → 我们坏了
+                //   · 筛完才变空的     → 登记了 N 个，但一个都用不上
+                // 混成一句的话，玩家不知道该去修 bug 还是该换个宾语。
+                if (rawCount > 0)
+                {
+                    y = Hint(y, width, "RuleCore.Edit.NoneUsableAfterFilter".Translate(rawCount));
+                }
+                else
+                {
+                    y = Hint(y, width, "RuleCore.Edit.NoCandidateAtAll".Translate(
+                        domain != null ? domain.Name : verb.key));
+                }
             }
             else if (!readOnly && blank)
             {
@@ -1990,6 +2006,26 @@ namespace RuleCore
             }
 
             return y;
+        }
+
+        /// <summary>
+        /// 候选里"此刻真的能用"的那些。
+        ///
+        /// **不改 <see cref="Dialog_DefPicker.DefsOf"/> 返回的那份缓存**——它是共享的，
+        /// 就地删元素会把别的调用方（以及下一帧）一起带坏。所以另建一个列表。
+        /// </summary>
+        private static List<Def> FilterCandidates(List<Def> all, RuleVerbInfo verb)
+        {
+            if (all == null) return null;
+            if (verb == null || verb.argFilter == null) return all;
+
+            var kept = new List<Def>(all.Count);
+            for (int i = 0; i < all.Count; i++)
+            {
+                var def = all[i];
+                if (def != null && verb.argFilter(def)) kept.Add(def);
+            }
+            return kept;
         }
 
         /// <summary>已选值在界面上的显示名：优先查 Def 的翻译名，其次查固定清单，最后回落成键。</summary>

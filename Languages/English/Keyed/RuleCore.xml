@@ -327,6 +327,7 @@ The options for that slot show up here — no popup covering the sentence.</Rule
   <RuleCore.Edit.PickFromList>▾ pick one of {0}…</RuleCore.Edit.PickFromList>
   <RuleCore.Edit.SearchAll>🔍 search all {0}…</RuleCore.Edit.SearchAll>
   <RuleCore.Edit.MoreItems>…only the first 200 are listed; use "search all" above for the rest</RuleCore.Edit.MoreItems>
+  <RuleCore.Edit.NoneUsableAfterFilter>{0} candidates are registered, but none of them is usable under the current conditions (e.g. the incident does not target a map). Pick another verb or another object.</RuleCore.Edit.NoneUsableAfterFilter>
   <RuleCore.Edit.NoCandidateAtAll>Could not read the candidate list for "{0}" — this is a lookup failure, not "nothing to choose from". Logged to the timeline.</RuleCore.Edit.NoCandidateAtAll>
   <RuleCore.Edit.PickOneHint>Click the row above to pick a value. The candidates are vanilla's full list (mods included); when there are many it opens a window you can type into.</RuleCore.Edit.PickOneHint>
   <RuleCore.Edit.Type.Unknown>unknown</RuleCore.Edit.Type.Unknown>

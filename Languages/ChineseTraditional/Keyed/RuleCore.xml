@@ -327,6 +327,7 @@
   <RuleCore.Edit.PickFromList>▾ 從 {0} 個裡選一個…</RuleCore.Edit.PickFromList>
   <RuleCore.Edit.SearchAll>🔍 搜尋全部 {0} 個…</RuleCore.Edit.SearchAll>
   <RuleCore.Edit.MoreItems>…只列出了前 200 個，剩下的用上面的「搜尋全部」</RuleCore.Edit.MoreItems>
+  <RuleCore.Edit.NoneUsableAfterFilter>登記了 {0} 個候選，但按當前條件一個都用不上（比如事件的目標不是地圖）。換個謂語或者換個賓語。</RuleCore.Edit.NoneUsableAfterFilter>
   <RuleCore.Edit.NoCandidateAtAll>讀不到「{0}」的候選清單 —— 這不是「沒得選」，是查找失敗了。已記進時間線。</RuleCore.Edit.NoCandidateAtAll>
   <RuleCore.Edit.PickOneHint>點上面那一行選一個值。候選是原版的完整清單（含 mod 加的），條目多的時候會開一個能搜名字的視窗。</RuleCore.Edit.PickOneHint>
   <RuleCore.Edit.Type.Unknown>未知</RuleCore.Edit.Type.Unknown>

@@ -192,6 +192,20 @@ namespace RuleCore.Core
         /// <summary>宾语是枚举、但取值来自"算出来的固定选项"时的清单（与 <see cref="argDefType"/> 二选一）。</summary>
         public RuleEnumOption[] argOptions;
 
+        /// <summary>
+        /// 宾语取值的**额外筛选**（可选）。参数是那个候选值（Verse 侧是一个 <c>Def</c>），
+        /// 返回它**此刻**能不能用。
+        ///
+        /// 类型过滤管的是"这个宾语类型对不对"，管不了"这个具体的值此刻能不能用"。
+        /// 「触发事件」要的正是后者：日蚀 / 太阳耀斑 / 极光的 <c>targetTags</c> 只有
+        /// <c>World</c>，而从"本图"发出去会被原版第一关挡下——把它们列在菜单里，
+        /// 玩家**选了才知道不行**，那正是这套东西存在的全部理由要消灭的东西。
+        ///
+        /// 用 <c>object</c> 而不是 <c>Def</c>：Core 不认识 Verse 的类型
+        /// （和 <see cref="RuleValue.AsHandle"/> 同一个道理）。
+        /// </summary>
+        public System.Func<object, bool> argFilter;
+
         /// <summary>主语要具备什么能力才有意义（如「脱下」要求那个主体真的能穿衣服）。</summary>
         public RuleCapability requires = RuleCapability.None;
 
