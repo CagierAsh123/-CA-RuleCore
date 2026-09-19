@@ -365,6 +365,53 @@ namespace RuleCore
             AddMapPawnCount(v, "map.colonyMechCount", PawnTally.ColonyMechs);
             AddMapPawnCount(v, "map.colonyAnimalCount", PawnTally.ColonyAnimals);
             AddMapPawnCount(v, "map.pawnCount", PawnTally.AllSpawned);
+
+            // ── 时间 ──────────────────────────────────────────────────
+            //
+            // 玩家要写「时间 等于 白天」，而"白天"得有个诚实的定义。
+            // 这里给两层：一个数（几点）和一个布尔（是不是白天）。
+            //
+            // **布尔按当地时间算（6:00–18:00），与天气和日蚀无关**——那是天文学意义上的白天。
+            // "现在有多亮"是另一件事，用已有的「天空亮度」：日蚀时它照样会掉下去。
+            // 不把两者合并，是因为"白天"和"有阳光"在 RimWorld 里真的会分家。
+            v.Add(new RulePropertyInfo
+            {
+                key = "map.hour", owner = RuleEntityKind.Map,
+                requires = RuleCapability.Map,
+                result = RuleValueKind.Number, unit = "点", decimals = 0,
+                min = 0f, max = 23f,
+                reader = delegate(IRuleEvalHost host, RuleValue owner, out RuleValue value,
+                    out string code, out string reason)
+                {
+                    var map = RuleEvalHost.MapOf(owner);
+                    if (map == null)
+                    {
+                        return Fail(out value, out code, out reason, "prop.no_map", "没有地图，读不到时间。");
+                    }
+                    return Ok(RuleValue.OfNumber(GenLocalDate.HourOfDay(map)),
+                        out value, out code, out reason);
+                }
+            });
+
+            v.Add(new RulePropertyInfo
+            {
+                key = "map.isDay", owner = RuleEntityKind.Map,
+                requires = RuleCapability.Map,
+                result = RuleValueKind.Bool,
+                reader = delegate(IRuleEvalHost host, RuleValue owner, out RuleValue value,
+                    out string code, out string reason)
+                {
+                    var map = RuleEvalHost.MapOf(owner);
+                    if (map == null)
+                    {
+                        return Fail(out value, out code, out reason, "prop.no_map", "没有地图，读不到时间。");
+                    }
+
+                    float hour = GenLocalDate.HourFloat(map);
+                    return Ok(RuleValue.OfBool(hour >= 6f && hour < 18f),
+                        out value, out code, out reason);
+                }
+            });
         }
 
         private enum PawnTally
@@ -707,6 +754,34 @@ namespace RuleCore
             // （比如"这张图上的所有人"）。现在没有那种绑定，所以现在它们只能是常数。
             AddBool(v, "pawn.isDowned", PawnBool.Downed, RuleCapability.Pawn);
             AddBool(v, "pawn.isDrafted", PawnBool.Drafted, RuleCapability.CanDraft);
+
+            // 「在露天」——**头顶没有屋顶**。
+            //
+            // 玩家想写"在阳光底下"时需要它，而原版没有一个直接叫"露天"的东西：
+            // `need.outdoors` 只有人形才有（机械族没有），所以只能读位置。
+            // 注意它只回答"有没有屋顶"，不回答"现在亮不亮"——后者是
+            // `本图.天空亮度` 的事（日蚀时天线会掉下去）。**两件事分开**，
+            // 才写得出"露天 且 是白天 且 天空亮度 大于 0.3"这种精确的话。
+            v.Add(new RulePropertyInfo
+            {
+                key = "pawn.outdoor", owner = RuleEntityKind.Pawn,
+                requires = RuleCapability.Pawn,
+                result = RuleValueKind.Bool,
+                reader = delegate(IRuleEvalHost host, RuleValue owner, out RuleValue value,
+                    out string code, out string reason)
+                {
+                    var pawn = RuleEvalHost.PawnOf(owner);
+                    if (pawn == null || !pawn.Spawned || pawn.Map == null)
+                    {
+                        return Fail(out value, out code, out reason, "prop.not_spawned",
+                            "这个人不在任何地图上，看不出露天还是室内。");
+                    }
+
+                    // Roofed(map) 直接问屋顶网格——不绕 need.outdoors（机械族没有那个需求）。
+                    return Ok(RuleValue.OfBool(!pawn.Position.Roofed(pawn.Map)),
+                        out value, out code, out reason);
+                }
+            });
         }
 
         /// <summary>
@@ -1414,6 +1489,73 @@ namespace RuleCore
                     reason = arg.IsText && !string.IsNullOrEmpty(arg.AsText)
                         ? arg.AsText
                         : "（没写文本）";
+                    return RuleOperateStatus.Done;
+                }
+            });
+
+            // ── 充电（机械族）────────────────────────────────────────
+            //
+            // 玩家要写「本主体 充电 1%」。原版充电发生在 `Building_MechCharger` 上，
+            // 这里直接把电量推上去——**是直接改世界状态**，所以是开发者级。
+            //
+            // 数值宾语的显示单位由 `argDisplay` 声明：操作的主语是执行者，
+            // 路径上读不到单位，不给的话输入框就是个裸数字（输入 1 = 100%）。
+            v.Add(new RuleVerbInfo
+            {
+                key = "op.charge", category = RuleVerbCategory.Operate,
+                subject = RuleEntityKind.Pawn,
+                argKind = RuleValueKind.Number,
+                // 没有电量需求的（人、动物）身上不该出现"充电"。
+                requires = RuleCapability.NeedEnergy,
+                argDisplay = new RulePropertyInfo
+                {
+                    result = RuleValueKind.Number,
+                    percent = true, min = 0f, max = 1f, decimals = 1
+                },
+                tier = RuleTier.Developer,
+                operate = delegate(IRuleEvalHost host, RuleValue subject, RuleValue arg,
+                    out string code, out string reason)
+                {
+                    var pawn = RuleEvalHost.PawnOf(subject);
+                    if (pawn == null || pawn.needs == null || pawn.needs.energy == null)
+                    {
+                        code = "charge.no_energy";
+                        reason = "这个东西没有电量（只有机械族有）。";
+                        return RuleOperateStatus.Failed;
+                    }
+
+                    if (arg.IsMissing)
+                    {
+                        code = "charge.no_amount";
+                        reason = "没有说充多少。";
+                        return RuleOperateStatus.Failed;
+                    }
+
+                    var need = pawn.needs.energy;
+                    float amount = arg.AsNumber;
+
+                    if (amount <= 0f)
+                    {
+                        code = "charge.zero";
+                        reason = "充 0 等于什么都没做。";
+                        return RuleOperateStatus.AlreadySatisfied;
+                    }
+
+                    // MaxLevel 是电量的满值；宾语的 1 = 100%（见 argDisplay.percent）。
+                    float before = need.CurLevelPercentage;
+                    if (before >= 1f)
+                    {
+                        code = "charge.full";
+                        reason = "已经是满电（100%）。";
+                        return RuleOperateStatus.AlreadySatisfied;
+                    }
+
+                    // Need.CurLevel 的 setter 自带 Clamp(0, MaxLevel)，不会溢出。
+                    need.CurLevel = need.CurLevel + amount * need.MaxLevel;
+
+                    code = "charge.done";
+                    reason = "电量 " + before.ToStringPercent() + " → "
+                        + need.CurLevelPercentage.ToStringPercent() + "。";
                     return RuleOperateStatus.Done;
                 }
             });

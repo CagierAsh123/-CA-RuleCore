@@ -482,6 +482,18 @@ namespace RuleCore
                 {
                     into.Add(where + " 没有主语。");
                 }
+                else
+                {
+                    // **操作的主语路径也要查。** 原来只查检测那一侧，
+                    // 于是操作里一条拼错的路径（比如"全部某群"指向一个不存在的群体）
+                    // 载入时不报，等到某一次采样才发现它读不出东西。
+                    string opPathError = RulePathTypes.FindTypeError(clause.subject, subjectKind,
+                        false, RuleEntityKind.Any);
+                    if (opPathError != null)
+                    {
+                        into.Add(where + " 的主语路径： " + opPathError);
+                    }
+                }
 
                 ValidateOperand(vocabulary, verb, clause.argument,
                     where + "「" + NameOf(verb) + "」", subjectKind, into);

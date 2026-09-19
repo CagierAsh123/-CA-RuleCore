@@ -42,6 +42,21 @@ namespace RuleCore
                     entityKind = RuleEntityKind.Pawn;
                     return;
 
+                case RuleRootKind.PawnGroup:
+                {
+                    // 元素种类由**那一种绑定**声明，不是写死成 Pawn——
+                    // 将来有"每张床"这类绑定，它自动就对。
+                    kind = RuleValueKind.EntitySet;
+
+                    var group = RuleVocabularyCatalog.Current.Subject(
+                        path != null && !path.RootLiteral.IsMissing
+                            ? path.RootLiteral.AsKey
+                            : null);
+
+                    entityKind = group != null ? group.entityKind : RuleEntityKind.Pawn;
+                    return;
+                }
+
                 case RuleRootKind.AllMaps:
                     kind = RuleValueKind.EntitySet;
                     entityKind = RuleEntityKind.Map;
@@ -138,6 +153,24 @@ namespace RuleCore
             RuleValueKind kind;
             RuleEntityKind entityKind;
             RootType(path, subjectKind, insideFilter, elementKind, out kind, out entityKind);
+
+            // 「全部某群」的根要说清是哪一群，而且那一群得真的在词表里。
+            // 不查的话，手改 XML / 删掉一个绑定之后，这句话会变成"读不到任何东西"，
+            // 而界面上只有一句笼统的"这条路走到头了"。
+            if (path.rootKind == RuleRootKind.PawnGroup)
+            {
+                string groupKey = path.RootLiteral.IsMissing ? null : path.RootLiteral.AsKey;
+
+                if (string.IsNullOrEmpty(groupKey))
+                {
+                    return "这一句的根是一个「全部…」，但没说清是哪一群。";
+                }
+
+                if (vocabulary.Subject(groupKey) == null)
+                {
+                    return "「全部" + groupKey + "」不在词表里（主体绑定表里没有这一群）。";
+                }
+            }
 
             for (int i = 0; i < path.StepCount; i++)
             {

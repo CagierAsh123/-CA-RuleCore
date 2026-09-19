@@ -1183,19 +1183,24 @@ namespace RuleCore
 
                 y = Section(y, width, "RuleCore.Edit.Section.Root".Translate());
 
-                for (int i = 0; i < RootOrder.Length; i++)
+                rootOptions.Clear();
+                CollectRootOptions(rootOptions);
+
+                for (int i = 0; i < rootOptions.Count; i++)
                 {
-                    var rootKind = RootOrder[i];
-                    if (rootKind == RuleRootKind.Element && !selection.InsideFilter) continue;
+                    var option = rootOptions[i];   // struct：复制一份，闭包里不能用迭代变量
+                    bool active = path != null
+                        && path.rootKind == option.kind
+                        && (option.kind != RuleRootKind.PawnGroup
+                            || (!path.RootLiteral.IsMissing
+                                && path.RootLiteral.AsKey == option.groupKey));
 
-                    bool active = path != null && path.rootKind == rootKind;
-
-                    if (Option(y, width, RootName(rootKind, currentRule),
-                            TypeTagOf(RootKind(rootKind), RootEntity(rootKind)), EntityColor, active))
+                    if (Option(y, width, option.label,
+                            TypeTagOf(option.valueKind, option.entityKind), EntityColor, active))
                     {
                         // 换根 = 换一整条路径：旧步骤挂在新根上多半不成立，
                         // 留着它们只会得到一串红色的「不能挂在这个类型上」。
-                        CreatePath(rootKind);
+                        CreatePath(option);
                     }
                     y += OptionHeight + OptionGap;
                 }
@@ -1307,6 +1312,24 @@ namespace RuleCore
                     }
                     y += OptionHeight + OptionGap;
                 }
+
+                // ── 这里是最容易走错的一步，所以**当场说清它和主体绑定的区别** ──
+                //
+                // 玩家的直觉是：「全部机械族.电量 小于 50%」= 每个机械族的电量都小于 50%。
+                // 但那个写法在一组东西上**读不出属性**（上面根本没有属性列表），
+                // 而且字面意思只能是"这一组东西的电量小于 50%"。想要"每个各判一次"，
+                // 那是**主体绑定**的事——而那个入口的名字不叫这个，他找不到。
+                if (path.rootKind == RuleRootKind.PawnGroup)
+                {
+                    var group = RuleVocabularyCatalog.Current.Subject(
+                        path.RootLiteral.IsMissing ? null : path.RootLiteral.AsKey);
+
+                    if (group != null)
+                    {
+                        y = Hint(y, width, "RuleCore.Edit.GroupRootHint".Translate(
+                            Label(group.LabelKey, group.key)));
+                    }
+                }
             }
             else if (kind == RuleValueKind.None)
             {
@@ -1320,9 +1343,97 @@ namespace RuleCore
             return y;
         }
 
-        private void CreatePath(RuleRootKind kind)
+        /// <summary>根列表里的一项。<see cref="RuleRootKind.PawnGroup"/> 的"哪一群"放在 groupKey 里。</summary>
+        private struct RootOption
         {
-            var path = new RulePath { rootKind = kind };
+            public RuleRootKind kind;
+            public string groupKey;
+            public string label;
+            public RuleValueKind valueKind;
+            public RuleEntityKind entityKind;
+        }
+
+        private readonly List<RootOption> rootOptions = new List<RootOption>();
+
+        /// <summary>
+        /// 当前可选的根。**"一群"那部分是从绑定表里现场生成的，不是写死的几行。**
+        ///
+        /// 于是"加一种主体绑定"（比如别的 mod 加"所有机械体"）会自动在根列表里
+        /// 多出一项，两处不会漂——这是把 <see cref="RuleRootKind.PawnGroup"/>
+        /// 做成"一个值 + 一个键"而不是"每种群体一个枚举值"换来的。
+        /// </summary>
+        private void CollectRootOptions(List<RootOption> into)
+        {
+            into.Clear();
+
+            // 「当前元素」只在筛选器里有意义。
+            if (selection != null && selection.InsideFilter)
+            {
+                into.Add(new RootOption
+                {
+                    kind = RuleRootKind.Element,
+                    label = "RuleCore.Edit.Root.Element".Translate(),
+                    valueKind = RuleValueKind.Entity,
+                    entityKind = ElementKind()
+                });
+            }
+
+            into.Add(new RootOption
+            {
+                kind = RuleRootKind.Subject,
+                label = "RuleCore.Edit.Root.Subject".Translate(),
+                valueKind = RuleValueKind.Entity,
+                entityKind = SubjectKind()
+            });
+
+            into.Add(new RootOption
+            {
+                kind = RuleRootKind.Map,
+                label = "RuleCore.Edit.Root.Map".Translate(),
+                valueKind = RuleValueKind.Entity,
+                entityKind = RuleEntityKind.Map
+            });
+
+            // 一群：每一种"群体绑定"各一项，名字就是「全部」+ 那个绑定的名字。
+            var subjects = new List<RuleSubjectInfo>();
+            RuleVocabularyCatalog.Current.CollectSubjects(subjects);
+
+            for (int i = 0; i < subjects.Count; i++)
+            {
+                var info = subjects[i];
+                // 指名绑定不是"一群"，它没有对应的集合根。
+                if (info.scope != RuleSubjectScope.Group) continue;
+
+                into.Add(new RootOption
+                {
+                    kind = RuleRootKind.PawnGroup,
+                    groupKey = info.key,
+                    label = "RuleCore.Edit.Root.AllOf".Translate(Label(info.LabelKey, info.key)),
+                    valueKind = RuleValueKind.EntitySet,
+                    entityKind = info.entityKind
+                });
+            }
+
+            into.Add(new RootOption
+            {
+                kind = RuleRootKind.AllMaps,
+                label = "RuleCore.Edit.Root.AllMaps".Translate(),
+                valueKind = RuleValueKind.EntitySet,
+                entityKind = RuleEntityKind.Map
+            });
+        }
+
+        /// <summary>点根列表里的一项：换一条全新的路径。</summary>
+        private void CreatePath(RootOption option)
+        {
+            var path = new RulePath { rootKind = option.kind };
+
+            if (option.kind == RuleRootKind.PawnGroup)
+            {
+                // 是哪一群存在根的字面量里（Enum 值，键 = 绑定表的 key）。
+                // 复用现成的序列化字段，不必给 RulePath 加新成员。
+                path.rootLiteral = RuleLiteral.From(RuleValue.OfKey(option.groupKey));
+            }
 
             if (selection.InsideFilter && selection.FilterPath != null
                 && selection.FilterStepIndex >= 0
@@ -1341,6 +1452,31 @@ namespace RuleCore
             }
 
             AfterPathEdit(path);
+        }
+
+        /// <summary>
+        /// 一条路径的根在界面上的名字。
+        ///
+        /// 静态版（给 <see cref="RuleText"/> 用）和实例版最终都走
+        /// <see cref="RootText"/>，所以规则列表和编辑器不会显示成两个样子。
+        /// </summary>
+        public static string RootText(RulePath path, Rule rule)
+        {
+            if (path == null) return "?";
+
+            if (path.rootKind == RuleRootKind.PawnGroup)
+            {
+                string key = path.RootLiteral.IsMissing ? null : path.RootLiteral.AsKey;
+                var info = RuleVocabularyCatalog.Current.Subject(key);
+
+                string name = info != null
+                    ? Label(info.LabelKey, info.key)
+                    : "⚠" + (key ?? "?");
+
+                return "RuleCore.Edit.Root.AllOf".Translate(name);
+            }
+
+            return RootName(path.rootKind, rule);
         }
 
         /// <summary>
@@ -1409,7 +1545,7 @@ namespace RuleCore
             float cursor = 0f;
             float row = y;
 
-            if (ChainSegment(ref cursor, ref row, width, RootName(path.rootKind, currentRule),
+            if (ChainSegment(ref cursor, ref row, width, RootText(path, currentRule),
                     EntityColor, readOnly))
             {
                 path.steps.Clear();
@@ -1791,6 +1927,11 @@ namespace RuleCore
             RulePathTypes.AdvanceType(subject, SubjectKind(), selection.InsideFilter,
                 ElementKind(), subject != null ? subject.StepCount : 0,
                 out kind, out entityKind, out unitSource);
+
+            // 主语路径上读不到单位时，用**谓语自己声明的**。
+            // 操作的典型情况：`本主体 充电 [__]` 的主语是执行者，路径上什么都没有，
+            // 不给这一步的话输入框就是个裸数字（输入 1 = 100%）。
+            if (unitSource == null) unitSource = verb.argDisplay;
 
             y = Section(y, width, "RuleCore.Edit.Section.Object".Translate());
 
@@ -2914,7 +3055,7 @@ namespace RuleCore
             if (path == null) return "?";
 
             var sb = new System.Text.StringBuilder(64);
-            sb.Append(RootName(path.rootKind, rule));
+            sb.Append(RootText(path, rule));
 
             for (int i = 0; i < path.StepCount; i++)
             {
@@ -3041,35 +3182,12 @@ namespace RuleCore
                 case RuleRootKind.Map: return "RuleCore.Edit.Root.Map".Translate();
                 case RuleRootKind.Colonists: return "RuleCore.Edit.Root.Colonists".Translate();
                 case RuleRootKind.AllMaps: return "RuleCore.Edit.Root.AllMaps".Translate();
+
+                // PawnGroup 的名字要**那条路径**才知道（是哪一群），所以走 RootText。
+                // 这里是兜底：拿到这里说明调用方没带路径，不该发生。
+                case RuleRootKind.PawnGroup: return "RuleCore.Edit.Root.PawnGroup".Translate();
+
                 default: return kind.ToString();
-            }
-        }
-
-        public static RuleValueKind RootKind(RuleRootKind kind)
-        {
-            switch (kind)
-            {
-                case RuleRootKind.Colonists:
-                case RuleRootKind.AllMaps:
-                    return RuleValueKind.EntitySet;
-                case RuleRootKind.Literal:
-                    return RuleValueKind.None;
-                default:
-                    return RuleValueKind.Entity;
-            }
-        }
-
-        public static RuleEntityKind RootEntity(RuleRootKind kind)
-        {
-            switch (kind)
-            {
-                case RuleRootKind.Map:
-                case RuleRootKind.AllMaps:
-                    return RuleEntityKind.Map;
-                case RuleRootKind.Colonists:
-                    return RuleEntityKind.Pawn;
-                default:
-                    return RuleEntityKind.Any;
             }
         }
 

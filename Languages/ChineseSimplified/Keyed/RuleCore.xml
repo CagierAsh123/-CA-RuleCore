@@ -162,6 +162,18 @@
   <RuleCore.TierGranted>开发者级（你在下面勾了「允许开发者级操作」）</RuleCore.TierGranted>
   <RuleCore.TierNotGranted>玩家级（只能"让谁去做"）</RuleCore.TierNotGranted>
 
+  <RuleCore.Edit.Root.AllOf>全部{0}</RuleCore.Edit.Root.AllOf>
+  <RuleCore.Edit.Root.PawnGroup>一群</RuleCore.Edit.Root.PawnGroup>
+  <RuleCore.Edit.GroupRootHint>「全部{0}」是一整组东西，它只能**数个数**（.数量）或**取一个**（.第一个），读不了属性——"这一组东西的电量"本来就不是一个值。想让**每个{0}各判一次自己的电量/自己所在的位置**，请把顶上的「主体绑定」改成「{0}」：那样整条规则会为每个成员各跑一遍，每个人身上只看得见自己的数。</RuleCore.Edit.GroupRootHint>
+  <RuleCore.Prop.map.hour>当地时间</RuleCore.Prop.map.hour>
+  <RuleCore.Prop.map.hourDesc>当地现在是几点（0~23）。想知道"是不是白天"直接看「是白天」；想要精确时段就用它，比如「不小于 6 且 小于 18」。</RuleCore.Prop.map.hourDesc>
+  <RuleCore.Prop.map.isDay>是白天</RuleCore.Prop.map.isDay>
+  <RuleCore.Prop.map.isDayDesc>按当地时间算的白天（6:00–18:00），**与天气和日蚀无关**——那是天文学意义上的白天。想知道"现在到底有多亮"用「天空亮度」，日蚀时它会掉下去。两件事分开才写得出「露天 且 是白天 且 天空亮度 大于 0.3」这种话。</RuleCore.Prop.map.isDayDesc>
+  <RuleCore.Prop.pawn.outdoor>在露天</RuleCore.Prop.pawn.outdoor>
+  <RuleCore.Prop.pawn.outdoorDesc>他头顶上没有屋顶。**只回答"有没有屋顶"，不回答"现在亮不亮"**——后者是「本图.天空亮度」的事。机械族没有"户外需求"这个东西，所以这里直接问屋顶网格，人和动物也一样适用。</RuleCore.Prop.pawn.outdoorDesc>
+  <RuleCore.Verb.op.charge>充电</RuleCore.Verb.op.charge>
+  <RuleCore.Verb.op.chargeDesc>把执行者的电量推上去（百分比，1 = 100%）。原版充电发生在充电站上，这条是**直接改电量**，所以是开发者级。已经满电时记「已经满足」，不刷红字。</RuleCore.Verb.op.chargeDesc>
+
   <RuleCore.Reduce.First>第一个</RuleCore.Reduce.First>
   <RuleCore.Reduce.Nearest>最近</RuleCore.Reduce.Nearest>
   <RuleCore.Reduce.Count>数量</RuleCore.Reduce.Count>

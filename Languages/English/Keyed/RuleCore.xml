@@ -162,6 +162,18 @@ Add a RuleCore.RulePackDef under 1.6/Defs/ to create one.</RuleCore.Panel.NoRule
   <RuleCore.TierGranted>developer (you ticked "Allow developer-tier operations" below)</RuleCore.TierGranted>
   <RuleCore.TierNotGranted>player (delegate only)</RuleCore.TierNotGranted>
 
+  <RuleCore.Edit.Root.AllOf>All {0}</RuleCore.Edit.Root.AllOf>
+  <RuleCore.Edit.Root.PawnGroup>a group</RuleCore.Edit.Root.PawnGroup>
+  <RuleCore.Edit.GroupRootHint>"All {0}" is one whole group. It can only be **counted** (.count) or **picked apart** (.first) — you cannot read a property off it, because "the energy of this group" is not a value. To have **each {0} judged on its own energy / its own position**, change the **subject binding** at the top to "{0}": the whole rule then runs once per member, and each one only sees its own numbers.</RuleCore.Edit.GroupRootHint>
+  <RuleCore.Prop.map.hour>Local time</RuleCore.Prop.map.hour>
+  <RuleCore.Prop.map.hourDesc>Current local hour (0-23). For "is it daytime" use "Is daytime"; for a precise window use this, e.g. "at least 6 and less than 18".</RuleCore.Prop.map.hourDesc>
+  <RuleCore.Prop.map.isDay>Is daytime</RuleCore.Prop.map.isDay>
+  <RuleCore.Prop.map.isDayDesc>Astronomical daytime by local time (6:00-18:00), **independent of weather and eclipses**. For "how bright is it right now" use "Sky glow" — an eclipse drops that. Keeping them apart is what makes "outdoors and daytime and sky glow above 0.3" writable.</RuleCore.Prop.map.isDayDesc>
+  <RuleCore.Prop.pawn.outdoor>Is outdoors</RuleCore.Prop.pawn.outdoor>
+  <RuleCore.Prop.pawn.outdoorDesc>There is no roof over his head. **It answers "is there a roof", not "is it bright"** — that is what "sky glow" is for. Mechanoids have no outdoors need, so this asks the roof grid directly, and it works the same for humans and animals.</RuleCore.Prop.pawn.outdoorDesc>
+  <RuleCore.Verb.op.charge>Charge</RuleCore.Verb.op.charge>
+  <RuleCore.Verb.op.chargeDesc>Push the executor's energy up (percentage, 1 = 100%). Vanilla charging happens at a mech charger; this changes the energy directly, so it is developer tier. Already full counts as "already satisfied" rather than an error.</RuleCore.Verb.op.chargeDesc>
+
   <RuleCore.Reduce.First>first</RuleCore.Reduce.First>
   <RuleCore.Reduce.Nearest>nearest</RuleCore.Reduce.Nearest>
   <RuleCore.Reduce.Count>count</RuleCore.Reduce.Count>

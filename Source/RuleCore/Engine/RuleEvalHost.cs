@@ -143,28 +143,17 @@ namespace RuleCore
                     return Done(out reasonCode, out reason);
 
                 case RuleRootKind.Colonists:
-                {
-                    var map = context != null ? context.Map : null;
-                    if (map == null)
-                    {
-                        value = RuleValue.None;
-                        reasonCode = "root.no_map";
-                        reason = "没有地图，数不了殖民者。";
-                        return false;
-                    }
+                    // 老数据里的「全部自由殖民者」。它等于 PawnGroup + freeColonists，
+                    // 留着这个分支是为了让已经存下来的规则继续能跑。
+                    return CollectGroup("freeColonists", out value, out reasonCode, out reason);
 
-                    scratch.Clear();
-                    var colonists = map.mapPawns.FreeColonistsSpawned;
-                    for (int i = 0; i < colonists.Count; i++)
-                    {
-                        var pawn = colonists[i];
-                        if (pawn == null || pawn.Dead || pawn.Destroyed) continue;
-                        scratch.Add(RuleValue.OfEntity(RuleEntityKind.Pawn, pawn));
-                    }
-
-                    value = RuleValue.OfSet(RuleEntityKind.Pawn, new List<RuleValue>(scratch));
-                    return Done(out reasonCode, out reason);
-                }
+                case RuleRootKind.PawnGroup:
+                    // **一群同类实体**：是哪一群写在 literal 里（Enum 值，键就是绑定表的 key）。
+                    //
+                    // 复用**绑定器本体**，而不是在这里另写一份"地图上所有囚犯"——
+                    // 两份判据迟早会漂。于是"绑定表加一行"就自动多出一个根。
+                    return CollectGroup(literal.IsMissing ? null : literal.AsKey,
+                        out value, out reasonCode, out reason);
 
                 case RuleRootKind.AllMaps:
                 {
@@ -191,6 +180,47 @@ namespace RuleCore
                     reason = "认不出的根：" + kind;
                     return false;
             }
+        }
+
+        /// <summary>
+        /// 一个"一群"的根：跑那一种主体绑定的绑定器，把结果当成集合。
+        ///
+        /// **复用绑定器本体**（不是在这里重写一份判据）—— 于是"绑定表加一行"
+        /// 自动在根列表里多出一个可用的根，两处不会漂。
+        /// </summary>
+        private bool CollectGroup(string groupKey, out RuleValue value,
+            out string reasonCode, out string reason)
+        {
+            value = RuleValue.None;
+
+            if (string.IsNullOrEmpty(groupKey))
+            {
+                reasonCode = "root.no_group";
+                reason = "这个「一群」没有说清是哪一群。";
+                return false;
+            }
+
+            var info = RuleVocabularyCatalog.Current.Subject(groupKey);
+            if (info == null || info.binder == null)
+            {
+                reasonCode = "root.unknown_group";
+                reason = "词表里没有「" + groupKey + "」这个群体。";
+                return false;
+            }
+
+            if (context != null && context.Map == null)
+            {
+                reasonCode = "root.no_map";
+                reason = "这次求值没有地图，收不出「" + groupKey + "」。";
+                return false;
+            }
+
+            scratch.Clear();
+            info.binder(this, scratch);
+
+            // 复制的元素种类由绑定自己声明——不假设它一定是小人。
+            value = RuleValue.OfSet(info.entityKind, new List<RuleValue>(scratch));
+            return Done(out reasonCode, out reason);
         }
 
         public bool TryReduce(RuleValue set, RuleReduceKind kind, out RuleValue value,

@@ -193,6 +193,19 @@ namespace RuleCore.Core
         public RuleEnumOption[] argOptions;
 
         /// <summary>
+        /// **数值宾语的显示元数据**（单位 / 百分比 / 范围 / 小数位）。
+        ///
+        /// 数值宾语的显示一向是从"主语路径最后读到的那个属性"来的
+        /// （`血量 小于 [50%]` 的百分号就是那么来的）。但**操作的主语是执行者**
+        /// ——`本主体 充电 [__]` 的路径上什么都没有——于是玩家面对一个裸数字框，
+        /// 输入 1 会被当成 100%。这里就是补那个位置。
+        ///
+        /// 刻意**复用 <see cref="RulePropertyInfo"/>**：它正好就是那四样元数据，
+        /// 另开一个类只会多一份要同步的东西（key / owner / reader 留空即可）。
+        /// </summary>
+        public RulePropertyInfo argDisplay;
+
+        /// <summary>
         /// 宾语取值的**额外筛选**（可选）。参数是那个候选值（Verse 侧是一个 <c>Def</c>），
         /// 返回它**此刻**能不能用。
         ///
