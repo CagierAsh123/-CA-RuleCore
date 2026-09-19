@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Verse;
+using RuleCore.Core;
 
 namespace RuleCore
 {
@@ -62,6 +63,10 @@ namespace RuleCore
         /// 某个 Def 类型下的全部候选。**查询失败返回空列表而不是抛异常**：
         /// 该类型没有实例化过 DefDatabase 是可能的（类型写错、Def 卸载），
         /// 那不该让编辑器每帧报错。
+        ///
+        /// 但**失败必须留下痕迹**（写时间线）。返回空列表的调用方分不清
+        /// "这个类型真的没有 Def"和"查询炸了"，于是它会摆出一个空菜单，
+        /// 而玩家得到的结论是"这个功能没得选"——一个查不出答案的结论。
         /// </summary>
         public static List<Def> DefsOf(Type defType)
         {
@@ -72,6 +77,8 @@ namespace RuleCore
             }
 
             var defs = new List<Def>();
+            bool failed = false;
+
             if (defType != null)
             {
                 try
@@ -81,9 +88,13 @@ namespace RuleCore
                         if (def != null) defs.Add(def);
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    failed = true;
                     defs.Clear();
+                    RuleLog.Error(null, "Picker", RuleEvalStatus.Error, "picker.lookup_failed", null,
+                        "读不到 " + defType.Name + " 的 Def 清单："
+                        + ex.GetType().Name + " · " + ex.Message);
                 }
             }
 
@@ -92,7 +103,13 @@ namespace RuleCore
                 return string.CompareOrdinal(a.defName, b.defName);
             });
 
-            if (defType != null) defCache[defType] = defs;
+            // **空结果不进缓存。** 一次偶发失败（某个 Def 类型当时还没实例化）
+            // 不该把这个类型永远钉死成"没有候选"——那会让问题看起来像设计如此。
+            if (defType != null && (defs.Count > 0 || !failed))
+            {
+                defCache[defType] = defs;
+            }
+
             return defs;
         }
 

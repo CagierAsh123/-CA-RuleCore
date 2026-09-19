@@ -1883,6 +1883,27 @@ namespace RuleCore
             return y + OptionHeight + OptionGap;
         }
 
+        /// <summary>
+        /// 枚举宾语。
+        ///
+        /// <b>这一版修的是"玩家被迫手填 defName"。</b> 原来的布局是：
+        ///
+        /// <code>
+        /// 宾语
+        ///   [选一个值…]        ← 一行字，看起来像标签
+        /// 手填 defName
+        ///   [___________]     ← 一个文本框，**这一屏里唯一看起来能编辑的东西**
+        /// </code>
+        ///
+        /// 于是玩家的第一反应就是往文本框里打字——而 defName 是内部标识符，
+        /// 他不可能知道该填什么。**这不是玩家的问题，是界面把错的东西做得最显眼。**
+        ///
+        /// 现在：
+        ///   · 候选清单**当场查出来**，数量写在按钮上（「从 152 个里选一个…」）；
+        ///   · 声明了取值来源时，**根本不提供手填**——不需要知道 defName 是什么；
+        ///   · 声明了来源却一条候选都没有时，**说实话**（那是我们坏了，不是他没得选），
+        ///     并记进时间线，免得这种情况静默地装作"没有可以选的"。
+        /// </summary>
         private float EnumObject(float y, float width, RuleOperand operand, RuleVerbInfo verb,
             RulePropertyInfo unitSource, bool readOnly)
         {
@@ -1892,55 +1913,61 @@ namespace RuleCore
                 ? verb.argDefType
                 : (unitSource != null ? unitSource.enumDefType : null);
 
-            // 取值**不来自 Def 表**的枚举（如「身份」）：没有 Def 可查，
-            // 但有作者写好的固定清单。两者都没有才退回"手填 key"。
+            // 取值**不来自 Def 表**的枚举（如"身份"）：没有 Def 可查，但有作者写好的固定清单。
             RuleEnumOption[] options = verb.argOptions != null
                 ? verb.argOptions
                 : (unitSource != null ? unitSource.enumOptions : null);
 
-            string shown = operand.literal.key;
-            if (!string.IsNullOrEmpty(shown))
-            {
-                if (domain != null)
-                {
-                    Def def = GenDefDatabase.GetDefSilentFail(domain, shown);
-                    if (def != null)
-                    {
-                        string cap = def.LabelCap;
-                        if (!string.IsNullOrEmpty(cap)) shown = cap;
-                    }
-                }
-                else if (options != null)
-                {
-                    for (int i = 0; i < options.Length; i++)
-                    {
-                        if (options[i].key != operand.literal.key) continue;
-                        shown = Label(options[i].labelKey, options[i].key);
-                        break;
-                    }
-                }
-            }
+            // 候选清单现在就查（DefsOf 有缓存，不花钱），因为下面三件事都要用它：
+            // 按钮文案、走菜单还是走搜索窗口、以及"一条都没有"时该说什么。
+            var defs = domain != null ? Dialog_DefPicker.DefsOf(domain) : null;
+            int candidateCount = defs != null
+                ? defs.Count
+                : (options != null ? options.Length : 0);
 
-            if (string.IsNullOrEmpty(shown)) shown = "RuleCore.Edit.PickValue".Translate();
-
+            bool hasSource = domain != null || candidateCount > 0;
             bool blank = string.IsNullOrEmpty(operand.literal.key);
+
+            string shown;
+            if (!blank)
+            {
+                shown = DisplayKeyOf(operand.literal.key, domain, options);
+            }
+            else if (candidateCount > 0)
+            {
+                // 数量是关键：它让"点下去会看到什么"变得可预期，
+                // 也让这一行看起来像一个**选择器**而不是一个标签。
+                shown = "RuleCore.Edit.PickFromList".Translate(candidateCount);
+            }
+            else
+            {
+                shown = "RuleCore.Edit.PickValue".Translate();
+            }
 
             if (!readOnly && Option(y, width, shown, null, ObjectColor))
             {
-                OpenEnumPicker(operand, domain, options);
+                OpenEnumPicker(operand, domain, options, defs);
             }
 
             y += OptionHeight + OptionGap;
 
-            // 还没选值时把"该做什么、候选取自哪里"说清楚。
-            // 光有一行「选一个值…」，玩家看不出**点下去会看到什么**，
-            // 也看不出为什么底下校验在催他。
-            if (!readOnly && blank)
+            if (!readOnly && candidateCount == 0 && hasSource)
+            {
+                // 声明了取值来源却查不到候选：**这不是"没得选"，是我们坏了。**
+                // 含糊过去的话，玩家会以为自己漏看了什么。
+                y = Hint(y, width, "RuleCore.Edit.NoCandidateAtAll".Translate(
+                    domain != null ? domain.Name : verb.key));
+            }
+            else if (!readOnly && blank)
             {
                 y = Hint(y, width, "RuleCore.Edit.PickOneHint".Translate());
             }
 
-            if (!readOnly)
+            // **手填只留给"压根没声明取值来源"的情况。**
+            //
+            // 声明了来源时它是有害的：它把"你不知道 defName"变成一个看起来必须回答的问题。
+            // 没有来源时才真的只能手填，那时它才该出现。
+            if (!readOnly && !hasSource)
             {
                 y = Section(y, width, "RuleCore.Edit.Section.RawKey".Translate());
                 var rect = new Rect(0f, y, width, 26f);
@@ -1958,7 +1985,49 @@ namespace RuleCore
             return y;
         }
 
-        private void OpenEnumPicker(RuleOperand operand, Type domain, RuleEnumOption[] options)
+        /// <summary>已选值在界面上的显示名：优先查 Def 的翻译名，其次查固定清单，最后回落成键。</summary>
+        private string DisplayKeyOf(string key, Type domain, RuleEnumOption[] options)
+        {
+            if (string.IsNullOrEmpty(key)) return key;
+
+            if (domain != null)
+            {
+                Def def = GenDefDatabase.GetDefSilentFail(domain, key);
+                if (def != null)
+                {
+                    string cap = def.LabelCap;
+                    if (!string.IsNullOrEmpty(cap)) return cap;
+                }
+                return key;
+            }
+
+            if (options != null)
+            {
+                for (int i = 0; i < options.Length; i++)
+                {
+                    if (options[i].key != key) continue;
+                    return Label(options[i].labelKey, options[i].key);
+                }
+            }
+
+            return key;
+        }
+
+        /// <summary>
+        /// 一屏能扫完就给菜单，扫不完才交给带搜索的窗口。
+        ///
+        /// **300 而不是 40**：菜单是原版控件（一定画得出来），那个搜索窗口是本模组自己的。
+        /// 阈值定得太低会把"天气 / 信件类型 / 事件"这些中等长度的清单全推给自己的窗口，
+        /// 而玩家在那里一旦看不到东西，得到的信息是"**没有宾语可以选**"——
+        /// 一个查不出答案的结论。宁可他多滚两下。
+        /// </summary>
+        private const int FloatMenuLimit = 300;
+
+        /// <summary>超过菜单上限时，先在菜单里放多少条。剩下的靠"搜索全部"。</summary>
+        private const int FloatMenuPreview = 200;
+
+        private void OpenEnumPicker(RuleOperand operand, Type domain, RuleEnumOption[] options,
+            List<Def> defs)
         {
             // 固定清单优先：它是作者写好的完整取值域，语言名也是现成的。
             if (options != null && options.Length > 0)
@@ -1991,43 +2060,77 @@ namespace RuleCore
                 return;
             }
 
-            var defs = Dialog_DefPicker.DefsOf(domain);
+            if (defs == null) defs = Dialog_DefPicker.DefsOf(domain);
 
-            // 一屏扫不完就交给带搜索的窗口：十来个候选用菜单少一次点击，
-            // 两千个候选用菜单等于没有候选。
-            if (defs.Count > 40)
+            if (defs.Count == 0)
             {
-                Find.WindowStack.Add(new Dialog_DefPicker(domain, operand.literal.key,
-                    delegate(Def picked)
-                    {
-                        operand.kind = RuleValueKind.Enum;
-                        operand.literal.kind = RuleValueKind.Enum;
-                        operand.literal.key = picked.defName;
-                        ValueChanged = true;
-                    }));
+                // **"一条候选都没有"必须说出来。** 静默地摆一个空菜单，
+                // 玩家得到的结论是"这个功能没得选"——而真相是 `DefsOf` 出错了。
+                // 同时记进时间线，这样它有个能被查到的落点。
+                string msg = "读不到 " + domain.Name + " 的候选清单——这不是\"没得选\"，是查找失败了。";
+                RuleLog.Error(null, "Picker", RuleEvalStatus.Error, "picker.empty", null, msg);
+                Messages.Message("RuleCore.Edit.NoCandidateAtAll".Translate(domain.Name),
+                    MessageTypeDefOf.NegativeEvent, false);
                 return;
             }
 
             var menuOptions = new List<FloatMenuOption>();
-            for (int i = 0; i < defs.Count; i++)
-            {
-                var captured = defs[i];
-                string label = (captured.LabelCap + "  [" + captured.defName + "]").ToString();
-                menuOptions.Add(new FloatMenuOption(label, delegate
-                {
-                    operand.kind = RuleValueKind.Enum;
-                    operand.literal.kind = RuleValueKind.Enum;
-                    operand.literal.key = captured.defName;
-                    ValueChanged = true;
-                }));
-            }
 
-            if (menuOptions.Count == 0)
+            // 清单太长时：菜单里放"搜索全部"的入口 + 前 N 条。
+            // **不是把菜单整个换成搜索窗口**——搜索窗口要是画不出来，
+            // 玩家就彻底没得选了；这样至少那前 N 条还能用。
+            if (defs.Count > FloatMenuLimit)
             {
-                menuOptions.Add(new FloatMenuOption("RuleCore.Edit.NoValueDomain".Translate(), null));
+                var capturedDomain = domain;
+                menuOptions.Add(new FloatMenuOption(
+                    "RuleCore.Edit.SearchAll".Translate(defs.Count),
+                    delegate
+                    {
+                        Find.WindowStack.Add(new Dialog_DefPicker(capturedDomain,
+                            operand.literal.key, delegate(Def picked)
+                            {
+                                PickEnumKey(operand, picked.defName);
+                            }));
+                    }));
+
+                for (int i = 0; i < FloatMenuPreview && i < defs.Count; i++)
+                {
+                    menuOptions.Add(DefOption(operand, defs[i]));
+                }
+
+                menuOptions.Add(new FloatMenuOption(
+                    "RuleCore.Edit.MoreItems".Translate(
+                        Mathf.Max(defs.Count - FloatMenuPreview, 0)), null));
+            }
+            else
+            {
+                for (int i = 0; i < defs.Count; i++)
+                {
+                    menuOptions.Add(DefOption(operand, defs[i]));
+                }
             }
 
             Find.WindowStack.Add(new FloatMenu(menuOptions));
+        }
+
+        /// <summary>一条候选。显示成「中文名 [defName]」——**两个都给**，因为贴给别人时要用键。</summary>
+        private FloatMenuOption DefOption(RuleOperand operand, Def def)
+        {
+            var captured = def;
+            string label = (def.LabelCap + "  [" + def.defName + "]").ToString();
+            return new FloatMenuOption(label, delegate
+            {
+                PickEnumKey(operand, captured.defName);
+            });
+        }
+
+        /// <summary>把选中的键写进宾语。三条路径（固定清单 / 菜单 / 搜索窗口）共用一处。</summary>
+        private void PickEnumKey(RuleOperand operand, string key)
+        {
+            operand.kind = RuleValueKind.Enum;
+            operand.literal.kind = RuleValueKind.Enum;
+            operand.literal.key = key;
+            ValueChanged = true;
         }
 
         /// <summary>

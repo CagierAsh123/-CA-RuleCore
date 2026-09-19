@@ -289,7 +289,7 @@
   <RuleCore.Edit.Section.Predicate>可用謂詞（主語類型：{0}）</RuleCore.Edit.Section.Predicate>
   <RuleCore.Edit.Section.Object>賓語</RuleCore.Edit.Section.Object>
   <RuleCore.Edit.Section.Presets>常用值</RuleCore.Edit.Section.Presets>
-  <RuleCore.Edit.Section.RawKey>手填 defName</RuleCore.Edit.Section.RawKey>
+  <RuleCore.Edit.Section.RawKey>這條沒宣告取值來源，只能手填 defName</RuleCore.Edit.Section.RawKey>
   <RuleCore.Edit.Section.EntityPath>目标實體的路徑</RuleCore.Edit.Section.EntityPath>
   <RuleCore.Edit.CurrentType>當前类型：{0}</RuleCore.Edit.CurrentType>
   <RuleCore.Edit.CrumbDetect>檢測子句</RuleCore.Edit.CrumbDetect>
@@ -322,6 +322,10 @@
   <RuleCore.Edit.Type.Entity>單個實體</RuleCore.Edit.Type.Entity>
   <RuleCore.Edit.Type.EntitySet>一組東西</RuleCore.Edit.Type.EntitySet>
   <RuleCore.Edit.Type.None>（沒有值）</RuleCore.Edit.Type.None>
+  <RuleCore.Edit.PickFromList>▾ 從 {0} 個裡選一個…</RuleCore.Edit.PickFromList>
+  <RuleCore.Edit.SearchAll>🔍 搜尋全部 {0} 個…</RuleCore.Edit.SearchAll>
+  <RuleCore.Edit.MoreItems>…只列出了前 200 個，剩下的用上面的「搜尋全部」</RuleCore.Edit.MoreItems>
+  <RuleCore.Edit.NoCandidateAtAll>讀不到「{0}」的候選清單 —— 這不是「沒得選」，是查找失敗了。已記進時間線。</RuleCore.Edit.NoCandidateAtAll>
   <RuleCore.Edit.PickOneHint>點上面那一行選一個值。候選是原版的完整清單（含 mod 加的），條目多的時候會開一個能搜名字的視窗。</RuleCore.Edit.PickOneHint>
   <RuleCore.Edit.Type.Unknown>未知</RuleCore.Edit.Type.Unknown>
   <RuleCore.Edit.Section.Subject>主體綁定（「本主體」指誰）</RuleCore.Edit.Section.Subject>
