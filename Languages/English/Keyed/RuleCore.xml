@@ -319,6 +319,10 @@ The options for that slot show up here — no popup covering the sentence.</Rule
   <RuleCore.Edit.Type.Enum>name</RuleCore.Edit.Type.Enum>
   <RuleCore.Edit.Type.Coord>coord</RuleCore.Edit.Type.Coord>
   <RuleCore.Edit.Type.Text>text</RuleCore.Edit.Type.Text>
+  <RuleCore.Edit.Type.Entity>a single entity</RuleCore.Edit.Type.Entity>
+  <RuleCore.Edit.Type.EntitySet>a group</RuleCore.Edit.Type.EntitySet>
+  <RuleCore.Edit.Type.None>(no value)</RuleCore.Edit.Type.None>
+  <RuleCore.Edit.PickOneHint>Click the row above to pick a value. The candidates are vanilla's full list (mods included); when there are many it opens a window you can type into.</RuleCore.Edit.PickOneHint>
   <RuleCore.Edit.Type.Unknown>unknown</RuleCore.Edit.Type.Unknown>
   <RuleCore.Edit.Section.Subject>Subject binding (who "the subject" is)</RuleCore.Edit.Section.Subject>
   <RuleCore.Edit.SlotSubject>pick subject…</RuleCore.Edit.SlotSubject>

@@ -80,6 +80,58 @@ namespace RuleCore
             RuleLibrary.NotifyChanged();
         }
 
+        /// <summary>
+        /// 一行词表的**显示名**。查不到就回落成 key。
+        ///
+        /// **校验与报错消息里必须用它，不能用 <c>key</c>。**
+        /// 玩家看到的是「触发事件」，不该是 `map.incident`——
+        /// 内部键是给序列化用的，把它念给玩家听等于让他去猜那是什么。
+        /// （编辑器自己走 <see cref="RuleEditorView.Label"/>，那个最终也落到这里。）
+        /// </summary>
+        public static string LabelOf(string labelKey, string fallback)
+        {
+            if (string.IsNullOrEmpty(labelKey)) return fallback;
+
+            // 别的 mod 用 RuleCoreApi.Label 覆盖过的显示名优先。
+            string overridden = RuleCoreApi.Override(labelKey);
+            if (!string.IsNullOrEmpty(overridden)) return overridden;
+
+            try
+            {
+                // **不能写成三元表达式**：`Translate()` 返回 `TaggedString`，
+                // 和 `string` 之间在 C# 7.3 里没有公共类型（CS8957）。
+                // 这个坑在本项目里踩过多次，见 代码Wiki/dotnet-build/RimWorld_Mod_编译指南.md。
+                if (labelKey.CanTranslate())
+                {
+                    string translated = labelKey.Translate();
+                    return translated;
+                }
+                return fallback;
+            }
+            catch (System.Exception)
+            {
+                return fallback;
+            }
+        }
+
+        /// <summary>实体类型的显示名（「小人」「格子」）。</summary>
+        public static string EntityKindName(RuleEntityKind kind)
+        {
+            return LabelOf("RuleCore.Enum.RuleEntityKind." + kind, kind.ToString());
+        }
+
+        /// <summary>值类型的显示名（「数值」「名字」）。</summary>
+        public static string ValueKindName(RuleValueKind kind)
+        {
+            return LabelOf("RuleCore.Edit.Type." + kind, kind.ToString());
+        }
+
+        /// <summary>权限层级的显示名（「玩家级」「开发者级」）。</summary>
+        public static string TierName(RuleTier tier)
+        {
+            return LabelOf("RuleCore.Enum.RuleTier." + tier, tier.ToString());
+        }
+
         /// <summary>让 Mod 启动时就把表建起来，顺便把"描述与实现是否对得上"暴露在启动日志里。</summary>
         public static void EnsureBuilt()
         {

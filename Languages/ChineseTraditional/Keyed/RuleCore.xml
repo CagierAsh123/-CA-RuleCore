@@ -319,6 +319,10 @@
   <RuleCore.Edit.Type.Enum>名字</RuleCore.Edit.Type.Enum>
   <RuleCore.Edit.Type.Coord>座標</RuleCore.Edit.Type.Coord>
   <RuleCore.Edit.Type.Text>文字</RuleCore.Edit.Type.Text>
+  <RuleCore.Edit.Type.Entity>單個實體</RuleCore.Edit.Type.Entity>
+  <RuleCore.Edit.Type.EntitySet>一組東西</RuleCore.Edit.Type.EntitySet>
+  <RuleCore.Edit.Type.None>（沒有值）</RuleCore.Edit.Type.None>
+  <RuleCore.Edit.PickOneHint>點上面那一行選一個值。候選是原版的完整清單（含 mod 加的），條目多的時候會開一個能搜名字的視窗。</RuleCore.Edit.PickOneHint>
   <RuleCore.Edit.Type.Unknown>未知</RuleCore.Edit.Type.Unknown>
   <RuleCore.Edit.Section.Subject>主體綁定（「本主體」指誰）</RuleCore.Edit.Section.Subject>
   <RuleCore.Edit.SlotSubject>選擇主體…</RuleCore.Edit.SlotSubject>

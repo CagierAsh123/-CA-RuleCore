@@ -1672,7 +1672,50 @@ namespace RuleCore
             if (selection.Leaf != null) selection.Leaf.verbKey = info.key;
             else selection.Clause.verbKey = info.key;
 
+            // **谓语要宾语、而宾语还空着 → 直接把宾语槽选中。**
+            //
+            // 玩家的下一个动作必然是"填宾语"。不跳的话他会在谓语列表里停着，
+            // 然后看到底下校验说"宾语还没选值"——**那句话是对的，但它不告诉他该点哪里**。
+            // 把下一步要点的那个槽位直接选中，这个问题就不存在了。
+            //
+            // 只对"真的空着"的宾语跳：数值默认是 0（一个有意义的值），不跳——
+            // 否则每点一个比较符都被弹走，浏览谓语会变得很难受。
+            var installed = selection.Leaf != null ? selection.Leaf.argument
+                : selection.Clause.argument;
+            if (info.NeedsArgument && IsOperandBlank(installed))
+            {
+                selection.Slot = Slot.Object;
+            }
+
             StructureChanged = true;
+        }
+
+        /// <summary>
+        /// 宾语**还没有值**。和"类型不对"是两回事：
+        /// 这里判断的是"玩家还没填"，校验消息里的措辞也跟着分（"还没选值"而不是"类型不对"）。
+        /// </summary>
+        private static bool IsOperandBlank(RuleOperand operand)
+        {
+            if (operand == null) return true;
+
+            switch (operand.Kind)
+            {
+                // 枚举：选了具体一项才算填。
+                case RuleValueKind.Enum:
+                    return string.IsNullOrEmpty(operand.literal.key);
+
+                // 实体：连路径都没建才算没填（建了路径哪怕还没读属性，也是"有个东西"了）。
+                case RuleValueKind.Entity:
+                    return operand.path == null;
+
+                // 文本：空白算没填。
+                case RuleValueKind.Text:
+                    return string.IsNullOrEmpty(operand.literal.key);
+
+                // 数值/布尔/坐标：默认值本身就有意义（0 / false），不算空。
+                default:
+                    return false;
+            }
         }
 
         /// <summary>
@@ -1880,12 +1923,22 @@ namespace RuleCore
 
             if (string.IsNullOrEmpty(shown)) shown = "RuleCore.Edit.PickValue".Translate();
 
+            bool blank = string.IsNullOrEmpty(operand.literal.key);
+
             if (!readOnly && Option(y, width, shown, null, ObjectColor))
             {
                 OpenEnumPicker(operand, domain, options);
             }
 
             y += OptionHeight + OptionGap;
+
+            // 还没选值时把"该做什么、候选取自哪里"说清楚。
+            // 光有一行「选一个值…」，玩家看不出**点下去会看到什么**，
+            // 也看不出为什么底下校验在催他。
+            if (!readOnly && blank)
+            {
+                y = Hint(y, width, "RuleCore.Edit.PickOneHint".Translate());
+            }
 
             if (!readOnly)
             {
@@ -2768,6 +2821,13 @@ namespace RuleCore
                 return EnumOperandText(operand.literal.key, rule);
             }
 
+            // **还没选值的枚举宾语报成"没有值"，让槽位显示灰色的占位符。**
+            //
+            // 原来它会走到 `RuleValue.None.ToString()`，也就是**显示成 `(none)`**——
+            // 那一串看起来像一个已经填好的值，玩家会以为宾语配好了，
+            // 而底下校验还在说"还没选值"，两边对不上。
+            if (operand.Kind == RuleValueKind.Enum) return null;
+
             return operand.literal.ToValue().ToString();
         }
 
@@ -2885,28 +2945,13 @@ namespace RuleCore
             return kind.ToString();
         }
 
+        /// <summary>
+        /// 一行的显示名。**委托给 <see cref="RuleVocabularyCatalog.LabelOf"/>**——
+        /// 校验消息也走那一份，两边各写一遍迟早会漂（一个显示中文、一个念内部键）。
+        /// </summary>
         public static string Label(string key, string fallback)
         {
-            if (string.IsNullOrEmpty(key)) return fallback;
-
-            // 别的 mod 用 RuleCoreApi.Label 覆盖过的显示名优先——
-            // 给了"不想打包语言文件"的 mod 一条兜底的路。
-            string overridden = RuleCoreApi.Override(key);
-            if (!string.IsNullOrEmpty(overridden)) return overridden;
-
-            try
-            {
-                if (key.CanTranslate())
-                {
-                    string translated = key.Translate();
-                    return translated;
-                }
-                return fallback;
-            }
-            catch (Exception)
-            {
-                return fallback;
-            }
+            return RuleVocabularyCatalog.LabelOf(key, fallback);
         }
     }
 }

@@ -387,18 +387,18 @@ namespace RuleCore
 
                     if (verb.category != RuleVerbCategory.Detect)
                     {
-                        into.Add("「" + verb.key + "」是操作，不能出现在检测里。");
+                        into.Add("「" + NameOf(verb) + "」是操作，不能出现在检测里。");
                         return;
                     }
 
                     if (verb.edge == RuleEdge.Level) anyLevel = true;
 
                     ValidateOperand(vocabulary, verb, leaf.argument,
-                        "检测「" + verb.key + "」", subjectKind, into);
+                        "检测「" + NameOf(verb) + "」", subjectKind, into);
 
                     if (leaf.subject == null)
                     {
-                        into.Add("检测「" + verb.key + "」没有主语。");
+                        into.Add("检测「" + NameOf(verb) + "」没有主语。");
                         return;
                     }
 
@@ -408,7 +408,7 @@ namespace RuleCore
                         false, RuleEntityKind.Any);
                     if (pathError != null)
                     {
-                        into.Add("检测「" + verb.key + "」的主语路径： " + pathError);
+                        into.Add("检测「" + NameOf(verb) + "」的主语路径： " + pathError);
                         return;
                     }
 
@@ -424,8 +424,10 @@ namespace RuleCore
 
                         if (valueKind != verb.subjectValueKind)
                         {
-                            into.Add("检测「" + verb.key + "」要 " + verb.subjectValueKind
-                                + "，但主语产出的是 " + valueKind + "。");
+                            into.Add("检测「" + NameOf(verb) + "」要 "
+                                + RuleVocabularyCatalog.ValueKindName(verb.subjectValueKind)
+                                + "，但主语产出的是 "
+                                + RuleVocabularyCatalog.ValueKindName(valueKind) + "。");
                         }
                     }
 
@@ -434,7 +436,7 @@ namespace RuleCore
                     if (leaf.subject.rootKind == RuleRootKind.Subject
                         && string.IsNullOrEmpty(subjectKey))
                     {
-                        into.Add("检测「" + verb.key + "」读的是本主体，但规则没有主体绑定方式"
+                        into.Add("检测「" + NameOf(verb) + "」读的是本主体，但规则没有主体绑定方式"
                             + "——这一句永远不成立。");
                     }
                 });
@@ -472,7 +474,7 @@ namespace RuleCore
 
                 if (verb.category != RuleVerbCategory.Operate)
                 {
-                    into.Add(where + " 用的是检测「" + verb.key + "」——操作位里只能放操作。");
+                    into.Add(where + " 用的是检测「" + NameOf(verb) + "」——操作位里只能放操作。");
                     continue;
                 }
 
@@ -482,8 +484,19 @@ namespace RuleCore
                 }
 
                 ValidateOperand(vocabulary, verb, clause.argument,
-                    where + "「" + verb.key + "」", subjectKind, into);
+                    where + "「" + NameOf(verb) + "」", subjectKind, into);
             }
+        }
+
+        /// <summary>
+        /// 一条谓语在**消息里**的名字。
+        ///
+        /// **消息里一律用它，不念内部键**：玩家看到的是「触发事件」，
+        /// 不该是 `map.incident`——那是给序列化用的，念给他听等于让他去猜那是什么。
+        /// </summary>
+        private static string NameOf(RuleVerbInfo verb)
+        {
+            return verb == null ? "?" : RuleVocabularyCatalog.LabelOf(verb.LabelKey, verb.key);
         }
 
         private static void ValidateOperand(RuleVocabulary vocabulary, RuleVerbInfo verb,
@@ -492,8 +505,11 @@ namespace RuleCore
             if (verb.NeedsArgument && (operand == null || operand.Kind == RuleValueKind.None))
             {
                 // 「还没填」不是错误，是"没配完"。报出来是因为一条半成品规则跑起来一定失败，
-                // 与其让玩家在时间线里找，不如在表单上直接说。
-                into.Add(where + " 的宾语没有配置（需要 " + verb.argKind + "）。");
+                // 与其让玩家在时间线里找，不如在表单上直接说——
+                // 而且要说**去哪儿填**，否则这句话只告诉他"你缺东西"，不告诉他点哪里。
+                into.Add(where + " 的宾语还没填（要 "
+                    + RuleVocabularyCatalog.ValueKindName(verb.argKind)
+                    + "）——点那句里的宾语槽。");
                 return;
             }
 
@@ -523,15 +539,18 @@ namespace RuleCore
                 else if (pathKind == RuleValueKind.Entity
                     && !RuleVocabulary.EntityKindMatches(verb.argEntity, pathEntity))
                 {
-                    into.Add(where + " 的宾语类型不对：要 " + verb.argEntity
-                        + "，给的是 " + pathEntity + "。");
+                    into.Add(where + " 的宾语类型不对：要 "
+                        + RuleVocabularyCatalog.EntityKindName(verb.argEntity)
+                        + "，给的是 " + RuleVocabularyCatalog.EntityKindName(pathEntity) + "。");
                 }
                 return;
             }
 
             if (operand.Kind != RuleValueKind.None && operand.Kind != verb.argKind)
             {
-                into.Add(where + " 的宾语类型不对：要 " + verb.argKind + "，给的是 " + operand.Kind + "。");
+                into.Add(where + " 的宾语类型不对：要 "
+                    + RuleVocabularyCatalog.ValueKindName(verb.argKind)
+                    + "，给的是 " + RuleVocabularyCatalog.ValueKindName(operand.Kind) + "。");
                 return;
             }
 
@@ -539,7 +558,7 @@ namespace RuleCore
             // 这时求值会以"没有指定要匹配哪一类"失败，所以载入时就该说。
             if (operand.Kind == RuleValueKind.Enum && string.IsNullOrEmpty(operand.literal.key))
             {
-                into.Add(where + " 的宾语还没选值。");
+                into.Add(where + " 的宾语还没选值——点那句里的宾语槽。");
             }
         }
 
