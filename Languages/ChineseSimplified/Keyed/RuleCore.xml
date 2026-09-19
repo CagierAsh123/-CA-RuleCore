@@ -313,6 +313,17 @@
   <RuleCore.Step.Quantify.None>一个都不满足</RuleCore.Step.Quantify.None>
   <RuleCore.Edit.Section.Quantify>这一组怎么样（对每个元素各判一次）</RuleCore.Edit.Section.Quantify>
   <RuleCore.Edit.QuantifyHint>上面的归约是**选出一个**（几个 / 哪一个），这里是**问一句关于整组的话**，产出真或假。比如「每件帽子都耐久低于 50%」= 着装 全都满足（耐久 小于 50%）。注意：**这一组是空的时候，「全都满足」和「一个都不满足」都成立**——「我没有帽子」确实是「我的帽子都没问题」。</RuleCore.Edit.QuantifyHint>
+  <!-- ══ 野生动物 / 狩猎标记 ═══════════════════════════════════ -->
+  <RuleCore.Prop.map.wildAnimalCount>野生动物数</RuleCore.Prop.map.wildAnimalCount>
+  <RuleCore.Prop.map.wildAnimalCountDesc>这张图上**能狩猎的**野生动物有几只。判据和「标记狩猎」是同一套（原版 Designator_Hunt 的判据），所以这里数出来的每一只，规则都标得成功——不会出现"数得出来但做不了"。</RuleCore.Prop.map.wildAnimalCountDesc>
+  <RuleCore.Subject.wildAnimals>本图野生动物</RuleCore.Subject.wildAnimals>
+  <RuleCore.Subject.wildAnimalsDesc>图上能狩猎的野生动物，**每个各跑一遍**。想"给这些动物都加上狩猎标记"就用它当主体绑定——"这些"要有人替你跑一遍，那是主体绑定的活。</RuleCore.Subject.wildAnimalsDesc>
+  <RuleCore.Verb.op.hunt>标记狩猎</RuleCore.Verb.op.hunt>
+  <RuleCore.Verb.op.huntDesc>给执行者（一只野生动物）加上狩猎标记，走原版的标记系统——和你在工具栏里点「狩猎」点出来的东西完全一样，猎人会照常去处理它。玩家级。已经标过的会安静跳过，不算失败。</RuleCore.Verb.op.huntDesc>
+
+  <!-- ══ 清掉地图状态 ═════════════════════════════════════════ -->
+  <RuleCore.Verb.map.clearCondition>清除状态</RuleCore.Verb.map.clearCondition>
+  <RuleCore.Verb.map.clearConditionDesc>结束这张地图上正在生效的一个长期状态（心灵低语 / 日蚀 / 极光……），走原版自己的收尾流程，所以结束提示也会正常发。候选**只列此刻真的生效的**——现在没发生的东西不会出现在菜单里。开发者级：原版界面上没有任何地方能手动结束一个心灵低语。**天气不走这条路**，天气用「变成 晴」。</RuleCore.Verb.map.clearConditionDesc>
   <!-- ══ 管制界面那一列（玩家设置）══════════════════════════════
        医疗 / 着装 / 食物限制 / 药物政策 / 敌对反应 / 作息 / 活动区。
        改这些**玩家自己在管制界面点两下也能做**，所以全部玩家级。 -->
@@ -459,6 +470,7 @@
   <RuleCore.Cap.Humanlike>人形</RuleCore.Cap.Humanlike>
   <RuleCore.Cap.Mechanoid>机械族</RuleCore.Cap.Mechanoid>
   <RuleCore.Cap.Animal>动物</RuleCore.Cap.Animal>
+  <RuleCore.Cap.Wild>野生动物</RuleCore.Cap.Wild>
   <RuleCore.Cap.Biological>血肉之躯</RuleCore.Cap.Biological>
   <RuleCore.Cap.NeedMood>心情需求</RuleCore.Cap.NeedMood>
   <RuleCore.Cap.NeedFood>饱食需求</RuleCore.Cap.NeedFood>

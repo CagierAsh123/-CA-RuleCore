@@ -93,6 +93,11 @@ namespace RuleCore
                 c |= RuleCapability.Hostile;
             }
 
+            // 野生动物。判据和「本图野生动物」集合、「标记狩猎」**共用一份**
+            // （RuleMapFacts.IsWildAnimal）——三处各写各的迟早会漂，
+            // 而漂开的表现是"集合收得出来但动词被能力过滤藏掉了"。
+            if (RuleMapFacts.IsWildAnimal(pawn)) c |= RuleCapability.Wild;
+
             return c;
         }
 

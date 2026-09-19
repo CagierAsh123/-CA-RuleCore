@@ -324,6 +324,22 @@ namespace RuleCore.Core
         /// <summary>与玩家敌对。</summary>
         Hostile = 1 << 24,
 
+        /// <summary>
+        /// **野生动物**——是动物，而且不属于任何有人形的派系（也就是没人驯化它）。
+        ///
+        /// 为什么要单独一位，而不是让「标记狩猎」只要求 <see cref="Animal"/>：
+        /// 驯化过的殖民地动物**也有** <see cref="Animal"/>，于是玩家绑上「殖民地动物」时
+        /// 会看到「标记狩猎」，而它对每一只都必然失败（原版也不让猎自家动物）。
+        /// 那就是"看得见但选了必错"——本项目已经栽过三次的那个形状。
+        ///
+        /// 它和 <see cref="Colonist"/> / <see cref="Prisoner"/> / <see cref="Slave"/> /
+        /// <see cref="Guest"/> / <see cref="Hostile"/> 是同一类：不是生理构造，
+        /// 而是**这个宿主属于哪个类别**。所以它排在身份组里。
+        ///
+        /// 判据 <see cref="RuleMapFacts.IsWildAnimal"/> 和「标记狩猎」共用一份。
+        /// </summary>
+        Wild = 1 << 29,
+
         // ── 能力 ──────────────────────────────────────────────────────
         /// <summary>能被征召（有人形或机械族的指挥链）。</summary>
         CanDraft = 1 << 25,

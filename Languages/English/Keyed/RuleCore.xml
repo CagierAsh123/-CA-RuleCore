@@ -312,6 +312,17 @@ Add a RuleCore.RulePackDef under 1.6/Defs/ to create one.</RuleCore.Panel.NoRule
   <RuleCore.Step.Quantify.None>none of them satisfy</RuleCore.Step.Quantify.None>
   <RuleCore.Edit.Section.Quantify>What is this group like (each element judged separately)</RuleCore.Edit.Section.Quantify>
   <RuleCore.Edit.QuantifyHint>The reductions above **pick one out** (how many / which one); this **asks one question about the whole group** and yields true or false. E.g. "every hat has durability below 50%" = apparel, all of them satisfy (durability &lt; 50%). Note: **on an empty group both "all satisfy" and "none satisfy" hold** — "I have no hats" really does mean "all my hats are fine".</RuleCore.Edit.QuantifyHint>
+  <!-- ══ Wild animals / hunt marking ═══════════════════════════ -->
+  <RuleCore.Prop.map.wildAnimalCount>Wild animals</RuleCore.Prop.map.wildAnimalCount>
+  <RuleCore.Prop.map.wildAnimalCountDesc>How many **huntable** wild animals are on this map. Same predicate as "mark for hunting" (vanilla Designator_Hunt's), so every one counted here can actually be marked — never count-one-but-cannot-do-it.</RuleCore.Prop.map.wildAnimalCountDesc>
+  <RuleCore.Subject.wildAnimals>Wild animals on this map</RuleCore.Subject.wildAnimals>
+  <RuleCore.Subject.wildAnimalsDesc>Huntable wild animals on the map, **run once per animal**. Use this as the subject binding to "mark all of these for hunting" — "these" needs someone to walk the list, and that is the subject binding's job.</RuleCore.Subject.wildAnimalsDesc>
+  <RuleCore.Verb.op.hunt>Mark for hunting</RuleCore.Verb.op.hunt>
+  <RuleCore.Verb.op.huntDesc>Adds a hunt designation to the executor (one wild animal), through vanilla's designation system — exactly what clicking Hunt in the toolbar produces, and hunters will treat it the same. Player tier. Already-marked animals are skipped quietly, not counted as failures.</RuleCore.Verb.op.huntDesc>
+
+  <!-- ══ Clearing map conditions ═══════════════════════════════ -->
+  <RuleCore.Verb.map.clearCondition>Clear condition</RuleCore.Verb.map.clearCondition>
+  <RuleCore.Verb.map.clearConditionDesc>Ends a long-running condition currently active on this map (psychic drone / eclipse / aurora...), through vanilla's own teardown, so the end message still fires. Candidates list **only what is actually active right now** — nothing inactive appears in the menu. Developer tier: vanilla has no UI anywhere to manually end a psychic drone. **Weather does not go through this**, use "set weather to clear".</RuleCore.Verb.map.clearConditionDesc>
   <!-- ══ The Assign/Restrict column (player settings) ═══════════ -->
   <RuleCore.Prop.pawn.medCare>Medical care</RuleCore.Prop.pawn.medCare>
   <RuleCore.Prop.pawn.medCareDesc>The medical care level set on the Assign tab (no care / no meds / herbal or worse / normal or worse / best). Use it with "is".</RuleCore.Prop.pawn.medCareDesc>
@@ -457,6 +468,7 @@ The options for that slot show up here — no popup covering the sentence.</Rule
   <RuleCore.Cap.Humanlike>humanlike</RuleCore.Cap.Humanlike>
   <RuleCore.Cap.Mechanoid>mechanoid</RuleCore.Cap.Mechanoid>
   <RuleCore.Cap.Animal>animal</RuleCore.Cap.Animal>
+  <RuleCore.Cap.Wild>wild animal</RuleCore.Cap.Wild>
   <RuleCore.Cap.Biological>flesh and blood</RuleCore.Cap.Biological>
   <RuleCore.Cap.NeedMood>a mood need</RuleCore.Cap.NeedMood>
   <RuleCore.Cap.NeedFood>a food need</RuleCore.Cap.NeedFood>

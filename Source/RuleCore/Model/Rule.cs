@@ -35,6 +35,18 @@ namespace RuleCore
         public string description;
         public bool enabled = true;
 
+        /// <summary>
+        /// 作者在 XML 里写下的 <c>enabled</c>，**第一次解析时记下来之后就不再动**。
+        ///
+        /// 为什么需要单独存一份：<see cref="enabled"/> 会被**玩家覆盖**改写，
+        /// 而重建（设置一变就重建）会再读一次它——那时读到的已经不是作者的意思了。
+        /// 分开存之后两件事各自独立：作者说"随包给你，但默认别跑"，
+        /// 玩家说"我要它跑"，两者都不丢。
+        ///
+        /// <c>null</c> = 还没记过。玩家规则不住 XML，所以它在玩家规则上没意义。
+        /// </summary>
+        public bool? authorEnabled;
+
         // ── 谁 ────────────────────────────────────────────────────────
 
         /// <summary>

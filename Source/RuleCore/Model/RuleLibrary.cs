@@ -103,10 +103,18 @@ namespace RuleCore
                             "rule.config_error", null, problems[p]);
                     }
 
-                    // **玩家的覆盖在这里生效。**
-                    // XML 说 `enabled=true` 是**作者**的意图；玩家关掉过它才是当下的状态。
-                    // 覆盖层是权威——否则"关掉内置规则"每次读档都会被 XML 顶回来。
-                    rule.enabled = !IsDisabled(rule.id);
+                    // **作者的意图先记下来。**
+                    // 下面那行会改写 rule.enabled，而这个方法会被调不止一次
+                    // （设置一变就重建），再回来读它就已经不是作者写的值了。
+                    if (rule.authorEnabled == null) rule.authorEnabled = rule.enabled;
+
+                    // **玩家的覆盖在这里生效，而且是三态。**
+                    //
+                    // 原来写的是 `rule.enabled = !IsDisabled(rule.id)` —— 那等于
+                    // **无视作者的 enabled=false**：作者想"随包给你一个例子，
+                    // 但默认别跑"，会被强行打开，而玩家在界面上看不出自己打开了什么。
+                    // （这条是加内置的机关枪级样例时发现的：那类规则不该默认开。）
+                    rule.enabled = ResolveEnabled(rule);
 
                     modRules.Add(rule);
                 }
@@ -154,9 +162,48 @@ namespace RuleCore
             }
         }
 
+        /// <summary>
+        /// 玩家**明确打开过**的规则 id。
+        ///
+        /// 有它才能让「启用」按钮在"作者关掉了它"的规则上也真的有用——
+        /// 否则那个按钮点了没有任何反应，而玩家分不清是"点了没用"还是"本来就这样"。
+        /// </summary>
+        private static List<string> EnabledIds
+        {
+            get
+            {
+                var settings = RuleCoreMod.Settings;
+                return settings != null ? settings.enabledRuleIds : emptyIds;
+            }
+        }
+
         public static bool IsDisabled(string id)
         {
             return !string.IsNullOrEmpty(id) && DisabledIds.Contains(id);
+        }
+
+        /// <summary>玩家明确打开过它（即使作者随包关掉了）。</summary>
+        public static bool IsForcedOn(string id)
+        {
+            return !string.IsNullOrEmpty(id) && EnabledIds.Contains(id);
+        }
+
+        /// <summary>
+        /// 一条内置规则**最终**该不该跑：作者意图 × 玩家覆盖。
+        ///
+        /// 三态，因为只留两态必然牺牲一边：
+        /// <list type="bullet">
+        /// <item>玩家明确关过 → 关（**优先级最高**，这是"我不想让它跑"）</item>
+        /// <item>玩家明确开过 → 开（哪怕作者写的是 enabled=false）</item>
+        /// <item>玩家没表态 → 听作者的</item>
+        /// </list>
+        /// </summary>
+        private static bool ResolveEnabled(Rule rule)
+        {
+            if (rule == null) return false;
+            if (IsDisabled(rule.id)) return false;
+            if (IsForcedOn(rule.id)) return true;
+            return rule.authorEnabled ?? true;
         }
 
         /// <summary>被玩家从列表里移除的规则：它不跑，也不显示。</summary>
@@ -180,8 +227,23 @@ namespace RuleCore
         {
             if (string.IsNullOrEmpty(id)) return false;
 
-            var list = DisabledIds;
-            bool changed = disabled ? Add(list, id) : list.Remove(id);
+            bool changed;
+
+            if (disabled)
+            {
+                // 关：进"玩家关掉的"名单，同时撤掉"玩家打开的"表态——
+                // 同一个 id 在两边同时存在的话，谁赢取决于判断顺序，那太脆了。
+                changed = Add(DisabledIds, id);
+                changed |= EnabledIds.Remove(id);
+            }
+            else
+            {
+                // 开：撤掉"关掉"的表态，并记下"玩家要它跑"——
+                // 这样作者写的 enabled=false 也拦不住玩家（否则「启用」是个死按钮）。
+                changed = DisabledIds.Remove(id);
+                changed |= Add(EnabledIds, id);
+            }
+
             if (!changed) return false;
 
             var rule = Find(id);

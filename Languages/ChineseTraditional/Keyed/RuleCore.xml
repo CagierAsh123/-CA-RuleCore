@@ -312,6 +312,17 @@
   <RuleCore.Step.Quantify.None>一個都不滿足</RuleCore.Step.Quantify.None>
   <RuleCore.Edit.Section.Quantify>這一組怎麼樣（對每個元素各判一次）</RuleCore.Edit.Section.Quantify>
   <RuleCore.Edit.QuantifyHint>上面的歸約是**選出一個**（幾個 / 哪一個），這裡是**問一句關於整組的話**，產出真或假。比如「每件帽子都耐久低於 50%」= 著裝 全都滿足（耐久 小於 50%）。注意：**這一組是空的時候，「全都滿足」和「一個都不滿足」都成立**——「我沒有帽子」確實是「我的帽子都沒問題」。</RuleCore.Edit.QuantifyHint>
+  <!-- ══ 野生動物 / 狩獵標記 ═══════════════════════════════════ -->
+  <RuleCore.Prop.map.wildAnimalCount>野生動物數</RuleCore.Prop.map.wildAnimalCount>
+  <RuleCore.Prop.map.wildAnimalCountDesc>這張圖上**能狩獵的**野生動物有幾隻。判據和「標記狩獵」是同一套（原版 Designator_Hunt 的判據），所以在這裡數出來的每一隻，規則都標得成功——不會出現「數得出來但做不了」。</RuleCore.Prop.map.wildAnimalCountDesc>
+  <RuleCore.Subject.wildAnimals>本圖野生動物</RuleCore.Subject.wildAnimals>
+  <RuleCore.Subject.wildAnimalsDesc>圖上能狩獵的野生動物，**每個各跑一遍**。想「給這些動物都加上狩獵標記」就用它當主體綁定——「這些」要有人替你跑一遍，那是主體綁定的活。</RuleCore.Subject.wildAnimalsDesc>
+  <RuleCore.Verb.op.hunt>標記狩獵</RuleCore.Verb.op.hunt>
+  <RuleCore.Verb.op.huntDesc>給執行者（一隻野生動物）加上狩獵標記，走原版的標記系統——和你在工具列裡點「狩獵」點出來的東西完全一樣，獵人會照常去處理它。玩家級。已經標過的會安靜跳過，不算失敗。</RuleCore.Verb.op.huntDesc>
+
+  <!-- ══ 清掉地圖狀態 ═════════════════════════════════════════ -->
+  <RuleCore.Verb.map.clearCondition>清除狀態</RuleCore.Verb.map.clearCondition>
+  <RuleCore.Verb.map.clearConditionDesc>結束這張地圖上正在生效的一個長期狀態（心靈低語 / 日蝕 / 極光……），走原版自己的收尾流程，所以結束提示也會正常發。候選**只列此刻真的生效的**——現在沒發生的東西不會出現在選單裡。開發者級：原版介面上沒有任何地方能手動結束一個心靈低語。**天氣不走這條路**，天氣用「變成 晴」。</RuleCore.Verb.map.clearConditionDesc>
   <!-- ══ 管制介面那一列（玩家設定）══════════════════════════════ -->
   <RuleCore.Prop.pawn.medCare>醫療級別</RuleCore.Prop.pawn.medCare>
   <RuleCore.Prop.pawn.medCareDesc>他在管制介面裡設的醫療護理等級（無 / 不用藥 / 草藥或更差 / 普通或更差 / 最佳）。配「是」用。</RuleCore.Prop.pawn.medCareDesc>
@@ -456,6 +467,7 @@
   <RuleCore.Cap.Humanlike>人形</RuleCore.Cap.Humanlike>
   <RuleCore.Cap.Mechanoid>機械族</RuleCore.Cap.Mechanoid>
   <RuleCore.Cap.Animal>動物</RuleCore.Cap.Animal>
+  <RuleCore.Cap.Wild>野生動物</RuleCore.Cap.Wild>
   <RuleCore.Cap.Biological>血肉之軀</RuleCore.Cap.Biological>
   <RuleCore.Cap.NeedMood>心情需求</RuleCore.Cap.NeedMood>
   <RuleCore.Cap.NeedFood>飽食需求</RuleCore.Cap.NeedFood>

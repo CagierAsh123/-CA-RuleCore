@@ -39,6 +39,16 @@ namespace RuleCore
         public List<string> disabledRuleIds = new List<string>();
 
         /// <summary>
+        /// 玩家**明确打开过**的规则 id。
+        ///
+        /// 存在的理由：作者可以在 XML 里写 `enabled=false`（"随包给你一个例子，
+        /// 但默认别跑"）。只有"关掉名单"一份表态的话，那个 `enabled=false`
+        /// 要么被无视（作者的意图丢了），要么变成玩家永远开不起来（按钮变死的）。
+        /// 两份表态合起来才是三态：没表态 → 听作者的。
+        /// </summary>
+        public List<string> enabledRuleIds = new List<string>();
+
+        /// <summary>
         /// 玩家**从列表里移除**的规则 id（只对内置规则有意义——玩家规则是直接删）。
         ///
         /// 它**不删任何数据**，只是不再加载、不再显示，所以随时能恢复。
@@ -62,6 +72,7 @@ namespace RuleCore
             Scribe_Values.Look(ref logRetention, "logRetention", 10);
             Scribe_Values.Look(ref allowDeveloperOps, "allowDeveloperOps", false);
             Scribe_Collections.Look(ref disabledRuleIds, "disabledRuleIds", LookMode.Value);
+            Scribe_Collections.Look(ref enabledRuleIds, "enabledRuleIds", LookMode.Value);
             Scribe_Collections.Look(ref hiddenRuleIds, "hiddenRuleIds", LookMode.Value);
             Scribe_Collections.Look(ref playerRules, "playerRules", LookMode.Deep);
 
@@ -87,12 +98,24 @@ namespace RuleCore
             }
 
             if (disabledRuleIds == null) disabledRuleIds = new List<string>();
+            if (enabledRuleIds == null) enabledRuleIds = new List<string>();
             if (hiddenRuleIds == null) hiddenRuleIds = new List<string>();
 
             // 写坏的 id（空串）清掉：它们在列表里会变成一条点不动、也恢复不了的空行。
             for (int i = disabledRuleIds.Count - 1; i >= 0; i--)
             {
                 if (string.IsNullOrEmpty(disabledRuleIds[i])) disabledRuleIds.RemoveAt(i);
+            }
+            for (int i = enabledRuleIds.Count - 1; i >= 0; i--)
+            {
+                if (string.IsNullOrEmpty(enabledRuleIds[i])) enabledRuleIds.RemoveAt(i);
+            }
+            // 同一个 id 在"关掉"和"打开"两份表态里同时出现是不该发生的
+            // （SetDisabled 会维持互斥）。真出现了（手改配置文件）就按"关掉优先"清理——
+            // 那是更强的一份表态。
+            for (int i = enabledRuleIds.Count - 1; i >= 0; i--)
+            {
+                if (disabledRuleIds.Contains(enabledRuleIds[i])) enabledRuleIds.RemoveAt(i);
             }
             for (int i = hiddenRuleIds.Count - 1; i >= 0; i--)
             {

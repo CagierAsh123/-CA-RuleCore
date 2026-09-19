@@ -241,6 +241,23 @@ namespace RuleCore
                 binder = GroupOf(delegate(Pawn p) { return p.IsColonyAnimal; })
             });
 
+            // **图上的野生动物。**
+            //
+            // 它和「殖民地动物」是一对：那个是"我的动物"，这个是"野的"。
+            // 加它的直接理由是玩家的一句话——「给这些动物加上狩猎标记」：
+            // 标记狩猎是个**一次性动作**，而"这些动物"要成立就必须有人替它跑一遍。
+            // 那件事一直是**主体绑定**干的活（"让一类人各做一遍"），不是根实体。
+            //
+            // 判据复用 <see cref="RuleMapFacts.Huntable"/>，和「标记狩猎」用的是同一个——
+            // 于是"绑定收出来的每一个都标得成功"是**结构上成立**的，
+            // 而不是靠两处判据碰巧一致。
+            v.Add(new RuleSubjectInfo
+            {
+                key = "wildAnimals",
+                entityKind = RuleEntityKind.Pawn,
+                binder = GroupOf(RuleMapFacts.Huntable)
+            });
+
             v.Add(new RuleSubjectInfo
             {
                 key = "guests",
@@ -365,6 +382,8 @@ namespace RuleCore
             AddMapPawnCount(v, "map.slaveCount", PawnTally.Slaves);
             AddMapPawnCount(v, "map.colonyMechCount", PawnTally.ColonyMechs);
             AddMapPawnCount(v, "map.colonyAnimalCount", PawnTally.ColonyAnimals);
+            // 野生的。和上面那一行的区别就是"野的 / 我的"，而判据和「标记狩猎」共用一套。
+            AddMapPawnCount(v, "map.wildAnimalCount", PawnTally.WildAnimals);
             AddMapPawnCount(v, "map.pawnCount", PawnTally.AllSpawned);
 
             // ── 时间 ──────────────────────────────────────────────────
@@ -422,6 +441,7 @@ namespace RuleCore
             Slaves,
             ColonyMechs,
             ColonyAnimals,
+            WildAnimals,
             AllSpawned
         }
 
@@ -466,6 +486,11 @@ namespace RuleCore
                             break;
                         case PawnTally.ColonyAnimals:
                             count = map.mapPawns.SpawnedColonyAnimals.Count;
+                            break;
+                        case PawnTally.WildAnimals:
+                            // 原版**没有**一个"野动物"集合可以直接读，
+                            // 全是按 Huntable 判据现数（和「标记狩猎」同一套判据）。
+                            count = RuleMapFacts.WildAnimalCount(map);
                             break;
                         default:
                             count = map.mapPawns.AllPawnsSpawnedCount;
@@ -2141,6 +2166,65 @@ namespace RuleCore
                     return RuleOperateStatus.Done;
                 }
             });
+
+            // ── 清掉地图状态（心灵低语 / 日蚀 / 极光……）────────────────
+            //
+            // 补的是一个真实的洞：地图状态原来**只能起、不能清**。
+            // `触发事件` 能把心灵低语叫来，`处于` 能看出它在不在，
+            // 但没有任何办法把它请走——玩家只能等它自己到期。
+            //
+            // 天气不走这条路：天气是 `变成 晴` 一句话的事（WeatherDef 本来就全），
+            // 而 `GameConditionDef` 覆盖的是"没法用天气表达"的那些长期状态。
+            //
+            // **开发者级**，理由和 `变成` / `触发事件` 一样（本项目判据：
+            // "原版根本不给你这个按钮"）：原版界面上没有任何地方能手动结束一个
+            // 心灵低语。它有开局心情惩罚、有叙事意图，规则能随手删掉它就必须是
+            // 玩家显式开过「允许开发者级操作」之后的事。
+            //
+            // 而且它是 `触发事件` 的**逆操作**，权限层级和它对齐才对称。
+            v.Add(new RuleVerbInfo
+            {
+                key = "map.clearCondition", category = RuleVerbCategory.Operate,
+                subject = RuleEntityKind.Map,
+                argKind = RuleValueKind.Enum,
+                argDefType = typeof(GameConditionDef),
+                // **只列此刻真的在图上生效的状态。**
+                // 菜单里摆一个现在没发生的状态，玩家选了会得到"没什么可清的"——
+                // 又一次"看得见但选了必错"。这是本项目已经栽过三次的那个坑。
+                argFilter = RuleMapFacts.ActiveOnCurrentMapFilter,
+                tier = RuleTier.Developer,
+                operate = delegate(IRuleEvalHost host, RuleValue subject, RuleValue arg,
+                    out string code, out string reason)
+                {
+                    var map = RuleEvalHost.MapOf(subject);
+                    if (map == null)
+                    {
+                        code = "condition.no_map";
+                        reason = "没有地图，清不了状态。";
+                        return RuleOperateStatus.Failed;
+                    }
+
+                    GameConditionDef def;
+                    if (!TryDefArg(arg, out def, out code, out reason)) return RuleOperateStatus.Failed;
+
+                    int ended = RuleMapFacts.EndAll(map, def);
+
+                    if (ended == 0)
+                    {
+                        // **说清"没发生"而不是假装做完了。**
+                        // 静默成功是最坏的一种成功：玩家会以为这条规则在跑，
+                        // 而实际上它每轮都在做一件不存在的事。
+                        code = "condition.not_active";
+                        reason = "「" + def.LabelCap + "」现在没有在这张地图上生效，没什么可清的。";
+                        return RuleOperateStatus.Rejected;
+                    }
+
+                    code = "condition.cleared";
+                    reason = "已清除「" + def.LabelCap + "」"
+                        + (ended > 1 ? "（这张图上同时有 " + ended + " 个）" : "") + "。";
+                    return RuleOperateStatus.Done;
+                }
+            });
         }
 
         /// <summary>
@@ -2256,6 +2340,54 @@ namespace RuleCore
                     code = "charge.done";
                     reason = "电量 " + before.ToStringPercent() + " → "
                         + need.CurLevelPercentage.ToStringPercent() + "。";
+                    return RuleOperateStatus.Done;
+                }
+            });
+
+            // ── 狩猎标记 ────────────────────────────────────────────
+            //
+            // **玩家级**：原版工具栏里就有「狩猎」，玩家自己点两下也能做。
+            // 规则的价值不是"能做一件做不了的事"，而是**及时**——
+            // 「野生动物超过 10 只就全标上」这种事没人愿意盯着手动点。
+            //
+            // 它不需要宾语：主语就是那只动物。"给这些动物加标记"里的
+            // "这些"由**主体绑定**（本图野生动物）负责跑一遍，见 AddSubjects。
+            v.Add(new RuleVerbInfo
+            {
+                key = "op.hunt", category = RuleVerbCategory.Operate,
+                subject = RuleEntityKind.Pawn,
+                argKind = RuleValueKind.None,
+                // **Animal 和 Wild 两位都要。** 只要 Animal 的话，
+                // 绑上「殖民地动物」也会看到「标记狩猎」，而它对每一只都必然失败
+                // （原版不让猎自家动物）——那是本项目栽过三次的"看得见但选了必错"。
+                requires = RuleCapability.Animal | RuleCapability.Wild,
+                tier = RuleTier.Player,
+                operate = delegate(IRuleEvalHost host, RuleValue subject, RuleValue arg,
+                    out string code, out string reason)
+                {
+                    var pawn = RuleEvalHost.PawnOf(subject);
+
+                    if (!RuleMapFacts.CanMarkHunt(pawn, out code, out reason))
+                    {
+                        return RuleOperateStatus.Failed;
+                    }
+
+                    if (!RuleMapFacts.TryMarkHunt(pawn))
+                    {
+                        // **已经标过了不是失败。** 这条规则每一轮采样都会跑，
+                        // 报 Failed 会让时间线被同一句话刷满，而且看起来像出错了。
+                        code = "hunt.already";
+                        reason = "「" + pawn.LabelShort + "」已经带着狩猎标记了。";
+                        return RuleOperateStatus.AlreadySatisfied;
+                    }
+
+                    code = "hunt.marked";
+                    // **故意不调 Designator_Hunt.ShowDesignationWarnings。**
+                    // 它会给每只动物弹一条"没有猎人 / 会发狂"的提示，而原版是
+                    // 在 `FinalizeDesignationSucceeded` 里按物种去重之后才弹的；
+                    // 一条规则标 30 只动物就是 30 条弹窗。
+                    // 那些警告属于"玩家手动点一次"的交互，不属于每一轮采样。
+                    reason = "已给「" + pawn.LabelShort + "」加上狩猎标记。";
                     return RuleOperateStatus.Done;
                 }
             });
