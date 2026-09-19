@@ -1650,11 +1650,40 @@ namespace RuleCore
             y = Section(y, width, "RuleCore.Edit.Section.Predicate".Translate(
                 TypeTagOf(kind, entityKind)));
 
-            // 一组东西时，这里必然是空的——说清**为什么**以及下一步做什么，
-            // 而不是干巴巴一句"没有能用的谓词"。
+            // 一组东西时，这里必然是空的——说清**为什么**，并且**把下一步做成点得动的**。
             if (kind == RuleValueKind.EntitySet)
             {
-                return Hint(y, width, "RuleCore.Edit.NeedsReduceFirst".Translate());
+                y = Hint(y, width, "RuleCore.Edit.NeedsReduceFirst".Translate());
+
+                // 原来这里只有一句"先接一个归约"。而玩家此刻正站在**谓语槽**上，
+                // 要照做就得回上一层、找到主语、再翻到归约那一节。
+                // **光告诉他"先做 X"却不给他 X，等于没说。**
+                // 归约本来就是主语路径上的一步，就地接上去是完全一样的东西。
+                if (subject == null) return y;
+
+                y = Section(y, width, "RuleCore.Edit.Section.Reduce".Translate());
+
+                var reduces = RuleVocabulary.AllReduces;
+                for (int i = 0; i < reduces.Count; i++)
+                {
+                    var reduce = reduces[i];
+                    if (reduce.from != kind) continue;
+
+                    if (Option(y, width, "." + Label(reduce.LabelKey, reduce.kind.ToString()),
+                            "→ " + TypeTagOf(reduce.to), ReduceColor) && !readOnly)
+                    {
+                        subject.steps.Add(new RulePathStep
+                        {
+                            kind = RuleStepKind.Reduce,
+                            reduce = reduce.kind
+                        });
+                        AfterPathEdit(subject);
+                        return y;
+                    }
+                    y += OptionHeight + OptionGap;
+                }
+
+                return y;
             }
 
             if (list.Count == 0 && rejectedVerbs.Count == 0)
@@ -1997,34 +2026,72 @@ namespace RuleCore
 
             y += 30f;
 
-            // 常用值：原型的做法。给几个一看就懂的锚点，比让人从空白框开始强。
+            // ── 常用值 ────────────────────────────────────────────────
+            //
+            // **锚点必须从这个属性自己的单位和范围里长出来。**
+            //
+            // 原来这里是写死的一串 `0 / 10 / 0℃ / -5℃`——于是
+            // 「本图.天空亮度 大于 __」的宾语旁边摆着两个**温度**锚点。
+            // 那不只是没用：它会让玩家以为自己填错了地方，或者以为
+            // 这个属性是个温度。**和"念内部键"是同一类错**：界面说了不该说的话。
             y = Section(y, width, "RuleCore.Edit.Section.Presets".Translate());
 
-            if (percent)
+            float[] anchors = AnchorValues(unitSource, min, max);
+            for (int i = 0; i < anchors.Length; i++)
             {
-                y = Preset(y, width, "50%", operand, 0.5f, true);
-                y = Preset(y, width, "30%", operand, 0.3f, true);
-                y = Preset(y, width, "100%", operand, 1f, true);
-            }
-            else
-            {
-                y = Preset(y, width, "0", operand, 0f, false);
-                y = Preset(y, width, "10", operand, 10f, false);
-                y = Preset(y, width, "0℃", operand, 0f, false);
-                y = Preset(y, width, "-5℃", operand, -5f, false);
+                y = Preset(y, width, FormatAnchor(anchors[i], unitSource, percent),
+                    operand, anchors[i]);
             }
 
             return y;
         }
 
-        private float Preset(float y, float width, string label, RuleOperand operand, float value,
-            bool percent)
+        private static readonly float[] GenericAnchors = { 0f, 1f, 10f, 100f };
+        private static readonly float[] PercentAnchors = { 0.25f, 0.5f, 0.75f, 1f };
+        private static readonly float[] TempAnchors = { -10f, 0f, 20f };
+
+        /// <summary>
+        /// 几个"一看就懂的锚点"，**按属性自己的类型挑，并剔掉落在范围外的**。
+        ///
+        /// `min`/`max` 是**输入框那边的刻度**（百分比是 0~100），所以比较前要换算。
+        /// </summary>
+        private static float[] AnchorValues(RulePropertyInfo info, float min, float max)
+        {
+            float[] pool;
+            if (info != null && info.percent) pool = PercentAnchors;
+            else if (info != null && info.unit == "℃") pool = TempAnchors;
+            else pool = GenericAnchors;
+
+            float lo = RuleFormat.ToEditValue(min, info != null && info.percent);
+            float hi = RuleFormat.ToEditValue(max, info != null && info.percent);
+
+            var kept = new List<float>(pool.Length);
+            for (int i = 0; i < pool.Length; i++)
+            {
+                float shown = RuleFormat.ToEditValue(pool[i], info != null && info.percent);
+                if (shown < lo || shown > hi) continue;
+                kept.Add(pool[i]);
+            }
+
+            // 范围窄到一个锚点都不剩时，至少给下界——空着比候选差更让人无从下手。
+            if (kept.Count == 0) kept.Add(RuleFormat.FromEditValue(lo, info != null && info.percent));
+
+            return kept.ToArray();
+        }
+
+        private static string FormatAnchor(float value, RulePropertyInfo info, bool percent)
+        {
+            return RuleFormat.FormatNumber(value, info != null ? info.decimals : 2,
+                info != null ? info.unit : null, percent);
+        }
+
+        private float Preset(float y, float width, string label, RuleOperand operand, float value)
         {
             if (Option(y, width, label, null, ObjectColor))
             {
                 operand.kind = RuleValueKind.Number;
                 operand.literal.kind = RuleValueKind.Number;
-                operand.literal.number = percent ? value : value;
+                operand.literal.number = value;
                 ValueChanged = true;
             }
 
@@ -2066,6 +2133,24 @@ namespace RuleCore
                 ? verb.argOptions
                 : (unitSource != null ? unitSource.enumOptions : null);
 
+            // **第三种取值域：存档里算出来的。**
+            // 活动区、着装方案、药物政策都不是 Def，是玩家自己建的对象——
+            // 数量与名字每次读档都可能不同，所以只能**现在**问一遍。
+            // 只有前两种都为空时才问：作者写死的清单优先，因为那是有意为之的取舍。
+            List<RuleEnumOption> runtime = null;
+            if ((options == null || options.Length == 0) && domain == null)
+            {
+                var collector = verb.argCandidates != null
+                    ? verb.argCandidates
+                    : (unitSource != null ? unitSource.enumCandidates : null);
+
+                if (collector != null)
+                {
+                    runtime = new List<RuleEnumOption>();
+                    collector(runtime);
+                }
+            }
+
             // 候选清单现在就查（DefsOf 有缓存，不花钱），因为下面三件事都要用它：
             // 按钮文案、走菜单还是走搜索窗口、以及"一条都没有"时该说什么。
             var defs = domain != null ? Dialog_DefPicker.DefsOf(domain) : null;
@@ -2078,7 +2163,8 @@ namespace RuleCore
 
             int candidateCount = defs != null
                 ? defs.Count
-                : (options != null ? options.Length : 0);
+                : (options != null ? options.Length
+                    : (runtime != null ? runtime.Count : 0));
 
             bool hasSource = domain != null || candidateCount > 0;
             bool blank = string.IsNullOrEmpty(operand.literal.key);
@@ -2086,7 +2172,7 @@ namespace RuleCore
             string shown;
             if (!blank)
             {
-                shown = DisplayKeyOf(operand.literal.key, domain, options);
+                shown = DisplayKeyOf(operand.literal.key, domain, options, runtime);
             }
             else if (candidateCount > 0)
             {
@@ -2101,7 +2187,7 @@ namespace RuleCore
 
             if (!readOnly && Option(y, width, shown, null, ObjectColor))
             {
-                OpenEnumPicker(operand, domain, options, defs);
+                OpenEnumPicker(operand, domain, options, defs, runtime);
             }
 
             y += OptionHeight + OptionGap;
@@ -2169,8 +2255,17 @@ namespace RuleCore
             return kept;
         }
 
-        /// <summary>已选值在界面上的显示名：优先查 Def 的翻译名，其次查固定清单，最后回落成键。</summary>
-        private string DisplayKeyOf(string key, Type domain, RuleEnumOption[] options)
+        /// <summary>一条候选在界面上的显示名。运行时候选直接带名字，静态候选查语言键。</summary>
+        private static string OptionLabel(RuleEnumOption opt)
+        {
+            if (opt == null) return "?";
+            if (!string.IsNullOrEmpty(opt.label)) return opt.label;
+            return Label(opt.labelKey, opt.key);
+        }
+
+        /// <summary>已选值在界面上的显示名：Def 翻译名 → 静态清单 → 运行时候选 → 回落成键。</summary>
+        private string DisplayKeyOf(string key, Type domain, RuleEnumOption[] options,
+            List<RuleEnumOption> runtime)
         {
             if (string.IsNullOrEmpty(key)) return key;
 
@@ -2189,9 +2284,21 @@ namespace RuleCore
             {
                 for (int i = 0; i < options.Length; i++)
                 {
-                    if (options[i].key != key) continue;
-                    return Label(options[i].labelKey, options[i].key);
+                    if (options[i].key == key) return OptionLabel(options[i]);
                 }
+            }
+
+            if (runtime != null)
+            {
+                for (int i = 0; i < runtime.Count; i++)
+                {
+                    if (runtime[i].key == key) return OptionLabel(runtime[i]);
+                }
+
+                // 运行时候选里找不到：**活动区可能刚被删掉**。
+                // 这时显示成「(已不存在) 名字」而不是一个光秃秃的数字 ID——
+                // 玩家要能看出"这条规则指向的东西没了"。
+                return "RuleCore.Edit.MissingOption".Translate(key);
             }
 
             return key;
@@ -2211,7 +2318,7 @@ namespace RuleCore
         private const int FloatMenuPreview = 200;
 
         private void OpenEnumPicker(RuleOperand operand, Type domain, RuleEnumOption[] options,
-            List<Def> defs)
+            List<Def> defs, List<RuleEnumOption> runtime)
         {
             // 固定清单优先：它是作者写好的完整取值域，语言名也是现成的。
             if (options != null && options.Length > 0)
@@ -2222,17 +2329,36 @@ namespace RuleCore
                 {
                     var captured = options[i];
                     fixedOptions.Add(new FloatMenuOption(
-                        Label(captured.labelKey, captured.key),
-                        delegate
-                        {
-                            operand.kind = RuleValueKind.Enum;
-                            operand.literal.kind = RuleValueKind.Enum;
-                            operand.literal.key = captured.key;
-                            ValueChanged = true;
-                        }));
+                        OptionLabel(captured),
+                        delegate { PickEnumKey(operand, captured.key); }));
                 }
 
                 Find.WindowStack.Add(new FloatMenu(fixedOptions));
+                return;
+            }
+
+            // 运行时候选：活动区 / 着装方案 / 药物政策。
+            // **一条都没有时要分开说**——"你还没建过任何活动区"是完全正常的，
+            // 而"读不到"才是我们坏了。
+            if (runtime != null)
+            {
+                if (runtime.Count == 0)
+                {
+                    Messages.Message("RuleCore.Edit.NoRuntimeOption".Translate(),
+                        MessageTypeDefOf.NeutralEvent, false);
+                    return;
+                }
+
+                var runtimeOptions = new List<FloatMenuOption>();
+                for (int i = 0; i < runtime.Count; i++)
+                {
+                    var captured = runtime[i];
+                    runtimeOptions.Add(new FloatMenuOption(
+                        OptionLabel(captured),
+                        delegate { PickEnumKey(operand, captured.key); }));
+                }
+
+                Find.WindowStack.Add(new FloatMenu(runtimeOptions));
                 return;
             }
 

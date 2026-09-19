@@ -154,6 +154,7 @@ namespace RuleCore
             AddSubjects(v);
             AddMapProperties(v);
             AddPawnProperties(v);
+            AddPlayerSettings(v);
             AddThingProperties(v);
             AddDetects(v);
             AddOperates(v);
@@ -709,32 +710,45 @@ namespace RuleCore
                 }
             });
 
+            // ── 自己身上的东西 ────────────────────────────────────────
+            //
+            // **这里曾经有一个 `pawn.shelterCell`（避难格），已经删掉。**
+            //
+            // 那是我自己发明的东西：一个"最近的、有屋顶的、真的走得到的格子"，
+            // 靠自写的矩形扫描 + 可达性试探找出来。**游戏里没有这个概念。**
+            // 它的害处有两层：
+            //   · 玩家看到「避难格」会以为原版有这么个东西，而"他该去哪"原版是用
+            //     **活动区**回答的（管制界面那一列）；
+            //   · 每 tick 扫 61×61 格再逐个试寻路，是这套东西里最贵的一次求值。
+            //
+            // 换成两个**原版真的有**的属性之后，「去某个地方」就有了诚实的来源：
+            // `本主体 前往 本主体.床位.交互格`。
             v.Add(new RulePropertyInfo
             {
-                key = "pawn.shelterCell", owner = RuleEntityKind.Pawn,
-                requires = RuleCapability.Pawn,
-                result = RuleValueKind.Entity, resultEntity = RuleEntityKind.Cell,
+                key = "pawn.bed", owner = RuleEntityKind.Pawn,
+                requires = RuleCapability.Bed,
+                result = RuleValueKind.Entity, resultEntity = RuleEntityKind.Thing,
                 reader = delegate(IRuleEvalHost host, RuleValue owner, out RuleValue value,
                     out string code, out string reason)
                 {
                     var pawn = RuleEvalHost.PawnOf(owner);
-                    var map = pawn != null ? pawn.Map : null;
-                    if (pawn == null || map == null || !pawn.Spawned)
+                    if (pawn == null || pawn.ownership == null)
                     {
-                        return Fail(out value, out code, out reason, "prop.not_spawned",
-                            "这个人不在任何地图上。");
+                        return Fail(out value, out code, out reason, "prop.no_ownership",
+                            "这个人没有归属信息，读不到床位。");
                     }
 
-                    IntVec3 cell;
-                    string reasonCode;
-                    string reason2;
-                    if (!TryFindShelter(pawn, map, out cell, out reasonCode, out reason2))
+                    var bed = pawn.ownership.OwnedBed;
+                    if (bed == null)
                     {
-                        return Fail(out value, out code, out reason, reasonCode, reason2);
+                        // 没床是**读不到**，不是"有一张空的床"——
+                        // 混起来会让「床位.交互格」在没床的人身上静默指向 (0,0)。
+                        return Fail(out value, out code, out reason, "prop.no_bed",
+                            "他没有自己的床。");
                     }
 
-                    return Ok(RuleValue.OfEntity(RuleEntityKind.Cell,
-                        new RuleCell(cell.x, cell.z)), out value, out code, out reason);
+                    return Ok(RuleValue.OfEntity(RuleEntityKind.Thing, bed),
+                        out value, out code, out reason);
                 }
             });
 
@@ -784,81 +798,6 @@ namespace RuleCore
             });
         }
 
-        /// <summary>
-        /// 最近的、可站立的、有屋顶的、**真的走得到**的格子。
-        ///
-        /// 确定性矩形扫描 + 按距离排序取最近 N 个候选再逐个试可达性。
-        /// **不用 <c>CellFinder.TryFindRandomCellNear</c>** —— 随机取样会让同一个世界状态
-        /// 解析出不同格子，读档、重放、排障全部会漂。
-        /// </summary>
-        private static bool TryFindShelter(Pawn pawn, Map map, out IntVec3 cell,
-            out string reasonCode, out string reason)
-        {
-            const int radius = 30;
-            const int maxCandidates = 12;
-
-            cell = IntVec3.Invalid;
-            reasonCode = null;
-            reason = null;
-
-            var candidates = new IntVec3[maxCandidates];
-            var distances = new int[maxCandidates];
-            int count = 0;
-
-            IntVec3 origin = pawn.Position;
-            int x0 = UnityEngine.Mathf.Max(0, origin.x - radius);
-            int x1 = UnityEngine.Mathf.Min(map.Size.x - 1, origin.x + radius);
-            int z0 = UnityEngine.Mathf.Max(0, origin.z - radius);
-            int z1 = UnityEngine.Mathf.Min(map.Size.z - 1, origin.z + radius);
-
-            for (int x = x0; x <= x1; x++)
-            {
-                for (int z = z0; z <= z1; z++)
-                {
-                    var candidate = new IntVec3(x, 0, z);
-                    if (!candidate.Roofed(map)) continue;
-                    if (!candidate.Standable(map)) continue;
-
-                    int distance = (candidate - origin).LengthHorizontalSquared;
-                    if (distance == 0) continue;
-
-                    if (count == maxCandidates && distance >= distances[count - 1]) continue;
-
-                    int at = count < maxCandidates ? count : maxCandidates - 1;
-                    while (at > 0 && distances[at - 1] > distance)
-                    {
-                        distances[at] = distances[at - 1];
-                        candidates[at] = candidates[at - 1];
-                        at--;
-                    }
-
-                    distances[at] = distance;
-                    candidates[at] = candidate;
-                    if (count < maxCandidates) count++;
-                }
-            }
-
-            if (count == 0)
-            {
-                reasonCode = "shelter.no_roofed_cell";
-                reason = "半径 " + radius + " 内没有可站立的屋顶格。";
-                return false;
-            }
-
-            var parms = TraverseParms.For(pawn, Danger.Deadly, TraverseMode.PassDoors);
-            for (int i = 0; i < count; i++)
-            {
-                if (map.reachability.CanReach(origin, candidates[i], PathEndMode.OnCell, parms))
-                {
-                    cell = candidates[i];
-                    return true;
-                }
-            }
-
-            reasonCode = "shelter.unreachable";
-            reason = "找到 " + count + " 个屋顶格，但一个都到不了（路径被堵？）。";
-            return false;
-        }
 
         // ── 属性：房间与物品 ──────────────────────────────────────────
 
@@ -961,6 +900,743 @@ namespace RuleCore
                     return Ok(RuleValue.OfKey(thing.def.defName), out value, out code, out reason);
                 }
             });
+
+            // 「交互格」——**站在哪儿能跟这件东西打交道**。
+            //
+            // 它是原版自己的概念（`Thing.InteractionCell`：工作台前面那一格、
+            // 床脚那一格、门两侧那种位置），而不是我编的。
+            // 有了它，「去某个地方」才有诚实的来源：
+            //
+            //     本主体 前往 本主体.床位.交互格
+            //
+            // 原来是给了一个自造的「避难格」（最近的、有屋顶的、走得到的格子），
+            // 那个概念游戏里根本不存在，而且每 tick 要扫 61×61 格。
+            v.Add(new RulePropertyInfo
+            {
+                key = "thing.interactionCell", owner = RuleEntityKind.Thing,
+                requires = RuleCapability.Thing,
+                result = RuleValueKind.Entity, resultEntity = RuleEntityKind.Cell,
+                reader = delegate(IRuleEvalHost host, RuleValue owner, out RuleValue value,
+                    out string code, out string reason)
+                {
+                    var thing = RuleEvalHost.ThingOf(owner);
+                    if (thing == null)
+                    {
+                        return Fail(out value, out code, out reason, "prop.no_thing", "这不是一件物品。");
+                    }
+
+                    if (!thing.Spawned || thing.Map == null)
+                    {
+                        return Fail(out value, out code, out reason, "prop.not_spawned",
+                            "这件东西不在任何地图上，算不出交互格。");
+                    }
+
+                    var cell = thing.InteractionCell;
+                    return Ok(RuleValue.OfEntity(RuleEntityKind.Cell,
+                        new RuleCell(cell.x, cell.z)), out value, out code, out reason);
+                }
+            });
+        }
+
+        // ── 玩家设置：管制界面那一整列 ────────────────────────────────
+        //
+        // `PawnTableDefs` 里 Assign / Restrict 两页的东西：
+        // 医疗级别 / 着装 / 食物限制 / 药物政策 / 敌对反应 / 作息 / 活动区。
+        //
+        // **它们该进主谓宾**，理由是它们本来就是"给每个小人设的一个开关"：
+        // 玩家天天在管制界面手点，而"什么时候该换成哪一个"恰恰是规则最擅长回答的问题。
+        //
+        // 全部**玩家级**：改这些玩家自己点两下也能做，不涉及世界状态。
+        //
+        // 刻意没接进来的两个，以及原因：
+        //   · **主人**（动物那页）——那一格是一个 Pawn 引用，不是枚举。
+        //     要写它得先有"从一群人里挑一个"的实体路径，而句子里那个位置
+        //     填 `全部自由殖民者.第一个` 并不表达玩家的意思。
+        //   · **作息的写**——作息是 24 格的一张表，不是单值。
+        //     读得出"他现在这一格排的是什么"，但"改成 X"改的是今天这一小时，
+        //     语义比看上去复杂。读留着，写等有"整表"的表达方式再说。
+
+        /// <summary>读一个玩家设置：给出当前值的键；读不到时给原因。</summary>
+        private delegate bool PlayerSettingRead(Pawn pawn, out string key,
+            out string code, out string reason);
+
+        /// <summary>写一个玩家设置。</summary>
+        private delegate RuleOperateStatus PlayerSettingWrite(Pawn pawn, string key,
+            out string code, out string reason);
+
+        private static void AddPlayerSettings(RuleVocabulary v)
+        {
+            AddPlayerSetting(v,
+                new RulePropertyInfo
+                {
+                    key = "pawn.area", requires = RuleCapability.Pawn,
+                    enumCandidates = CollectAreas
+                },
+                new RuleVerbInfo
+                {
+                    key = "pawn.setArea", requires = RuleCapability.Pawn,
+                    argCandidates = CollectAreas
+                },
+                ReadArea, WriteArea);
+
+            AddPlayerSetting(v,
+                new RulePropertyInfo
+                {
+                    key = "pawn.outfit", requires = RuleCapability.Apparel,
+                    enumCandidates = CollectOutfits
+                },
+                new RuleVerbInfo
+                {
+                    key = "pawn.setOutfit", requires = RuleCapability.Apparel,
+                    argCandidates = CollectOutfits
+                },
+                ReadOutfit, WriteOutfit);
+
+            AddPlayerSetting(v,
+                new RulePropertyInfo
+                {
+                    key = "pawn.foodPolicy", requires = RuleCapability.NeedFood,
+                    enumCandidates = CollectFoodPolicies
+                },
+                new RuleVerbInfo
+                {
+                    key = "pawn.setFoodPolicy", requires = RuleCapability.NeedFood,
+                    argCandidates = CollectFoodPolicies
+                },
+                ReadFoodPolicy, WriteFoodPolicy);
+
+            AddPlayerSetting(v,
+                new RulePropertyInfo
+                {
+                    key = "pawn.drugPolicy", requires = RuleCapability.Humanlike,
+                    enumCandidates = CollectDrugPolicies
+                },
+                new RuleVerbInfo
+                {
+                    key = "pawn.setDrugPolicy", requires = RuleCapability.Humanlike,
+                    argCandidates = CollectDrugPolicies
+                },
+                ReadDrugPolicy, WriteDrugPolicy);
+
+            AddPlayerSetting(v,
+                new RulePropertyInfo
+                {
+                    key = "pawn.medCare", requires = RuleCapability.Humanlike,
+                    enumOptions = MedicalCareOptions
+                },
+                new RuleVerbInfo
+                {
+                    key = "pawn.setMedCare", requires = RuleCapability.Humanlike,
+                    argOptions = MedicalCareOptions
+                },
+                ReadMedCare, WriteMedCare);
+
+            AddPlayerSetting(v,
+                new RulePropertyInfo
+                {
+                    key = "pawn.hostilityResponse", requires = RuleCapability.Humanlike,
+                    enumOptions = HostilityOptions
+                },
+                new RuleVerbInfo
+                {
+                    key = "pawn.setHostilityResponse", requires = RuleCapability.Humanlike,
+                    argOptions = HostilityOptions
+                },
+                ReadHostility, WriteHostility);
+
+            // 作息：**只读**。取值域是 Def（TimeAssignmentDef），原版现成的。
+            AddPlayerSetting(v,
+                new RulePropertyInfo
+                {
+                    key = "pawn.timetable", requires = RuleCapability.Humanlike,
+                    enumDefType = typeof(TimeAssignmentDef)
+                },
+                null,
+                ReadTimetable, null);
+        }
+
+        /// <summary>
+        /// 一行"玩家设置" = 一个读属性 + 一个写操作。
+        ///
+        /// **成对出现是有意的**：只给读，玩家问不出"他现在的活动区是哪个"；
+        /// 只给写，他写不出"如果他不该在这就把他放回去"——那正是管制界面手点做不到的事。
+        /// </summary>
+        private static void AddPlayerSetting(RuleVocabulary v,
+            RulePropertyInfo property, RuleVerbInfo verb,
+            PlayerSettingRead read, PlayerSettingWrite write)
+        {
+            property.owner = RuleEntityKind.Pawn;
+            property.result = RuleValueKind.Enum;
+            property.reader = delegate(IRuleEvalHost host, RuleValue owner, out RuleValue value,
+                out string code, out string reason)
+            {
+                value = RuleValue.None;
+
+                var pawn = RuleEvalHost.PawnOf(owner);
+                if (pawn == null)
+                {
+                    code = "setting.no_pawn";
+                    reason = "这不是一个人。";
+                    return false;
+                }
+
+                string current;
+                if (!read(pawn, out current, out code, out reason)) return false;
+
+                if (string.IsNullOrEmpty(current))
+                {
+                    // **"没有设置"是读不到，不是"设置成空的那一个"。**
+                    // 混起来会让「活动区 是 厨房」在一个没被限制的人身上无从判断。
+                    code = "setting.not_set";
+                    reason = "他这一项没有设置（或者这一项对他不适用）。";
+                    return false;
+                }
+
+                value = RuleValue.OfKey(current);
+                code = null;
+                reason = null;
+                return true;
+            };
+
+            v.Add(property);
+
+            // 只读的那一项（作息）没有写的那一半。
+            if (verb == null || write == null) return;
+
+            verb.category = RuleVerbCategory.Operate;
+            verb.subject = RuleEntityKind.Pawn;
+            verb.argKind = RuleValueKind.Enum;
+            verb.tier = RuleTier.Player;
+            verb.operate = delegate(IRuleEvalHost host, RuleValue subject, RuleValue arg,
+                out string code, out string reason)
+            {
+                var pawn = RuleEvalHost.PawnOf(subject);
+                if (pawn == null)
+                {
+                    code = "setting.no_pawn";
+                    reason = "这不是一个人。";
+                    return RuleOperateStatus.Failed;
+                }
+
+                if (arg.IsMissing || string.IsNullOrEmpty(arg.AsKey))
+                {
+                    code = "setting.no_value";
+                    reason = "没有说改成哪一个。";
+                    return RuleOperateStatus.Failed;
+                }
+
+                return write(pawn, arg.AsKey, out code, out reason);
+            };
+
+            v.Add(verb);
+        }
+
+        // ── 候选取集：三类运行时对象 ─────────────────────────────────
+
+        /// <summary>活动区。**玩家自己在地图上画的**，每张图一套。</summary>
+        private static void CollectAreas(List<RuleEnumOption> into)
+        {
+            // 「不受限」也是一条合法选择——原版管制界面那一列就有它。
+            into.Add(new RuleEnumOption(AreaNoneKey, null, "RuleCore.Enum.Area.none".Translate()));
+
+            var map = Find.CurrentMap;
+            if (map == null || map.areaManager == null) return;
+
+            var areas = map.areaManager.AllAreas;
+            for (int i = 0; i < areas.Count; i++)
+            {
+                var area = areas[i];
+                if (area == null) continue;
+                into.Add(new RuleEnumOption(area.ID.ToString(), null, area.Label));
+            }
+        }
+
+        private static void CollectOutfits(List<RuleEnumOption> into)
+        {
+            var game = Verse.Current.Game;
+            if (game == null || game.outfitDatabase == null) return;
+
+            var all = game.outfitDatabase.AllOutfits;
+            for (int i = 0; i < all.Count; i++) AddPolicy(into, all[i]);
+        }
+
+        private static void CollectFoodPolicies(List<RuleEnumOption> into)
+        {
+            var game = Verse.Current.Game;
+            if (game == null || game.foodRestrictionDatabase == null) return;
+
+            var all = game.foodRestrictionDatabase.AllFoodRestrictions;
+            for (int i = 0; i < all.Count; i++) AddPolicy(into, all[i]);
+        }
+
+        private static void CollectDrugPolicies(List<RuleEnumOption> into)
+        {
+            var game = Verse.Current.Game;
+            if (game == null || game.drugPolicyDatabase == null) return;
+
+            var all = game.drugPolicyDatabase.AllPolicies;
+            for (int i = 0; i < all.Count; i++) AddPolicy(into, all[i]);
+        }
+
+        /// <summary>着装 / 食物 / 药物三套方案形状一样，都是 <see cref="Policy"/>。</summary>
+        private static void AddPolicy(List<RuleEnumOption> into, Policy policy)
+        {
+            if (policy == null) return;
+
+            string name = policy.label;
+            if (string.IsNullOrEmpty(name)) name = policy.BaseLabel;
+
+            into.Add(new RuleEnumOption(policy.id.ToString(), null, name));
+        }
+
+        // ── 静态清单：两个 C# 枚举 ───────────────────────────────────
+
+        // 显示名走**原版自己的翻译键**（`GetLabel()` → `MedicalCareCategory_X`），
+        // 所以这里不需要另造一份词——而且游戏换语言时它跟着换。
+        private static readonly RuleEnumOption[] MedicalCareOptions =
+        {
+            new RuleEnumOption(MedicalCareCategory.NoCare.ToString(), null,
+                MedicalCareCategory.NoCare.GetLabel()),
+            new RuleEnumOption(MedicalCareCategory.NoMeds.ToString(), null,
+                MedicalCareCategory.NoMeds.GetLabel()),
+            new RuleEnumOption(MedicalCareCategory.HerbalOrWorse.ToString(), null,
+                MedicalCareCategory.HerbalOrWorse.GetLabel()),
+            new RuleEnumOption(MedicalCareCategory.NormalOrWorse.ToString(), null,
+                MedicalCareCategory.NormalOrWorse.GetLabel()),
+            new RuleEnumOption(MedicalCareCategory.Best.ToString(), null,
+                MedicalCareCategory.Best.GetLabel())
+        };
+
+        private static readonly RuleEnumOption[] HostilityOptions =
+        {
+            new RuleEnumOption(HostilityResponseMode.Ignore.ToString(), null,
+                HostilityResponseMode.Ignore.GetLabel()),
+            new RuleEnumOption(HostilityResponseMode.Attack.ToString(), null,
+                HostilityResponseMode.Attack.GetLabel()),
+            new RuleEnumOption(HostilityResponseMode.Flee.ToString(), null,
+                HostilityResponseMode.Flee.GetLabel())
+        };
+
+        /// <summary>「不受限」。活动区列表里那一项没有对应的 Area 对象。</summary>
+        private const string AreaNoneKey = "none";
+
+        // ── 读 ───────────────────────────────────────────────────────
+
+        private static bool ReadArea(Pawn pawn, out string key, out string code, out string reason)
+        {
+            key = null;
+            code = null;
+            reason = null;
+
+            if (pawn.playerSettings == null)
+            {
+                code = "setting.no_settings";
+                reason = "这个人没有玩家设置（不在殖民地？）。";
+                return false;
+            }
+
+            var area = pawn.playerSettings.AreaRestrictionInPawnCurrentMap;
+            if (area == null)
+            {
+                // 「不受限」是一个**有意义的值**，不是"读不到"——
+                // 原版管制界面上那一格就写着"Unrestricted"。
+                key = AreaNoneKey;
+                return true;
+            }
+
+            key = area.ID.ToString();
+            return true;
+        }
+
+        private static bool ReadOutfit(Pawn pawn, out string key, out string code, out string reason)
+        {
+            key = null;
+            code = null;
+            reason = null;
+
+            if (pawn.outfits == null)
+            {
+                code = "setting.no_outfits";
+                reason = "这个人不能着装。";
+                return false;
+            }
+
+            var policy = pawn.outfits.CurrentApparelPolicy;
+            if (policy == null)
+            {
+                code = "setting.not_set";
+                reason = "他这一项没有设置。";
+                return false;
+            }
+
+            key = policy.id.ToString();
+            return true;
+        }
+
+        private static bool ReadFoodPolicy(Pawn pawn, out string key, out string code, out string reason)
+        {
+            key = null;
+            code = null;
+            reason = null;
+
+            if (pawn.foodRestriction == null || pawn.foodRestriction.CurrentFoodPolicy == null)
+            {
+                code = "setting.no_food_policy";
+                reason = "这个人没有食物限制设置。";
+                return false;
+            }
+
+            key = pawn.foodRestriction.CurrentFoodPolicy.id.ToString();
+            return true;
+        }
+
+        private static bool ReadDrugPolicy(Pawn pawn, out string key, out string code, out string reason)
+        {
+            key = null;
+            code = null;
+            reason = null;
+
+            if (pawn.drugs == null || pawn.drugs.CurrentPolicy == null)
+            {
+                code = "setting.no_drug_policy";
+                reason = "这个人没有药物政策设置。";
+                return false;
+            }
+
+            key = pawn.drugs.CurrentPolicy.id.ToString();
+            return true;
+        }
+
+        private static bool ReadMedCare(Pawn pawn, out string key, out string code, out string reason)
+        {
+            key = null;
+            code = null;
+            reason = null;
+
+            if (pawn.playerSettings == null)
+            {
+                code = "setting.no_settings";
+                reason = "这个人没有玩家设置。";
+                return false;
+            }
+
+            key = pawn.playerSettings.medCare.ToString();
+            return true;
+        }
+
+        private static bool ReadHostility(Pawn pawn, out string key, out string code, out string reason)
+        {
+            key = null;
+            code = null;
+            reason = null;
+
+            if (pawn.playerSettings == null)
+            {
+                code = "setting.no_settings";
+                reason = "这个人没有玩家设置。";
+                return false;
+            }
+
+            key = pawn.playerSettings.hostilityResponse.ToString();
+            return true;
+        }
+
+        private static bool ReadTimetable(Pawn pawn, out string key, out string code, out string reason)
+        {
+            key = null;
+            code = null;
+            reason = null;
+
+            if (pawn.timetable == null)
+            {
+                code = "setting.no_timetable";
+                reason = "这个人没有作息表。";
+                return false;
+            }
+
+            var def = pawn.timetable.CurrentAssignment;
+            if (def == null)
+            {
+                code = "setting.no_assignment";
+                reason = "他这一格没有排作息。";
+                return false;
+            }
+
+            key = def.defName;
+            return true;
+        }
+
+        // ── 写 ───────────────────────────────────────────────────────
+        //
+        // 每一条的**第一件事都是确认"现在到底能不能改"**——
+        // 原版的 setter 在改不动的时候是**静默什么都不做**的
+        // （活动区那个 setter 在 `MapHeld == null` 时直接跳过），
+        // 不先查就会得到一条"做成了"的假记录。
+
+        private static RuleOperateStatus WriteArea(Pawn pawn, string key,
+            out string code, out string reason)
+        {
+            if (pawn.playerSettings == null)
+            {
+                code = "setting.no_settings";
+                reason = "这个人没有玩家设置。";
+                return RuleOperateStatus.Failed;
+            }
+
+            var map = pawn.MapHeld;
+            if (map == null || map.areaManager == null)
+            {
+                code = "setting.no_map";
+                reason = "他不在任何地图上，改不了活动区（原版这时会静默跳过）。";
+                return RuleOperateStatus.Failed;
+            }
+
+            Area target = null;
+            if (key != AreaNoneKey)
+            {
+                int id;
+                if (!int.TryParse(key, out id))
+                {
+                    code = "setting.bad_area";
+                    reason = "认不出的活动区编号：" + key;
+                    return RuleOperateStatus.Failed;
+                }
+
+                var areas = map.areaManager.AllAreas;
+                for (int i = 0; i < areas.Count; i++)
+                {
+                    if (areas[i] != null && areas[i].ID == id) { target = areas[i]; break; }
+                }
+
+                if (target == null)
+                {
+                    code = "setting.area_gone";
+                    reason = "这个活动区已经不在了（可能被删掉或改名换了 ID）。";
+                    return RuleOperateStatus.Failed;
+                }
+            }
+
+            if (pawn.playerSettings.AreaRestrictionInPawnCurrentMap == target)
+            {
+                code = "setting.same";
+                reason = "他本来就是这个活动区。";
+                return RuleOperateStatus.AlreadySatisfied;
+            }
+
+            pawn.playerSettings.AreaRestrictionInPawnCurrentMap = target;
+            code = "setting.changed";
+
+            // 三元里不能混 string 和 TaggedString（CS8957）。
+            // 这个坑本项目记过笔记**还是踩了**——规矩：`Translate()` 永远不进三元表达式。
+            string areaName;
+            if (target != null)
+            {
+                areaName = target.Label;
+            }
+            else
+            {
+                areaName = "RuleCore.Enum.Area.none".Translate();
+            }
+
+            reason = "活动区已改成「" + areaName + "」。";
+            return RuleOperateStatus.Done;
+        }
+
+        private static RuleOperateStatus WriteOutfit(Pawn pawn, string key,
+            out string code, out string reason)
+        {
+            var game = Verse.Current.Game;
+            if (pawn.outfits == null || game == null || game.outfitDatabase == null)
+            {
+                code = "setting.no_outfits";
+                reason = "这个人不能着装。";
+                return RuleOperateStatus.Failed;
+            }
+
+            ApparelPolicy target;
+            if (!TryFindPolicy(game.outfitDatabase.AllOutfits, key, out target))
+            {
+                code = "setting.policy_gone";
+                reason = "这个着装方案已经不在了。";
+                return RuleOperateStatus.Failed;
+            }
+
+            if (pawn.outfits.CurrentApparelPolicy == target)
+            {
+                code = "setting.same";
+                reason = "他本来就用这个着装方案。";
+                return RuleOperateStatus.AlreadySatisfied;
+            }
+
+            pawn.outfits.CurrentApparelPolicy = target;
+            code = "setting.changed";
+            reason = "着装方案已改成「" + target.label + "」。";
+            return RuleOperateStatus.Done;
+        }
+
+        private static RuleOperateStatus WriteFoodPolicy(Pawn pawn, string key,
+            out string code, out string reason)
+        {
+            var game = Verse.Current.Game;
+            if (pawn.foodRestriction == null || game == null
+                || game.foodRestrictionDatabase == null)
+            {
+                code = "setting.no_food_policy";
+                reason = "这个人没有食物限制设置。";
+                return RuleOperateStatus.Failed;
+            }
+
+            FoodPolicy target;
+            if (!TryFindPolicy(game.foodRestrictionDatabase.AllFoodRestrictions, key, out target))
+            {
+                code = "setting.policy_gone";
+                reason = "这个食物限制方案已经不在了。";
+                return RuleOperateStatus.Failed;
+            }
+
+            if (pawn.foodRestriction.CurrentFoodPolicy == target)
+            {
+                code = "setting.same";
+                reason = "他本来就用这个食物限制。";
+                return RuleOperateStatus.AlreadySatisfied;
+            }
+
+            pawn.foodRestriction.CurrentFoodPolicy = target;
+            code = "setting.changed";
+            reason = "食物限制已改成「" + target.label + "」。";
+            return RuleOperateStatus.Done;
+        }
+
+        private static RuleOperateStatus WriteDrugPolicy(Pawn pawn, string key,
+            out string code, out string reason)
+        {
+            var game = Verse.Current.Game;
+            if (pawn.drugs == null || game == null || game.drugPolicyDatabase == null)
+            {
+                code = "setting.no_drug_policy";
+                reason = "这个人没有药物政策设置。";
+                return RuleOperateStatus.Failed;
+            }
+
+            DrugPolicy target;
+            if (!TryFindPolicy(game.drugPolicyDatabase.AllPolicies, key, out target))
+            {
+                code = "setting.policy_gone";
+                reason = "这个药物政策已经不在了。";
+                return RuleOperateStatus.Failed;
+            }
+
+            if (pawn.drugs.CurrentPolicy == target)
+            {
+                code = "setting.same";
+                reason = "他本来就用这个药物政策。";
+                return RuleOperateStatus.AlreadySatisfied;
+            }
+
+            pawn.drugs.CurrentPolicy = target;
+            code = "setting.changed";
+            reason = "药物政策已改成「" + target.label + "」。";
+            return RuleOperateStatus.Done;
+        }
+
+        private static RuleOperateStatus WriteMedCare(Pawn pawn, string key,
+            out string code, out string reason)
+        {
+            if (pawn.playerSettings == null)
+            {
+                code = "setting.no_settings";
+                reason = "这个人没有玩家设置。";
+                return RuleOperateStatus.Failed;
+            }
+
+            MedicalCareCategory target;
+            if (!TryParseEnum(key, out target))
+            {
+                code = "setting.bad_value";
+                reason = "认不出的医疗级别：" + key;
+                return RuleOperateStatus.Failed;
+            }
+
+            if (pawn.playerSettings.medCare == target)
+            {
+                code = "setting.same";
+                reason = "他本来就是这个医疗级别。";
+                return RuleOperateStatus.AlreadySatisfied;
+            }
+
+            pawn.playerSettings.medCare = target;
+            code = "setting.changed";
+            reason = "医疗级别已改成「" + target.GetLabel() + "」。";
+            return RuleOperateStatus.Done;
+        }
+
+        private static RuleOperateStatus WriteHostility(Pawn pawn, string key,
+            out string code, out string reason)
+        {
+            if (pawn.playerSettings == null)
+            {
+                code = "setting.no_settings";
+                reason = "这个人没有玩家设置。";
+                return RuleOperateStatus.Failed;
+            }
+
+            HostilityResponseMode target;
+            if (!TryParseEnum(key, out target))
+            {
+                code = "setting.bad_value";
+                reason = "认不出的敌对反应：" + key;
+                return RuleOperateStatus.Failed;
+            }
+
+            if (pawn.playerSettings.hostilityResponse == target)
+            {
+                code = "setting.same";
+                reason = "他本来就是这种敌对反应。";
+                return RuleOperateStatus.AlreadySatisfied;
+            }
+
+            pawn.playerSettings.hostilityResponse = target;
+            code = "setting.changed";
+            reason = "敌对反应已改成「" + target.GetLabel() + "」。";
+            return RuleOperateStatus.Done;
+        }
+
+        /// <summary>按 id 找一个方案。三个数据库共用（它们都是 <see cref="Policy"/>）。</summary>
+        private static bool TryFindPolicy<T>(List<T> all, string key, out T found)
+            where T : Policy
+        {
+            found = null;
+
+            int id;
+            if (!int.TryParse(key, out id)) return false;
+
+            for (int i = 0; i < all.Count; i++)
+            {
+                if (all[i] != null && all[i].id == id) { found = all[i]; return true; }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 把一个枚举成员名解析回去。
+        ///
+        /// 存的是**成员名**（`Best`、`Flee`）而不是序号——序号会因为原版
+        /// 往枚举中间插一个值而整体错位，而那种错位是静默的。
+        /// </summary>
+        private static bool TryParseEnum<T>(string key, out T value) where T : struct
+        {
+            value = default(T);
+            if (string.IsNullOrEmpty(key)) return false;
+
+            try
+            {
+                return System.Enum.TryParse<T>(key, false, out value)
+                    && System.Enum.IsDefined(typeof(T), value);
+            }
+            catch (System.Exception)
+            {
+                return false;
+            }
         }
 
         // ── 检测 ──────────────────────────────────────────────────────

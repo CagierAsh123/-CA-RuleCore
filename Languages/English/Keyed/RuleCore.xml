@@ -302,6 +302,43 @@ Add a RuleCore.RulePackDef under 1.6/Defs/ to create one.</RuleCore.Panel.NoRule
   <RuleCore.Edit.Section.Reduce>Reduce (required for a set)</RuleCore.Edit.Section.Reduce>
   <RuleCore.Edit.Section.Predicate>Predicates for {0}</RuleCore.Edit.Section.Predicate>
   <RuleCore.Edit.Section.Object>Object</RuleCore.Edit.Section.Object>
+  <RuleCore.Prop.pawn.bed>Bed</RuleCore.Prop.pawn.bed>
+  <RuleCore.Prop.pawn.bedDesc>The bed he has **claimed as his own**. Unclaimed (or no ownership record) means it cannot be read — not "reads as empty", the check stands down. To write "go to bed", append a cell: `本主体.床位.交互格`.</RuleCore.Prop.pawn.bedDesc>
+  <RuleCore.Prop.thing.interactionCell>Interaction cell</RuleCore.Prop.thing.interactionCell>
+  <RuleCore.Prop.thing.interactionCellDesc>The cell others stand on to use this thing (vanilla `Thing.InteractionCell`). This is the honest source for "go somewhere" — **the cell really exists in the game**. Off-map things can't produce one.</RuleCore.Prop.thing.interactionCellDesc>
+  <!-- ══ The Assign/Restrict column (player settings) ═══════════ -->
+  <RuleCore.Prop.pawn.medCare>Medical care</RuleCore.Prop.pawn.medCare>
+  <RuleCore.Prop.pawn.medCareDesc>The medical care level set on the Assign tab (no care / no meds / herbal or worse / normal or worse / best). Use it with "is".</RuleCore.Prop.pawn.medCareDesc>
+  <RuleCore.Prop.pawn.hostilityResponse>Hostility response</RuleCore.Prop.pawn.hostilityResponse>
+  <RuleCore.Prop.pawn.hostilityResponseDesc>Automatic reaction when attacked (ignore / attack / flee). Use it with "is".</RuleCore.Prop.pawn.hostilityResponseDesc>
+  <RuleCore.Prop.pawn.area>Allowed area</RuleCore.Prop.pawn.area>
+  <RuleCore.Prop.pawn.areaDesc>The area he is currently restricted to ("unrestricted" is a value too). Areas are **drawn by you in game**, so the candidates are read live — the same rule points at different ids in another save.</RuleCore.Prop.pawn.areaDesc>
+  <RuleCore.Prop.pawn.outfit>Apparel policy</RuleCore.Prop.pawn.outfit>
+  <RuleCore.Prop.pawn.outfitDesc>The apparel policy he uses (the Assign column). Policies are player-made, so candidates are read live.</RuleCore.Prop.pawn.outfitDesc>
+  <RuleCore.Prop.pawn.foodPolicy>Food restriction</RuleCore.Prop.pawn.foodPolicy>
+  <RuleCore.Prop.pawn.foodPolicyDesc>The food restriction he uses. Player-made, so candidates are read live.</RuleCore.Prop.pawn.foodPolicyDesc>
+  <RuleCore.Prop.pawn.drugPolicy>Drug policy</RuleCore.Prop.pawn.drugPolicy>
+  <RuleCore.Prop.pawn.drugPolicyDesc>The drug policy he uses. Player-made, so candidates are read live.</RuleCore.Prop.pawn.drugPolicyDesc>
+  <RuleCore.Prop.pawn.timetable>Current assignment</RuleCore.Prop.pawn.timetable>
+  <RuleCore.Prop.pawn.timetableDesc>What his current hour is scheduled as (sleep / work / joy...). **Read-only** — a timetable is a 24-slot table, not a single value.</RuleCore.Prop.pawn.timetableDesc>
+
+  <RuleCore.Verb.pawn.setMedCare>Set medical care</RuleCore.Verb.pawn.setMedCare>
+  <RuleCore.Verb.pawn.setMedCareDesc>Change the executor's medical care level. Player tier.</RuleCore.Verb.pawn.setMedCareDesc>
+  <RuleCore.Verb.pawn.setHostilityResponse>Set hostility response</RuleCore.Verb.pawn.setHostilityResponse>
+  <RuleCore.Verb.pawn.setHostilityResponseDesc>Change the executor's hostility response. Player tier.</RuleCore.Verb.pawn.setHostilityResponseDesc>
+  <RuleCore.Verb.pawn.setArea>Set allowed area</RuleCore.Verb.pawn.setArea>
+  <RuleCore.Verb.pawn.setAreaDesc>Restrict the executor to an area (or "unrestricted" to free him). Player tier. **He must be on a map** — vanilla silently does nothing otherwise; this reports the failure honestly.</RuleCore.Verb.pawn.setAreaDesc>
+  <RuleCore.Verb.pawn.setOutfit>Set apparel policy</RuleCore.Verb.pawn.setOutfit>
+  <RuleCore.Verb.pawn.setOutfitDesc>Change the executor's apparel policy. Player tier.</RuleCore.Verb.pawn.setOutfitDesc>
+  <RuleCore.Verb.pawn.setFoodPolicy>Set food restriction</RuleCore.Verb.pawn.setFoodPolicy>
+  <RuleCore.Verb.pawn.setFoodPolicyDesc>Change the executor's food restriction. Player tier.</RuleCore.Verb.pawn.setFoodPolicyDesc>
+  <RuleCore.Verb.pawn.setDrugPolicy>Set drug policy</RuleCore.Verb.pawn.setDrugPolicy>
+  <RuleCore.Verb.pawn.setDrugPolicyDesc>Change the executor's drug policy. Player tier.</RuleCore.Verb.pawn.setDrugPolicyDesc>
+
+  <RuleCore.Enum.Area.none>unrestricted</RuleCore.Enum.Area.none>
+  <RuleCore.Edit.NoRuntimeOption>Nothing to choose from yet — areas and policies are things you create in game; make one on the Assign/Restrict tab first.</RuleCore.Edit.NoRuntimeOption>
+  <RuleCore.Edit.MissingOption>(no longer exists: {0})</RuleCore.Edit.MissingOption>
+
   <RuleCore.Edit.Section.Presets>Common values</RuleCore.Edit.Section.Presets>
   <RuleCore.Edit.Section.RawKey>No value source declared here — you must type a defName</RuleCore.Edit.Section.RawKey>
   <RuleCore.Edit.Section.EntityPath>Target entity path</RuleCore.Edit.Section.EntityPath>

@@ -302,6 +302,43 @@
   <RuleCore.Edit.Section.Reduce>歸約（集合路徑必選）</RuleCore.Edit.Section.Reduce>
   <RuleCore.Edit.Section.Predicate>可用謂詞（主語類型：{0}）</RuleCore.Edit.Section.Predicate>
   <RuleCore.Edit.Section.Object>賓語</RuleCore.Edit.Section.Object>
+  <RuleCore.Prop.pawn.bed>床位</RuleCore.Prop.pawn.bed>
+  <RuleCore.Prop.pawn.bedDesc>他**自己認領的那張床**。沒認領過床（或沒有歸屬資訊）就讀不到——這不是「讀出來是空」，是這條判斷直接讓開。要寫「去床上」，接一格：`本主體.床位.互動格`。</RuleCore.Prop.pawn.bedDesc>
+  <RuleCore.Prop.thing.interactionCell>互動格</RuleCore.Prop.thing.interactionCell>
+  <RuleCore.Prop.thing.interactionCellDesc>別人站上去就能用這件東西的那一格（原版的 `Thing.InteractionCell`）。這是「去某個地方」最誠實的來源——**遊戲裡真有這個格子**。東西不在任何地圖上就算不出來。</RuleCore.Prop.thing.interactionCellDesc>
+  <!-- ══ 管制介面那一列（玩家設定）══════════════════════════════ -->
+  <RuleCore.Prop.pawn.medCare>醫療級別</RuleCore.Prop.pawn.medCare>
+  <RuleCore.Prop.pawn.medCareDesc>他在管制介面裡設的醫療護理等級（無 / 不用藥 / 草藥或更差 / 普通或更差 / 最佳）。配「是」用。</RuleCore.Prop.pawn.medCareDesc>
+  <RuleCore.Prop.pawn.hostilityResponse>敵對反應</RuleCore.Prop.pawn.hostilityResponse>
+  <RuleCore.Prop.pawn.hostilityResponseDesc>被敵人攻擊時的自動反應（無視 / 攻擊 / 逃跑）。配「是」用。</RuleCore.Prop.pawn.hostilityResponseDesc>
+  <RuleCore.Prop.pawn.area>活動區</RuleCore.Prop.pawn.area>
+  <RuleCore.Prop.pawn.areaDesc>他當前被限制在哪個活動區（「不受限」也是一個值）。活動區是**你在遊戲裡自己畫的**，所以候選是現場取的——同一份規則換存檔就指向別的編號。</RuleCore.Prop.pawn.areaDesc>
+  <RuleCore.Prop.pawn.outfit>著裝方案</RuleCore.Prop.pawn.outfit>
+  <RuleCore.Prop.pawn.outfitDesc>他用的著裝方案（管制介面那一列）。方案是玩家自建的，候選現場取。</RuleCore.Prop.pawn.outfitDesc>
+  <RuleCore.Prop.pawn.foodPolicy>食物限制</RuleCore.Prop.pawn.foodPolicy>
+  <RuleCore.Prop.pawn.foodPolicyDesc>他用的食物限制方案。方案是玩家自建的，候選現場取。</RuleCore.Prop.pawn.foodPolicyDesc>
+  <RuleCore.Prop.pawn.drugPolicy>藥物政策</RuleCore.Prop.pawn.drugPolicy>
+  <RuleCore.Prop.pawn.drugPolicyDesc>他用的藥物政策。政策是玩家自建的，候選現場取。</RuleCore.Prop.pawn.drugPolicyDesc>
+  <RuleCore.Prop.pawn.timetable>當前作息</RuleCore.Prop.pawn.timetable>
+  <RuleCore.Prop.pawn.timetableDesc>他此刻這一格排的是什麼（睡覺 / 工作 / 娛樂…）。**唯讀**——作息是 24 格的一張表，不是單值。</RuleCore.Prop.pawn.timetableDesc>
+
+  <RuleCore.Verb.pawn.setMedCare>改醫療級別</RuleCore.Verb.pawn.setMedCare>
+  <RuleCore.Verb.pawn.setMedCareDesc>把執行者的醫療護理等級改成某個值。玩家級。</RuleCore.Verb.pawn.setMedCareDesc>
+  <RuleCore.Verb.pawn.setHostilityResponse>改敵對反應</RuleCore.Verb.pawn.setHostilityResponse>
+  <RuleCore.Verb.pawn.setHostilityResponseDesc>把執行者的敵對反應改成某個值。玩家級。</RuleCore.Verb.pawn.setHostilityResponseDesc>
+  <RuleCore.Verb.pawn.setArea>改活動區</RuleCore.Verb.pawn.setArea>
+  <RuleCore.Verb.pawn.setAreaDesc>把執行者限制到某個活動區（也可以選「不受限」放他自由）。玩家級。**他必須在地圖上**——原版在沒地圖時會靜默跳過，這裡會如實報失敗。</RuleCore.Verb.pawn.setAreaDesc>
+  <RuleCore.Verb.pawn.setOutfit>改著裝方案</RuleCore.Verb.pawn.setOutfit>
+  <RuleCore.Verb.pawn.setOutfitDesc>把執行者的著裝方案換成另一個。玩家級。</RuleCore.Verb.pawn.setOutfitDesc>
+  <RuleCore.Verb.pawn.setFoodPolicy>改食物限制</RuleCore.Verb.pawn.setFoodPolicy>
+  <RuleCore.Verb.pawn.setFoodPolicyDesc>把執行者的食物限制換成另一個。玩家級。</RuleCore.Verb.pawn.setFoodPolicyDesc>
+  <RuleCore.Verb.pawn.setDrugPolicy>改藥物政策</RuleCore.Verb.pawn.setDrugPolicy>
+  <RuleCore.Verb.pawn.setDrugPolicyDesc>把執行者的藥物政策換成另一個。玩家級。</RuleCore.Verb.pawn.setDrugPolicyDesc>
+
+  <RuleCore.Enum.Area.none>不受限</RuleCore.Enum.Area.none>
+  <RuleCore.Edit.NoRuntimeOption>現在沒有可以選的——活動區/方案是你在遊戲裡自己建的，先去管制介面建一個。</RuleCore.Edit.NoRuntimeOption>
+  <RuleCore.Edit.MissingOption>（已不存在：{0}）</RuleCore.Edit.MissingOption>
+
   <RuleCore.Edit.Section.Presets>常用值</RuleCore.Edit.Section.Presets>
   <RuleCore.Edit.Section.RawKey>這條沒宣告取值來源，只能手填 defName</RuleCore.Edit.Section.RawKey>
   <RuleCore.Edit.Section.EntityPath>目标實體的路徑</RuleCore.Edit.Section.EntityPath>

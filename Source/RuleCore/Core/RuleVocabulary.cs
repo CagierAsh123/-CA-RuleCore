@@ -26,12 +26,43 @@ namespace RuleCore.Core
         /// <summary>显示名的语言键。查不到就显示 key。</summary>
         public readonly string labelKey;
 
+        /// <summary>
+        /// **直接的显示名** —— 给"运行时候选"用（活动区、着装方案……）。
+        ///
+        /// 那些名字是**玩家自己起的**（"厨房"、"工人方案"），没有语言键可查，
+        /// 只能在要用的时候把名字原样带过来。静态候选留空即可。
+        /// </summary>
+        public readonly string label;
+
         public RuleEnumOption(string key, string labelKey)
+            : this(key, labelKey, null)
+        {
+        }
+
+        public RuleEnumOption(string key, string labelKey, string label)
         {
             this.key = key;
             this.labelKey = labelKey;
+            this.label = label;
         }
     }
+
+    /// <summary>
+    /// **运行时候选清单**的收集器 —— 取值域的第三种来源。
+    ///
+    /// 三种并列，各有各的场合：
+    ///
+    /// | 来源 | 谁提供 | 例子 |
+    /// |---|---|---|
+    /// | <see cref="RulePropertyInfo.enumDefType"/> | Def 表 | 天气、事件、物品类型 |
+    /// | <see cref="RulePropertyInfo.enumOptions"/> | 作者写死的清单 | 身份、性别 |
+    /// | **这个** | **存档里算出来的** | **活动区、着装方案、药物政策** |
+    ///
+    /// 第三种必须存在，因为管制界面那一整列东西**都不是 Def**：
+    /// 它们是玩家在游戏里自己建的对象，数量与名字每次读档都可能不同。
+    /// **只能在要用的时候现场问**——写死的清单第二天就对不上了。
+    /// </summary>
+    public delegate void RuleEnumCandidateHandler(List<RuleEnumOption> into);
 
     /// <summary>
     /// 一条**被挡掉的选项**——给编辑器把"为什么没有它"说出来。
@@ -103,6 +134,12 @@ namespace RuleCore.Core
         /// 与 <see cref="enumDefType"/> 二选一，都为空就只能手填。
         /// </summary>
         public RuleEnumOption[] enumOptions;
+
+        /// <summary>
+        /// 取值来自**存档里的对象**（活动区、着装方案……）。见 <see cref="RuleEnumCandidateHandler"/>。
+        /// 与 <see cref="enumOptions"/> / <see cref="enumDefType"/> 三选一。
+        /// </summary>
+        public RuleEnumCandidateHandler enumCandidates;
 
         /// <summary>
         /// 挂在什么样的宿主上才有意义。见 <see cref="RuleCapability"/>。
@@ -191,6 +228,9 @@ namespace RuleCore.Core
 
         /// <summary>宾语是枚举、但取值来自"算出来的固定选项"时的清单（与 <see cref="argDefType"/> 二选一）。</summary>
         public RuleEnumOption[] argOptions;
+
+        /// <summary>宾语取值来自**存档里的对象**（活动区、着装方案……）。见 <see cref="RuleEnumCandidateHandler"/>。</summary>
+        public RuleEnumCandidateHandler argCandidates;
 
         /// <summary>
         /// **数值宾语的显示元数据**（单位 / 百分比 / 范围 / 小数位）。
